@@ -4,7 +4,6 @@ const {
   getVoiceConnection,
   createAudioPlayer,
   createAudioResource,
-  VoiceConnectionStatus,
   AudioPlayerStatus,
   entersState,
 } = require("@discordjs/voice");
@@ -22,31 +21,42 @@ module.exports = {
     ),
   async execute(interaction) {
     try {
+      // Check if the user is in a voice channel
       const channel = interaction.member.voice.channel;
-      const prompt = interaction.options.getString("prompt");
       if (!channel)
         return interaction.reply(
           "You need to be in a voice channel to use this command!"
         );
+
+      // Check if a song was provided
+      const prompt = interaction.options.getString("prompt");
       if (!prompt)
-        return interaction.reply("You need to provide a song to play!");
+        return interaction.reply("You need to provide a song or url to play!");
+
+      // Get the voice connection
       let connection = getVoiceConnection(channel.guild.id);
-      if (!connection) {
+      if (!connection)
         connection = joinVoiceChannel({
           channelId: channel.id,
           guildId: channel.guild.id,
           adapterCreator: channel.guild.voiceAdapterCreator,
         });
-      }
+
       let resource;
       const player = createAudioPlayer();
       connection.subscribe(player);
-      if (prompt.includes("youtube.com") || prompt.includes("youtu.be")) {
-        const stream = ytdl(prompt, { filter: "audioonly" });
-        resource = createAudioResource(stream);
-      } else resource = createAudioResource(prompt);
+
+      // Check if the song is a youtube link
+      if (prompt.includes("youtube.com") || prompt.includes("youtu.be"))
+        resource = createAudioResource(
+          ytdl(prompt, { filter: "audioonly", quality: "highestaudio" })
+        );
+      else resource = createAudioResource(stream);
+      if (!resource) return interaction.reply("Video not found!");
+
+      // Play the song
       player.play(resource);
-      await entersState(player, AudioPlayerStatus.Playing, 5e3);
+      await entersState(player, AudioPlayerStatus.Playing);
       await interaction.reply("Playing!");
     } catch (error) {
       await interaction.reply("Error playing!");
