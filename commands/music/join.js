@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { joinVoiceChannel } = require("@discordjs/voice");
+const { join } = require("../../interactions/join");
+const { getVoiceConnection } = require("@discordjs/voice");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,16 +8,16 @@ module.exports = {
     .setDescription("Join the voice channel."),
   async execute(interaction) {
     const channel = interaction.member.voice.channel;
-    const connection = joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
-    });
-    connection.on(VoiceConnectionStatus.Ready, () => {
-      console.log(
-        "The connection has entered the Ready state - ready to play audio!"
+    if (!channel)
+      return interaction.reply(
+        "You need to be in a voice channel to use this command!"
       );
-    });
-    await interaction.reply("Bot has joined the voice channel.");
+    let connection = getVoiceConnection(channel.guild.id);
+    if (connection) {
+      interaction.reply("I'm already in a voice channel!");
+      return connection;
+    }
+    await join(interaction);
+    interaction.reply("Bot has joined the voice channel.");
   },
 };

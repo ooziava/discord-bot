@@ -1,20 +1,15 @@
 const { SlashCommandBuilder } = require("discord.js");
 const {
-  joinVoiceChannel,
   getVoiceConnection,
   createAudioPlayer,
-  createAudioResource,
   AudioPlayerStatus,
   entersState,
 } = require("@discordjs/voice");
 
-const ytdl = require("ytdl-core");
-const opus = require("@discordjs/opus");
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("stop")
-    .setDescription("Stop playing a song in a voice chan"),
+    .setDescription("Stop playing a song in a voice channel!"),
   async execute(interaction) {
     try {
       // Check if the user is in a voice channel

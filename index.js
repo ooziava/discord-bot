@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const dotenv = require("dotenv");
+const { getFreeClientID, setToken, authorization } = require("play-dl");
 dotenv.config();
 
 const client = new Client({
@@ -54,5 +55,24 @@ for (const file of eventFiles) {
     client.on(event.name, (...args) => event.execute(...args));
   }
 }
-// Log in to Discord with your client's token
-client.login(process.env.DISCORD_TOKEN);
+const SocialAuth = async () => {
+  // Log in to Discord with your client's token
+  client.login(process.env.DISCORD_TOKEN);
+  try {
+    const clientID = await getFreeClientID();
+    await setToken({
+      soundcloud: {
+        client_id: clientID,
+      },
+      spotify: {
+        client_id: process.env.SPOTIFY_CLIENT_ID,
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET,
+        market: "UA",
+      },
+    });
+    console.log("Token set!");
+  } catch (error) {
+    console.error(error);
+  }
+};
+SocialAuth();

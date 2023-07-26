@@ -10,7 +10,7 @@ module.exports = {
     const connection = getVoiceConnection(channel.guild.id);
     if (connection) {
       connection.destroy();
-    }
-    await interaction.reply("Bot has left the voice channel.");
+      await interaction.reply("Bot has left the voice channel.");
+    } else await interaction.reply("I'm not in a voice channel!");
   },
 };
