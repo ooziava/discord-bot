@@ -1,4 +1,4 @@
-const { search, playlist_info, stream } = require("play-dl");
+const { search, playlist_info, stream, video_info } = require("play-dl");
 
 module.exports = {
   async findYTVideo(query, info) {
@@ -18,17 +18,12 @@ module.exports = {
       url = musicList.videos[0].url;
       title = musicList.videos[0].title;
     } else {
-      const musicList = await search(query, {
-        limit: 1,
-        source: { youtube: "video" },
-      });
-      if (!musicList.length) throw new Error("No video found!");
-      url = musicList[0].url;
-      title = musicList[0].title;
+      const video = await video_info(query, { incomplete: true });
+      if (video) title = video.video_details.title;
+      url = query;
     }
 
     const resource = await stream(url, {
-      seek: 10,
       quality: 2,
     });
     return { source: resource, title };
