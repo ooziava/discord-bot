@@ -3,6 +3,7 @@ const path = require("node:path");
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const dotenv = require("dotenv");
 const { getFreeClientID, setToken, authorization } = require("play-dl");
+const { VoiceConnection } = require("@discordjs/voice");
 dotenv.config();
 
 const client = new Client({
@@ -47,6 +48,7 @@ const eventFiles = fs
   .filter((file) => file.endsWith(".js"));
 
 for (const file of eventFiles) {
+  VoiceConnection.defaultMaxListeners = 20;
   const filePath = path.join(eventsPath, file);
   const event = require(filePath);
   if (event.once) {
@@ -67,7 +69,8 @@ const SocialAuth = async () => {
       spotify: {
         client_id: process.env.SPOTIFY_CLIENT_ID,
         client_secret: process.env.SPOTIFY_CLIENT_SECRET,
-        market: "UA",
+        refresh_token: process.env.SPOTIFY_REFRESH_TOKEN,
+        market: process.env.SPOTIFY_MARKET,
       },
     });
     console.log("Token set!");

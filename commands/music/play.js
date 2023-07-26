@@ -35,7 +35,7 @@ module.exports = {
       interaction.editReply(`Now playing: ${title}`);
     } catch (error) {
       console.error(error.message);
-      interaction.editReply(`Song on request '${prompt}' not found!`);
+      interaction.editReply(`Song on request <${prompt}> not found!`);
     }
   },
 };
