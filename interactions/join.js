@@ -13,6 +13,10 @@ module.exports = {
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
 
+    connection.on(AudioPlayerStatus.Paused, () => {
+      console.log("Audio player was automatically paused");
+    });
+
     connection.on(VoiceConnectionStatus.Signalling, () => {
       console.log(
         "The connection is now connecting to the voice channel - preparing to send audio!"
@@ -38,6 +42,12 @@ module.exports = {
 
     connection.on("error", (error) => {
       console.error(error);
+    });
+
+    connection.on("stateChange", (oldState, newState) => {
+      console.log(
+        `Connection transitioned from ${oldState.status} to ${newState.status}`
+      );
     });
 
     return connection;

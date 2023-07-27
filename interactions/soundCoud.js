@@ -1,7 +1,8 @@
-const { stream, soundcloud } = require("play-dl");
+const { soundcloud } = require("play-dl");
 
 module.exports = {
-  async findSOVideo(query, type) {
+  async findSOVideo(query, info) {
+    const type = info.split("_")[1];
     const res = await soundcloud(query);
     let url = res.url;
     let title = res.name;
@@ -14,7 +15,6 @@ module.exports = {
       throw new Error("Video not found!");
     }
 
-    const resource = await stream(url, { quality: 2 });
-    return { source: resource, title };
+    return { url, title };
   },
 };

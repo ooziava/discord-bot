@@ -11,7 +11,7 @@ const clientId = process.env.CLIENT_ID,
 
 const commands = [];
 // Grab all the command files from the commands directory you created earlier
-const foldersPath = path.join(__dirname, "commands");
+const foldersPath = path.join(__dirname, process.env.COMMANDS_FOLDER);
 const commandFolders = fs.readdirSync(foldersPath);
 
 if (!clean)

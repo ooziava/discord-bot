@@ -6,8 +6,7 @@ module.exports = {
     if (info === "search") {
       const [video] = await search(query, { limit: 1 });
       if (!video) throw new Error("No video found!");
-      const source = await stream(video.url, { seek: 10 });
-      return { source, title: video.title };
+      return { url: video.url, title: video.title };
     }
 
     if (info.includes("playlist")) {
@@ -18,14 +17,12 @@ module.exports = {
       const [track] = musicList.page(1);
       const url = track?.url || query;
       const title = track?.title || query;
-      const resource = await stream(url, { quality: 2 });
-      return { source: resource, title };
+      return { url, title };
     } else {
       const video = await video_info(query, { incomplete: true });
       const title = video?.video_details?.title || query;
       const url = video?.video_details?.url || query;
-      const resource = await stream(url, { quality: 2 });
-      return { source: resource, title };
+      return { url, title };
     }
   },
 };

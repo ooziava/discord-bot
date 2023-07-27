@@ -1,7 +1,8 @@
-const { search, stream, spotify } = require("play-dl");
+const { search, spotify } = require("play-dl");
 
 module.exports = {
-  async findSPVideo(query, type) {
+  async findSPVideo(query, info) {
+    const type = info.split("_")[1];
     const res = await spotify(query);
     let url = res.url,
       title = res.name,
@@ -31,7 +32,6 @@ module.exports = {
     if (!tracks.length) throw new Error("Track not found!");
     url = tracks[0]?.url || url;
     title = tracks[0]?.title || title;
-    const resource = await stream(url, { quality: 2 });
-    return { source: resource, title };
+    return { url, title };
   },
 };
