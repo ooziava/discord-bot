@@ -27,7 +27,6 @@ const play = async (
   subscription.player.play(resource);
 
   subscription.player.once(AudioPlayerStatus.Idle, () => {
-    console.log("idle");
     const nextSong = getNextSongInQueue(interaction.guild!.id);
 
     if (nextSong) {
