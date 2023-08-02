@@ -7,6 +7,7 @@ import { type Bot, type Command } from "interfaces/discordjs";
 import loadEvents from "./utils/loadEvents.js";
 import loadCommands from "./utils/loadCommands.js";
 import registerCommands from "./utils/registerCommands.js";
+import { getFreeClientID, setToken } from "play-dl";
 dotenv.config();
 
 // Create a new client instance
@@ -44,6 +45,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await command.execute(interaction, bot);
   } catch (error: any) {
     console.error(error);
+
     if (error.code === "InteractionNotReplied") {
       await interaction.followUp({
         content: "There was an error while executing this command!",
@@ -72,5 +74,26 @@ const bot: Bot = {
   commands,
   subscriptions: new Map(),
 };
-
+const SocialAuth = async () => {
+  // Log in to Discord with your client's token
+  client.login(process.env.DISCORD_TOKEN);
+  try {
+    const clientID = await getFreeClientID();
+    await setToken({
+      soundcloud: {
+        client_id: clientID,
+      },
+      spotify: {
+        client_id: process.env.SPOTIFY_CLIENT_ID!,
+        client_secret: process.env.SPOTIFY_CLIENT_SECRET!,
+        refresh_token: process.env.SPOTIFY_REFRESH_TOKEN!,
+        market: process.env.SPOTIFY_MARKET!,
+      },
+    });
+    console.log("Token set!");
+  } catch (error) {
+    console.error(error);
+  }
+};
+SocialAuth();
 export default bot;

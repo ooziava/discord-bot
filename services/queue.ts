@@ -16,9 +16,9 @@ const loadQueue = (guildId: string): Queue => {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(
       filePath,
-      JSON.stringify({ songs: [], lastAddedIndex: 0 })
+      JSON.stringify({ songs: [], lastAddedIndex: -1 })
     );
-    return { songs: [], lastAddedIndex: 0 };
+    return { songs: [], lastAddedIndex: -1 };
   }
 
   try {
@@ -26,7 +26,7 @@ const loadQueue = (guildId: string): Queue => {
     return JSON.parse(data);
   } catch (err) {
     console.error(`Error loading queue for guild ${guildId}: ${err}`);
-    return { songs: [], lastAddedIndex: 0 };
+    return { songs: [], lastAddedIndex: -1 };
   }
 };
 
@@ -52,8 +52,8 @@ const addSongsToQueue = (
   options: { newQueue?: boolean } | undefined | null
 ): void => {
   const queue = queues[guildId] || loadQueue(guildId);
-  queue.songs.concat(songs);
   if (options?.newQueue) queue.lastAddedIndex = queue.songs.length - 1;
+  queue.songs.push(...songs);
   if (queue.lastAddedIndex >= queue.songs.length) queue.lastAddedIndex = -1;
   queues[guildId] = queue;
   saveQueue(guildId, queue);

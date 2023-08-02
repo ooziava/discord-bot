@@ -5,6 +5,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
   // Search for the video
   if (info === "search") {
     const song = (await search(query, { limit: 1 }))[0];
+    if (!song) throw new Error("No video found!");
     return [
       {
         title: song.title ?? query,
@@ -29,6 +30,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
     }));
   } else {
     const video = await video_info(query);
+    if (!video) throw new Error("No video found!");
     return [
       {
         title: video?.video_details?.title || query,

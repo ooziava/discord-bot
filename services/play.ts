@@ -34,7 +34,7 @@ export const play = async (
   });
 
   subscription.player.on("error", () => {
-    interaction.editReply("Error playing song!");
+    interaction.channel?.send("Error playing song!");
     subscription.player.stop();
   });
 };
