@@ -11,19 +11,9 @@ const data = new SlashCommandBuilder()
   .setDescription("Leaves the voice channel you are in.");
 
 const execute = async (interaction: CommandInteraction) => {
-  const channel = (interaction.member as GuildMember).voice.channel;
-
-  if (!channel) {
-    await interaction.reply(`You are not in a voice channel.`);
-    return;
-  }
-
-  const connection = getVoiceConnection(channel.guild.id);
-  if (!connection) {
-    await interaction.reply(`I am not in a voice channel.`);
-    return;
-  }
-
+  const channel = (interaction.member as GuildMember).voice.channel!;
+  const connection = getVoiceConnection(channel.guild.id)!;
+  connection.disconnect();
   connection.destroy();
   await interaction.reply(`Left`);
 };
@@ -31,4 +21,5 @@ const execute = async (interaction: CommandInteraction) => {
 export const command: Command = {
   data,
   execute,
+  reqiures: ["requireVoice"],
 };

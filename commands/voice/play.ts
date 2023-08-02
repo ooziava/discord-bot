@@ -28,22 +28,7 @@ const execute = async (
   const prompt = (
     interaction.options as CommandInteractionOptionResolver
   ).getString("song")!;
-  const {
-    voice: { channel },
-  } = interaction.member as GuildMember;
-
-  if (!channel) {
-    await interaction.reply(`You are not in a voice channel.`);
-    return;
-  }
-
-  const connection =
-    getVoiceConnection(channel.guildId) ||
-    joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guildId,
-      adapterCreator: channel.guild.voiceAdapterCreator,
-    });
+  const connection = getVoiceConnection(interaction.guild!.id)!;
 
   await interaction.deferReply();
   const songs = await search(prompt).catch(() => {
@@ -62,18 +47,17 @@ const execute = async (
       : `Added to queue: ${songs[0].title}`;
   const player = createAudioPlayer();
 
-  if (!bot?.subscriptions.get(interaction.guild!.id)) {
+  if (!bot.subscriptions.get(interaction.guild!.id)) {
     const newSubscription = connection.subscribe(player);
     if (!newSubscription) {
       await interaction.editReply(`Error connecting to audio.`);
       return;
     }
+
     bot.subscriptions.set(interaction.guild!.id, newSubscription);
     play(interaction, songs[0].url, newSubscription, bot);
     addSongsToQueue(interaction.guild!.id, songs, { isNewQueue: true });
-  } else {
-    addSongsToQueue(interaction.guild!.id, songs);
-  }
+  } else addSongsToQueue(interaction.guild!.id, songs);
 
   interaction.editReply(reply);
 };
@@ -81,4 +65,5 @@ const execute = async (
 export const command: Command = {
   data,
   execute,
+  reqiures: ["requireSameVoiceChannel", "requireVoice"],
 };

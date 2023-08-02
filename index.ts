@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import { Bot, Command } from "interfaces/discordjs";
 import loadEvents from "./utils/loadEvents.js";
 import loadCommands from "./utils/loadCommands.js";
+import checkRequires from "./requirements";
 import registerCommands from "./utils/registerCommands.js";
 import { getFreeClientID, setToken } from "play-dl";
 
@@ -43,6 +44,20 @@ const onCommand = async (interaction: Interaction) => {
     }
 
     try {
+      if (command.reqiures?.length) {
+        const isValidated = command.reqiures.every((require) =>
+          checkRequires[require] ? checkRequires[require](interaction) : true
+        );
+
+        if (!isValidated) {
+          await interaction.reply({
+            content: "You don't have permission to use this command!",
+            ephemeral: true,
+          });
+          return;
+        }
+      }
+
       await command.execute(interaction, bot);
     } catch (error: any) {
       console.error(error);

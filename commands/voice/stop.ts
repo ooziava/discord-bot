@@ -1,4 +1,3 @@
-import { getVoiceConnection } from "@discordjs/voice";
 import {
   CommandInteraction,
   GuildMember,
@@ -11,20 +10,7 @@ const data = new SlashCommandBuilder()
   .setDescription("Stop the current song");
 
 const execute = async (interaction: CommandInteraction, bot: Bot) => {
-  const channel = (interaction.member as GuildMember).voice.channel;
-
-  if (!channel) {
-    await interaction.reply(`You are not in a voice channel.`);
-    return;
-  }
-
-  const connection = getVoiceConnection(channel.guildId);
-
-  if (!connection) {
-    await interaction.reply(`I am not in a voice channel.`);
-    return;
-  }
-
+  const channel = (interaction.member as GuildMember).voice.channel!;
   const subscription = bot?.subscriptions.get(channel.guildId);
 
   if (subscription) {
@@ -40,4 +26,5 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
 export const command: Command = {
   data,
   execute,
+  reqiures: ["requireSameVoiceChannel"],
 };

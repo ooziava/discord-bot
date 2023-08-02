@@ -23,18 +23,18 @@ export const play = async (
 
     if (nextSong) {
       const { title, url } = nextSong;
-      await interaction.channel?.send(`Now playing: ${title}`);
+      await interaction.editReply(`Now playing: ${title}`);
       await play(interaction, url, subscription, bot);
     } else {
       await interaction.channel?.send("Queue is empty!");
       subscription.player.stop();
       subscription.unsubscribe();
-      bot?.subscriptions.delete(interaction.guild!.id);
+      bot.subscriptions.delete(interaction.guild!.id);
     }
   });
 
   subscription.player.on("error", () => {
-    interaction.channel?.send("Error playing song!");
+    interaction.editReply("Error playing song!");
     subscription.player.stop();
   });
 };
