@@ -9,20 +9,17 @@ export interface Bot {
 
 export interface Command {
   data: SlashCommandBuilder;
-  execute: (interaction: CommandInteraction, bot?: Bot) => Promise<void>;
+  execute: (interaction: CommandInteraction, bot: Bot) => Promise<void>;
 }
 
 export interface Commands extends Collection<string, Command> {}
-
-export interface Execute {
-  (client: Client, ...args: any[]): Promise<void>;
-}
 
 export interface Song {
   title: string;
   url: string;
   duration: number;
   thumbnail: string;
+  playlist?: string;
 }
 
 export interface Queue {

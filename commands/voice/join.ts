@@ -1,23 +1,17 @@
-import {
-  VoiceConnectionStatus,
-  getVoiceConnection,
-  joinVoiceChannel,
-} from "@discordjs/voice";
+import { getVoiceConnection, joinVoiceChannel } from "@discordjs/voice";
 import {
   CommandInteraction,
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import { type Command } from "interfaces/discordjs";
+import { Command } from "interfaces/discordjs";
 
 const data = new SlashCommandBuilder()
   .setName("join")
   .setDescription("Joins the voice channel you are in.");
 
 const execute = async (interaction: CommandInteraction) => {
-  const {
-    voice: { channel },
-  } = interaction.member as GuildMember;
+  const channel = (interaction.member as GuildMember).voice.channel;
 
   if (!channel) {
     await interaction.reply(`You are not in a voice channel.`);
@@ -32,7 +26,7 @@ const execute = async (interaction: CommandInteraction) => {
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
 
-  connection.on("error", (err) => {
+  connection.on("error", () => {
     connection.destroy();
   });
 

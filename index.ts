@@ -1,16 +1,19 @@
-// Require the necessary discord.js classes
-
-import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
+import {
+  Client,
+  Collection,
+  Events,
+  GatewayIntentBits,
+  Interaction,
+} from "discord.js";
 import dotenv from "dotenv";
-
-import { type Bot, type Command } from "interfaces/discordjs";
+import { Bot, Command } from "interfaces/discordjs";
 import loadEvents from "./utils/loadEvents.js";
 import loadCommands from "./utils/loadCommands.js";
 import registerCommands from "./utils/registerCommands.js";
 import { getFreeClientID, setToken } from "play-dl";
+
 dotenv.config();
 
-// Create a new client instance
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -20,19 +23,16 @@ const client = new Client({
     GatewayIntentBits.GuildEmojisAndStickers,
   ],
 });
+
 let commands = new Collection<string, Command>();
+const bot: Bot = {
+  client,
+  commands,
+  subscriptions: new Map(),
+};
 
-// When the client is ready, run this code (only once)
-// We use 'c' for the event parameter to keep it separate from the already defined 'client'
-client.once(Events.ClientReady, async (c) => {
-  commands = await loadCommands();
-  await loadEvents(client, commands);
-  await registerCommands(commands);
-  console.log(`Ready! Logged in as ${c.user.tag}`);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+const onCommand = async (interaction: Interaction) => {
+  if (!interaction.isCommand()) return;
 
   const command = commands.get(interaction.commandName);
 
@@ -46,37 +46,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (error: any) {
     console.error(error);
 
-    if (error.code === "InteractionNotReplied") {
-      await interaction.followUp({
-        content: "There was an error while executing this command!",
-        ephemeral: true,
-      });
-    } else {
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: "There was an error while executing this command!",
-          ephemeral: true,
-        });
-      } else {
-        await interaction.reply({
-          content: "There was an error while executing this command!",
-          ephemeral: true,
-        });
-      }
-    }
+    const reply =
+      interaction.replied || interaction.deferred
+        ? interaction.followUp
+        : interaction.reply;
+    await reply({
+      content: "There was an error while executing this command!",
+      ephemeral: true,
+    });
   }
-});
-// Log in to Discord with your client's token
+};
+
 client.login(process.env.DISCORD_TOKEN);
 
-const bot: Bot = {
-  client,
-  commands,
-  subscriptions: new Map(),
-};
 const SocialAuth = async () => {
-  // Log in to Discord with your client's token
   client.login(process.env.DISCORD_TOKEN);
+
   try {
     const clientID = await getFreeClientID();
     await setToken({
@@ -95,5 +80,15 @@ const SocialAuth = async () => {
     console.error(error);
   }
 };
+
+client.once(Events.ClientReady, async (c) => {
+  commands = await loadCommands();
+  await loadEvents(client, commands);
+  await registerCommands(commands);
+  client.on(Events.InteractionCreate, onCommand);
+  console.log(`Ready! Logged in as ${c.user.tag}`);
+});
+
 SocialAuth();
+
 export default bot;

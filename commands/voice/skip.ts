@@ -9,13 +9,8 @@ const data = new SlashCommandBuilder()
   .setName("skip")
   .setDescription("Skip the current song");
 
-const execute = async (
-  interaction: CommandInteraction,
-  bot?: Bot | undefined
-) => {
-  const {
-    voice: { channel },
-  } = interaction.member! as GuildMember;
+const execute = async (interaction: CommandInteraction, bot: Bot) => {
+  const channel = (interaction.member as GuildMember).voice.channel;
 
   if (!channel) {
     await interaction.reply(`You are not in a voice channel.`);

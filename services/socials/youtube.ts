@@ -2,7 +2,6 @@ import { Song } from "interfaces/discordjs.js";
 import { search, playlist_info, video_info } from "play-dl";
 
 export default async (query: string, info: string): Promise<Song[]> => {
-  // Search for the video
   if (info === "search") {
     const song = (await search(query, { limit: 1 }))[0];
     if (!song) throw new Error("No video found!");
@@ -11,7 +10,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
         title: song.title ?? query,
         url: song.url,
         duration: song.durationInSec,
-        thumbnail: song.thumbnails[0].url,
+        thumbnail: song.thumbnails[0]?.url ?? "",
       },
     ];
   }
@@ -26,18 +25,19 @@ export default async (query: string, info: string): Promise<Song[]> => {
       title: track.title ?? query,
       url: track.url,
       duration: track.durationInSec,
-      thumbnail: track.thumbnails[0].url,
+      thumbnail: track.thumbnails[0]?.url ?? "",
+      playlist: musicList.title,
     }));
-  } else {
-    const video = await video_info(query);
-    if (!video) throw new Error("No video found!");
-    return [
-      {
-        title: video?.video_details?.title || query,
-        url: video?.video_details.url,
-        duration: video?.video_details?.durationInSec,
-        thumbnail: video?.video_details?.thumbnails[0]?.url,
-      },
-    ];
   }
+
+  const video = await video_info(query);
+  if (!video) throw new Error("No video found!");
+  return [
+    {
+      title: video.video_details?.title ?? query,
+      url: video.video_details?.url,
+      duration: video.video_details?.durationInSec,
+      thumbnail: video.video_details?.thumbnails[0]?.url ?? "",
+    },
+  ];
 };

@@ -1,5 +1,6 @@
 import {
   CommandInteraction,
+  CommandInteractionOptionResolver,
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
@@ -22,9 +23,11 @@ const data = new SlashCommandBuilder()
 
 const execute = async (
   interaction: CommandInteraction,
-  bot: Bot | undefined
+  bot: Bot
 ): Promise<void> => {
-  const prompt = interaction.options.data[0].value as string;
+  const prompt = (
+    interaction.options as CommandInteractionOptionResolver
+  ).getString("song")!;
   const {
     voice: { channel },
   } = interaction.member as GuildMember;
@@ -43,32 +46,35 @@ const execute = async (
     });
 
   await interaction.deferReply();
-  const songs = await search(prompt).catch((err) => {
-    console.error(err);
+  const songs = await search(prompt).catch(() => {
     interaction.editReply(`Error searching for song.`);
     return [];
   });
 
-  let reply = "";
-  if (!songs?.length) {
+  if (!songs.length) {
     interaction.editReply(`No song found.`);
     return;
-  } else if (songs.length > 1) reply = `Added to queue: ${songs.length} songs`;
-  else reply = `Added to queue: ${songs[0].title}`;
+  }
+
+  const reply =
+    songs.length > 1
+      ? `Added to queue: ${songs.length} songs from ${songs[0].playlist}`
+      : `Added to queue: ${songs[0].title}`;
   const player = createAudioPlayer();
 
-  let options = null;
   if (!bot?.subscriptions.get(interaction.guild!.id)) {
     const newSubscription = connection.subscribe(player);
     if (!newSubscription) {
       await interaction.editReply(`Error connecting to audio.`);
       return;
     }
-    bot?.subscriptions.set(interaction.guild!.id, newSubscription);
+    bot.subscriptions.set(interaction.guild!.id, newSubscription);
     play(interaction, songs[0].url, newSubscription, bot);
-    options = { newQueue: true };
+    addSongsToQueue(interaction.guild!.id, songs, { isNewQueue: true });
+  } else {
+    addSongsToQueue(interaction.guild!.id, songs);
   }
-  addSongsToQueue(interaction.guild!.id, songs, options);
+
   interaction.editReply(reply);
 };
 

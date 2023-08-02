@@ -4,16 +4,14 @@ import {
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import { type Command } from "interfaces/discordjs";
+import { Command } from "interfaces/discordjs";
 
 const data = new SlashCommandBuilder()
   .setName("leave")
   .setDescription("Leaves the voice channel you are in.");
 
 const execute = async (interaction: CommandInteraction) => {
-  const {
-    voice: { channel },
-  } = interaction.member as GuildMember;
+  const channel = (interaction.member as GuildMember).voice.channel;
 
   if (!channel) {
     await interaction.reply(`You are not in a voice channel.`);
@@ -25,10 +23,9 @@ const execute = async (interaction: CommandInteraction) => {
     await interaction.reply(`I am not in a voice channel.`);
     return;
   }
+
   connection.destroy();
-  connection.disconnect();
-  connection.removeAllListeners();
-  await interaction.reply(`Joined`);
+  await interaction.reply(`Left`);
 };
 
 export const command: Command = {
