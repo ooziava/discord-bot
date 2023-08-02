@@ -4,48 +4,14 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import {
-  AudioPlayerStatus,
-  PlayerSubscription,
-  VoiceConnection,
   createAudioPlayer,
-  createAudioResource,
   getVoiceConnection,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import { search, stream } from "play-dl";
-import { addSongToQueue, getNextSongInQueue } from "../../services/queue.js";
 import { type Bot, type Command } from "interfaces/discordjs.js";
-
-const play = async (
-  interaction: CommandInteraction,
-  songUrl: string,
-  subscription: PlayerSubscription,
-  bot: Bot | undefined
-): Promise<void> => {
-  const strm = await stream(songUrl, { quality: 2 });
-  const resource = createAudioResource(strm.stream, { inputType: strm.type });
-  subscription.player.play(resource);
-
-  subscription.player.once(AudioPlayerStatus.Idle, () => {
-    const nextSong = getNextSongInQueue(interaction.guild!.id);
-
-    if (nextSong) {
-      const { title, url } = nextSong;
-      interaction.channel?.send(`Now playing: ${title}`);
-      play(interaction, url, subscription, bot);
-    } else {
-      interaction.channel?.send("Queue is empty!");
-      subscription.player.stop();
-      subscription?.unsubscribe();
-      bot?.subscriptions.set(interaction.guild!.id, undefined!);
-    }
-  });
-
-  subscription.player.on("error", (err) => {
-    interaction.editReply("Error playing song!");
-    subscription.player.stop();
-  });
-};
+import { addSongsToQueue } from "../../services/queue.js";
+import { play } from "../../services/play.js";
+import { search } from "../../services/search.js";
 
 const data = new SlashCommandBuilder()
   .setName("play")
@@ -75,26 +41,14 @@ const execute = async (
       guildId: channel.guildId,
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
-  let song;
-  try {
-    interaction.deferReply();
-    song = await search(prompt ?? "", {
-      limit: 1,
-      source: {
-        youtube: "video",
-      },
-    });
-  } catch (error) {
-    console.log(error);
-  }
-  if (!song) {
-    await interaction.editReply(`No song found.`);
+
+  interaction.deferReply();
+  const songs = await search(prompt);
+
+  if (!songs?.length) {
+    interaction.editReply(`No song found.`);
     return;
   }
-  const songName = song[0].title ?? "";
-  const songUrl = song[0].url ?? "";
-  const songDuration = song[0].durationInSec ?? 0;
-  const songThumbnail = song[0].thumbnails[0].url ?? "";
   const player = createAudioPlayer();
 
   let options = null;
@@ -105,20 +59,11 @@ const execute = async (
       return;
     }
     bot?.subscriptions.set(interaction.guild!.id, newSubscription);
-    play(interaction, songUrl, newSubscription, bot);
+    play(interaction, songs[0].title, newSubscription, bot);
     options = { newQueue: true };
   }
-  addSongToQueue(
-    interaction.guild!.id,
-    {
-      title: songName,
-      url: songUrl,
-      duration: songDuration,
-      thumbnail: songThumbnail,
-    },
-    options
-  );
-  interaction.editReply(`Added to queue: ${songName}`);
+  addSongsToQueue(interaction.guild!.id, songs, options);
+  interaction.editReply(`Added to queue: ${songs[0].title}`);
 };
 
 export const command: Command = {

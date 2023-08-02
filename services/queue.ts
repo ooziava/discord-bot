@@ -46,13 +46,13 @@ const saveQueue = (guildId: string, queue: Queue): void => {
 };
 
 // Add a song to the queue for a guild
-const addSongToQueue = (
+const addSongsToQueue = (
   guildId: string,
-  song: Song,
+  songs: Song[],
   options: { newQueue?: boolean } | undefined | null
 ): void => {
   const queue = queues[guildId] || loadQueue(guildId);
-  queue.songs.push(song);
+  queue.songs.concat(songs);
   if (options?.newQueue) queue.lastAddedIndex = queue.songs.length - 1;
   if (queue.lastAddedIndex >= queue.songs.length) queue.lastAddedIndex = -1;
   queues[guildId] = queue;
@@ -77,4 +77,4 @@ const getNextSongInQueue = (guildId: string): Song | undefined => {
   return song;
 };
 
-export { addSongToQueue, removeSongFromQueue, getNextSongInQueue };
+export { addSongsToQueue, removeSongFromQueue, getNextSongInQueue };
