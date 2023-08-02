@@ -25,6 +25,14 @@ export default async (commandCollection: Commands): Promise<void> => {
       { body: commands }
     )) as unknown as Array<unknown>;
 
+    (await rest.put(
+      Routes.applicationGuildCommands(
+        process.env.CLIENT_ID!,
+        process.env.SUBGUILD_ID!
+      ),
+      { body: commands }
+    )) as unknown as Array<unknown>;
+
     console.log(
       `Successfully reloaded ${data.length} application (/) commands.`
     );

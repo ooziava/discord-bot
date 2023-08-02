@@ -78,7 +78,14 @@ const getNextSongInQueue = (guildId: string): Song | undefined => {
   saveQueue(guildId, queue);
   return song;
 };
-
+const getPrevSongInQueue = (guildId: string): Song | undefined => {
+  const queue = queues[guildId] || loadQueue(guildId);
+  queue.lastAddedIndex -= 1;
+  const song = queue.songs[queue.lastAddedIndex];
+  queues[guildId] = queue;
+  saveQueue(guildId, queue);
+  return song;
+};
 const getSong = (guildId: string, index: number): Song | undefined => {
   const queue = queues[guildId] || loadQueue(guildId);
   if (index < 0 || index >= queue.songs.length) return undefined;
@@ -97,4 +104,5 @@ export {
   getQueue,
   clearQueue,
   getSong,
+  getPrevSongInQueue,
 };

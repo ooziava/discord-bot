@@ -6,15 +6,17 @@ import {
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import { getQueue, getSong } from "../../services/queue.js";
-import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
-import { play } from "../../services/play.js";
 import {
   createAudioPlayer,
   getVoiceConnection,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import { Bot } from "interfaces/discordjs.js";
+import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
+import { Bot, Command } from "interfaces/discordjs.js";
+import { play } from "../../services/play.js";
+import { getQueue, getSong } from "../../services/queue.js";
+import requireVoice from "../../requirements/requireVoice.js";
+import requireSameVoiceChannel from "../../requirements/requireSameVoiceChannel.js";
 
 const SONG_PER_PAGE = 15;
 const setMessage = (interaction: CommandInteraction) => {
@@ -51,22 +53,15 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
   ).getString("index")!;
 
   if (prompt) {
-    const {
-      voice: { channel },
-    } = interaction.member as GuildMember;
-
-    if (!channel) {
-      await interaction.reply(`You are not in a voice channel.`);
-      return;
-    }
-    let connection = getVoiceConnection(interaction.guild!.id);
-    if (!connection) {
+    let connection;
+    if (!requireVoice(interaction)) return;
+    if (!requireSameVoiceChannel(interaction))
       connection = joinVoiceChannel({
-        channelId: channel.id,
+        channelId: (interaction.member as GuildMember)!.voice.channelId!,
         guildId: interaction.guild!.id,
         adapterCreator: interaction.guild!.voiceAdapterCreator,
       });
-    }
+    else connection = getVoiceConnection(interaction.guild!.id)!;
     const index = parseInt(prompt);
     const song = getSong(interaction.guild!.id, index - 1);
 
@@ -84,8 +79,9 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
       bot.subscriptions.set(interaction.guild!.id, subscription);
     }
 
-    await interaction.reply(`Playing: ${song.title}`);
-    await play(interaction, song.url, subscription, bot);
+    await interaction.deferReply();
+    await interaction.editReply(`Playing: ${song.title}`);
+    await play(interaction, subscription, bot, song.url, song.title);
     return;
   }
 
@@ -139,7 +135,8 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
   } catch (e) {}
 };
 
-export const command = {
+export const command: Command = {
   data,
   execute,
+  reqiures: ["requireQueueNotEmpty", "requireSameVoiceChannel"],
 };

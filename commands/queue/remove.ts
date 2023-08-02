@@ -82,4 +82,5 @@ const execute = async (interaction: CommandInteraction) => {
 export const command: Command = {
   data,
   execute,
+  reqiures: ["requireQueueNotEmpty"],
 };
