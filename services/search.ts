@@ -8,14 +8,13 @@ export const search = async (query: string): Promise<Song[]> => {
   if (is_expired()) {
     await refreshToken();
   }
-  // Validate the search query
+
   const info = await validate(query);
   if (!info) throw new Error("No video found!");
 
-  const [social] = info.split("_");
+  const social = info.split("_")[0];
   switch (social) {
     case "yt":
-      return await findYTVideo(query, info);
     case "search":
       return await findYTVideo(query, info);
     case "so":

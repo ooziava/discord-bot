@@ -55,11 +55,12 @@ const addSongsToQueue = (
   saveQueue(guildId, queue);
 };
 
-const removeSongFromQueue = (guildId: string, index: number): void => {
+const removeSongFromQueue = (guildId: string, index: number): Song => {
   const queue = queues[guildId] || loadQueue(guildId);
-  queue.songs.splice(index, 1);
+  const [song] = queue.songs.splice(index, 1);
   queues[guildId] = queue;
   saveQueue(guildId, queue);
+  return song;
 };
 
 const clearQueue = (guildId: string): void => {
@@ -78,6 +79,14 @@ const getNextSongInQueue = (guildId: string): Song | undefined => {
   return song;
 };
 
+const getSong = (guildId: string, index: number): Song | undefined => {
+  const queue = queues[guildId] || loadQueue(guildId);
+  if (index < 0 || index >= queue.songs.length) return undefined;
+  queue.lastAddedIndex = index;
+  queues[guildId] = queue;
+  return queue.songs[index];
+};
+
 const getQueue = (guildId: string): Queue =>
   queues[guildId] || loadQueue(guildId);
 
@@ -87,4 +96,5 @@ export {
   getNextSongInQueue,
   getQueue,
   clearQueue,
+  getSong,
 };

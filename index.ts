@@ -32,28 +32,34 @@ const bot: Bot = {
 };
 
 const onCommand = async (interaction: Interaction) => {
-  if (!interaction.isCommand()) return;
+  if (interaction.isCommand()) {
+    const command = commands.get(interaction.commandName);
 
-  const command = commands.get(interaction.commandName);
+    if (!command) {
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
+      return;
+    }
 
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
-    return;
-  }
+    try {
+      await command.execute(interaction, bot);
+    } catch (error: any) {
+      console.error(error);
 
-  try {
-    await command.execute(interaction, bot);
-  } catch (error: any) {
-    console.error(error);
-
-    const reply =
-      interaction.replied || interaction.deferred
-        ? interaction.followUp
-        : interaction.reply;
-    await reply({
-      content: "There was an error while executing this command!",
-      ephemeral: true,
-    });
+      const reply =
+        interaction.replied || interaction.deferred
+          ? interaction.followUp
+          : interaction.reply;
+      await reply({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
+    }
+  } else if (interaction.isButton()) {
+    // respond to the button
+  } else if (interaction.isStringSelectMenu()) {
+    // respond to the select menu
   }
 };
 
