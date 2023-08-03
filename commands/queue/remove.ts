@@ -1,16 +1,13 @@
+import { SlashCommandBuilder } from "@discordjs/builders";
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  SlashCommandBuilder,
-} from "@discordjs/builders";
-import {
-  ButtonStyle,
   CommandInteraction,
   CommandInteractionOptionResolver,
-  Interaction,
 } from "discord.js";
-import { Command } from "interfaces/discordjs.js";
-import { removeSongFromQueue } from "../../services/queue.js";
+
+import { Command } from "interfaces/discordjs";
+import { getSong, removeSongFromQueue } from "../../services/queue.js";
+import { confirmationRow } from "../../utils/actionBuilder.js";
+import { createConfirmarion } from "../../utils/actionHandlers.js";
 
 const data = new SlashCommandBuilder()
   .setName("remove")
@@ -22,65 +19,43 @@ const data = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-const execute = async (interaction: CommandInteraction) => {
-  const index = (
-    interaction.options as CommandInteractionOptionResolver
-  ).getString("index")!;
+const execute = async (interaction: CommandInteraction): Promise<void> => {
+  const prompt = (interaction.options as CommandInteractionOptionResolver)
+    .getString("index")!
+    .match(/\d+/)?.[0];
 
-  const confirm = new ButtonBuilder()
-    .setCustomId("confirm")
-    .setLabel("Confirm remove")
-    .setStyle(ButtonStyle.Danger);
+  const index = parseInt(prompt!) - 1;
+  if (isNaN(index)) {
+    await interaction.reply({
+      content: "Invalid index",
+      ephemeral: true,
+    });
+    return;
+  }
+  const song = getSong(interaction.guildId!, index);
+  if (!song) {
+    await interaction.reply({
+      content: "Song not found",
+      ephemeral: true,
+    });
+    return;
+  }
 
-  const cancel = new ButtonBuilder()
-    .setCustomId("cancel")
-    .setLabel("Cancel")
-    .setStyle(ButtonStyle.Secondary);
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    cancel,
-    confirm
-  );
-
+  const row = confirmationRow();
   const response = await interaction.reply({
-    content: "Are you sure you want to remove this song from the queue?",
+    content: `Are you sure you want to remove ${song.title}  from the queue?`,
     components: [row],
   });
-
-  const collectorFilter = (i: Interaction): boolean =>
-    i.user.id === interaction.user.id;
-
-  try {
-    const confirmation = await response.awaitMessageComponent({
-      filter: collectorFilter,
-      time: 60_000,
-    });
-
-    if (confirmation.customId === "confirm") {
-      const song = removeSongFromQueue(
-        interaction.guildId!,
-        parseInt(index) - 1
-      );
-      await confirmation.update({
-        content: `Removed ${song.title} from the queue`,
-        components: [],
-      });
-    } else if (confirmation.customId === "cancel") {
-      await confirmation.update({
-        content: "Action cancelled",
-        components: [],
-      });
-    }
-  } catch (e) {
-    await interaction.editReply({
-      content: "Confirmation not received within 1 minute, cancelling",
+  await createConfirmarion(interaction, response, async (confirmation) => {
+    removeSongFromQueue(interaction.guildId!, index);
+    await confirmation.update({
+      content: `Removed ${song.title} from the queue`,
       components: [],
     });
-  }
+  });
 };
 
 export const command: Command = {
   data,
   execute,
-  reqiures: ["requireQueueNotEmpty"],
 };

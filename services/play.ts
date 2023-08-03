@@ -1,39 +1,32 @@
 import {
   AudioPlayerStatus,
-  PlayerSubscription,
   VoiceConnectionStatus,
   createAudioResource,
 } from "@discordjs/voice";
 import { ButtonStyle, CommandInteraction, ComponentType } from "discord.js";
 import { stream } from "play-dl";
-import { Bot } from "interfaces/discordjs.js";
+import { Bot, Song } from "interfaces/discordjs";
 import { getNextSongInQueue, getPrevSongInQueue } from "./queue.js";
 import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 
 export const play = async (
   interaction: CommandInteraction,
-  newSubscription: PlayerSubscription,
   bot: Bot,
-  songUrl: string,
-  songName: string
+  song: Song
 ): Promise<void> => {
-  let title = songName,
-    url = songUrl,
-    subscription = newSubscription;
-  let strm = await stream(songUrl, { quality: 2 });
+  let title = song.title,
+    url = song.url,
+    subscription = bot.subscriptions.get(interaction.guild!.id)!;
+  let strm = await stream(url, { quality: 2 });
   let resource = createAudioResource(strm.stream, { inputType: strm.type });
-  const player = newSubscription.player;
-  const connection = newSubscription.connection;
+  const player = subscription.player;
+  const connection = subscription.connection;
   player.play(resource);
 
   player.on(AudioPlayerStatus.Idle, async () => {
     const nextSong = getNextSongInQueue(interaction.guild!.id);
 
     if (nextSong) {
-      if (!bot.subscriptions.has(interaction.guild!.id)) {
-        subscription = connection.subscribe(player)!;
-        bot.subscriptions.set(interaction.guild!.id, subscription);
-      }
       title = nextSong.title;
       url = nextSong.url;
       strm = await stream(url, { quality: 2 });
@@ -73,11 +66,9 @@ export const play = async (
   );
 
   const response = await interaction.editReply({
-    content: songName,
+    content: title,
     components: [row],
   });
-
-  // const collectorFilter = (i) => i.user.id === interaction.user.id;
 
   try {
     const collector = response.createMessageComponentCollector({
@@ -86,30 +77,40 @@ export const play = async (
     collector.on("collect", async (confirmation) => {
       if (confirmation.customId === "prev") {
         const prevSong = getPrevSongInQueue(interaction.guild!.id);
+
         if (prevSong) {
+          if (!bot.subscriptions.has(interaction.guild!.id)) {
+            subscription = connection.subscribe(player)!;
+            bot.subscriptions.set(interaction.guild!.id, subscription);
+          }
           title = prevSong.title;
           url = prevSong.url;
           strm = await stream(url, { quality: 2 });
           resource = createAudioResource(strm.stream, { inputType: strm.type });
           subscription.player.play(resource);
+          await confirmation.update({
+            content: title,
+            components: [row],
+          });
         }
-        await confirmation.update({
-          content: title,
-          components: [row],
-        });
       } else if (confirmation.customId === "next") {
         const nextSong = getNextSongInQueue(interaction.guild!.id);
+
         if (nextSong) {
+          if (!bot.subscriptions.has(interaction.guild!.id)) {
+            subscription = connection.subscribe(player)!;
+            bot.subscriptions.set(interaction.guild!.id, subscription);
+          }
           title = nextSong.title;
           url = nextSong.url;
           strm = await stream(url, { quality: 2 });
           resource = createAudioResource(strm.stream, { inputType: strm.type });
           subscription.player.play(resource);
+          await confirmation.update({
+            content: title,
+            components: [row],
+          });
         }
-        await confirmation.update({
-          content: title,
-          components: [row],
-        });
       } else if (confirmation.customId === "pause") {
         if (subscription.player.state.status === AudioPlayerStatus.Paused)
           subscription.player.unpause();

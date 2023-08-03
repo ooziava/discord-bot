@@ -1,5 +1,5 @@
 import { REST, Routes } from "discord.js";
-import { Command, type Commands } from "interfaces/discordjs";
+import { Command, Commands } from "interfaces/discordjs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,13 +10,11 @@ export default async (commandCollection: Commands): Promise<void> => {
   commandCollection.forEach((commandItem) =>
     commands.push(commandItem.data.toJSON())
   );
+  console.log(
+    `Started refreshing ${commands.length} application (/) commands.`
+  );
 
   try {
-    console.log(
-      `Started refreshing ${commands.length} application (/) commands.`
-    );
-
-    // The put method is used to fully refresh all commands in the guild with the current set
     const data = (await rest.put(
       Routes.applicationGuildCommands(
         process.env.CLIENT_ID!,
@@ -25,19 +23,18 @@ export default async (commandCollection: Commands): Promise<void> => {
       { body: commands }
     )) as unknown as Array<unknown>;
 
-    (await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID!,
-        process.env.SUBGUILD_ID!
-      ),
-      { body: commands }
-    )) as unknown as Array<unknown>;
+    // (await rest.put(
+    //   Routes.applicationGuildCommands(
+    //     process.env.CLIENT_ID!,
+    //     process.env.SUBGUILD_ID!
+    //   ),
+    //   { body: commands }
+    // )) as unknown as Array<unknown>;
 
     console.log(
       `Successfully reloaded ${data.length} application (/) commands.`
     );
   } catch (error) {
-    // And of course, make sure you catch and log any errors!
     console.error(error);
   }
 };

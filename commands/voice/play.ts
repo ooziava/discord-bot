@@ -1,20 +1,15 @@
 import {
   CommandInteraction,
   CommandInteractionOptionResolver,
-  GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import {
-  createAudioPlayer,
-  getVoiceConnection,
-  joinVoiceChannel,
-} from "@discordjs/voice";
-import { type Bot, type Command } from "interfaces/discordjs.js";
+import { createAudioPlayer } from "@discordjs/voice";
+
+import { type Bot, type Command } from "interfaces/discordjs";
 import { addSongsToQueue } from "../../services/queue.js";
 import { play } from "../../services/play.js";
 import { search } from "../../services/search.js";
-import requireSameVoiceChannel from "../../requirements/requireSameVoiceChannel.js";
-import requireVoice from "../../requirements/requireVoice.js";
+import createConnection from "../../utils/createConnection.js";
 
 const data = new SlashCommandBuilder()
   .setName("play")
@@ -30,16 +25,10 @@ const execute = async (
   const prompt = (
     interaction.options as CommandInteractionOptionResolver
   ).getString("song")!;
-  let connection;
-  if (!requireVoice(interaction)) return;
-  if (!requireSameVoiceChannel(interaction))
-    connection = joinVoiceChannel({
-      channelId: (interaction.member as GuildMember)!.voice.channelId!,
-      guildId: interaction.guild!.id,
-      adapterCreator: interaction.guild!.voiceAdapterCreator,
-    });
-  else connection = getVoiceConnection(interaction.guild!.id)!;
-  await interaction.deferReply();
+  const connection = createConnection(interaction);
+  if (!connection) return;
+
+  interaction.deferReply();
   const songs = await search(prompt).catch(() => {
     interaction.editReply(`Error searching for song.`);
     return [];
@@ -55,23 +44,20 @@ const execute = async (
       ? `Added to queue: ${songs.length} songs from ${songs[0].playlist}`
       : `Added to queue: ${songs[0].title}`;
   await interaction.editReply(reply);
-  const player = createAudioPlayer();
 
+  const player = createAudioPlayer();
+  let isNewQueue = false;
   if (!bot.subscriptions.get(interaction.guild!.id)) {
-    const newSubscription = connection.subscribe(player);
-    if (!newSubscription) {
-      interaction.editReply(`Error connecting to audio.`);
-      return;
-    }
+    const newSubscription = connection.subscribe(player)!;
 
     bot.subscriptions.set(interaction.guild!.id, newSubscription);
-    play(interaction, newSubscription, bot, songs[0].url, songs[0].title);
-    addSongsToQueue(interaction.guild!.id, songs, { isNewQueue: true });
-  } else addSongsToQueue(interaction.guild!.id, songs);
+    play(interaction, bot, songs[0]);
+    isNewQueue = true;
+  }
+  addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
 };
 
 export const command: Command = {
   data,
   execute,
-  reqiures: ["requireSameVoiceChannel", "requireVoice"],
 };

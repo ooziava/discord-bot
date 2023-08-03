@@ -7,15 +7,9 @@ export interface Bot {
   subscriptions: Map<string, PlayerSubscription>;
 }
 
-export type CommandRequirements =
-  | "requireVoice"
-  | "requireSameVoiceChannel"
-  | "requireQueueNotEmpty";
-
 export interface Command {
   data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction, bot: Bot) => Promise<void>;
-  reqiures: CommandRequirements[];
 }
 
 export interface Commands extends Collection<string, Command> {}

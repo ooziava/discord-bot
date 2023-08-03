@@ -16,11 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "_moduleAliases": {
-    "commands": "dist/commands",
-    "events": "dist/events",
-    "utils": "dist/utils"
-  },
+  "_moduleAliases": {},
   "_moduleDirectories": [
     "node_modules_custom"
   ],

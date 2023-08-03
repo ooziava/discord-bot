@@ -1,25 +1,20 @@
-import { getVoiceConnection } from "@discordjs/voice";
-import {
-  CommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
-} from "discord.js";
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Command } from "interfaces/discordjs";
+import createConnection from "../../utils/createConnection.js";
 
 const data = new SlashCommandBuilder()
   .setName("leave")
   .setDescription("Leaves the voice channel you are in.");
 
 const execute = async (interaction: CommandInteraction) => {
-  const channel = (interaction.member as GuildMember).voice.channel!;
-  const connection = getVoiceConnection(channel.guild.id)!;
+  const connection = createConnection(interaction);
+  if (!connection) return;
+
   connection.disconnect();
-  connection.destroy();
   await interaction.reply(`Left`);
 };
 
 export const command: Command = {
   data,
   execute,
-  reqiures: ["requireVoice"],
 };

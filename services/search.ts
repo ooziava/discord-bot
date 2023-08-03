@@ -2,7 +2,7 @@ import { validate, is_expired, refreshToken } from "play-dl";
 import findYTVideo from "./socials/youtube.js";
 import findSOVideo from "./socials/soundcolud.js";
 import findSPVideo from "./socials/spotify.js";
-import { Song } from "interfaces/discordjs.js";
+import { Song } from "interfaces/discordjs";
 
 export const search = async (query: string): Promise<Song[]> => {
   if (is_expired()) {
