@@ -11,6 +11,11 @@ export default async (query: string, info: string): Promise<Song[]> => {
         url: song.url,
         duration: song.durationInSec,
         thumbnail: song.thumbnails[0]?.url ?? "",
+        author: {
+          name: song.channel!.name ?? "",
+          url: song.channel!.url ?? "",
+          avatar: song.channel!.iconURL() ?? "",
+        },
       },
     ];
   }
@@ -27,6 +32,11 @@ export default async (query: string, info: string): Promise<Song[]> => {
       duration: track.durationInSec,
       thumbnail: track.thumbnails[0]?.url ?? "",
       playlist: musicList.title,
+      author: {
+        name: track.channel!.name ?? "",
+        url: track.channel!.url ?? "",
+        avatar: track.channel!.iconURL() ?? "",
+      },
     }));
   }
 
@@ -38,6 +48,11 @@ export default async (query: string, info: string): Promise<Song[]> => {
       url: video.video_details?.url,
       duration: video.video_details?.durationInSec,
       thumbnail: video.video_details?.thumbnails[0]?.url ?? "",
+      author: {
+        name: video.video_details?.channel?.name ?? "",
+        url: video.video_details?.channel?.url ?? "",
+        avatar: video.video_details?.channel?.iconURL() ?? "",
+      },
     },
   ];
 };

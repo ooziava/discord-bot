@@ -3,22 +3,24 @@ import {
   VoiceConnectionStatus,
   createAudioResource,
 } from "@discordjs/voice";
-import { ButtonStyle, CommandInteraction, ComponentType } from "discord.js";
+import { CommandInteraction, ComponentType } from "discord.js";
 import { stream } from "play-dl";
 import { Bot, Song } from "interfaces/discordjs";
 import { getNextSongInQueue, getPrevSongInQueue } from "./queue.js";
-import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
+import { createPlayerEmbed } from "../utils/embedBuilder.js";
+import { playerRow } from "../utils/actionBuilder.js";
 
 export const play = async (
   interaction: CommandInteraction,
   bot: Bot,
-  song: Song
+  newSong: Song
 ): Promise<void> => {
-  let title = song.title,
-    url = song.url,
-    subscription = bot.subscriptions.get(interaction.guild!.id)!;
+  let url = newSong.url;
+  let subscription = bot.subscriptions.get(interaction.guild!.id)!;
   let strm = await stream(url, { quality: 2 });
   let resource = createAudioResource(strm.stream, { inputType: strm.type });
+  let song = newSong;
+
   const player = subscription.player;
   const connection = subscription.connection;
   player.play(resource);
@@ -27,7 +29,6 @@ export const play = async (
     const nextSong = getNextSongInQueue(interaction.guild!.id);
 
     if (nextSong) {
-      title = nextSong.title;
       url = nextSong.url;
       strm = await stream(url, { quality: 2 });
       resource = createAudioResource(strm.stream, { inputType: strm.type });
@@ -45,29 +46,11 @@ export const play = async (
     subscription.player.stop();
   });
 
-  const prev = new ButtonBuilder()
-    .setCustomId("prev")
-    .setLabel("⏮️")
-    .setStyle(ButtonStyle.Primary);
-
-  const next = new ButtonBuilder()
-    .setCustomId("next")
-    .setLabel("⏭️")
-    .setStyle(ButtonStyle.Primary);
-  const pause = new ButtonBuilder()
-    .setCustomId("pause")
-    .setLabel("⏸️")
-    .setStyle(ButtonStyle.Primary);
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    prev,
-    pause,
-    next
-  );
-
+  const row = playerRow();
   const response = await interaction.editReply({
-    content: title,
+    content: " ",
     components: [row],
+    embeds: [createPlayerEmbed(interaction, song, song.index!)],
   });
 
   try {
@@ -79,36 +62,39 @@ export const play = async (
         const prevSong = getPrevSongInQueue(interaction.guild!.id);
 
         if (prevSong) {
+          song = prevSong;
           if (!bot.subscriptions.has(interaction.guild!.id)) {
             subscription = connection.subscribe(player)!;
             bot.subscriptions.set(interaction.guild!.id, subscription);
           }
-          title = prevSong.title;
-          url = prevSong.url;
+          url = song.url;
           strm = await stream(url, { quality: 2 });
           resource = createAudioResource(strm.stream, { inputType: strm.type });
           subscription.player.play(resource);
           await confirmation.update({
-            content: title,
+            content: " ",
             components: [row],
+            embeds: [createPlayerEmbed(interaction, song, song.index!)],
           });
         }
       } else if (confirmation.customId === "next") {
         const nextSong = getNextSongInQueue(interaction.guild!.id);
 
         if (nextSong) {
+          song = nextSong;
           if (!bot.subscriptions.has(interaction.guild!.id)) {
             subscription = connection.subscribe(player)!;
             bot.subscriptions.set(interaction.guild!.id, subscription);
           }
-          title = nextSong.title;
-          url = nextSong.url;
+          url = song.url;
           strm = await stream(url, { quality: 2 });
           resource = createAudioResource(strm.stream, { inputType: strm.type });
           subscription.player.play(resource);
+
           await confirmation.update({
-            content: title,
+            content: " ",
             components: [row],
+            embeds: [createPlayerEmbed(interaction, song, song.index!)],
           });
         }
       } else if (confirmation.customId === "pause") {
@@ -117,8 +103,9 @@ export const play = async (
         else subscription.player.pause();
 
         await confirmation.update({
-          content: title,
+          content: " ",
           components: [row],
+          embeds: [createPlayerEmbed(interaction, song, song.index!)],
         });
       }
     });

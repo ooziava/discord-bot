@@ -38,4 +38,28 @@ const paginationRow = (): ActionRowBuilder<ButtonBuilder> => {
   return row;
 };
 
-export { confirmationRow, paginationRow };
+const playerRow = (): ActionRowBuilder<ButtonBuilder> => {
+  const prev = new ButtonBuilder()
+    .setCustomId("prev")
+    .setLabel("Prev")
+    .setStyle(ButtonStyle.Primary);
+
+  const next = new ButtonBuilder()
+    .setCustomId("next")
+    .setLabel("Next")
+    .setStyle(ButtonStyle.Primary);
+  const pause = new ButtonBuilder()
+    .setCustomId("pause")
+    .setLabel("Pause")
+    .setStyle(ButtonStyle.Primary);
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    prev,
+    pause,
+    next
+  );
+
+  return row;
+};
+
+export { confirmationRow, paginationRow, playerRow };

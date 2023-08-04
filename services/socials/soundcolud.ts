@@ -12,6 +12,11 @@ export default async (query: string): Promise<Song[]> => {
       thumbnail: track.thumbnail,
       duration: track.durationInSec,
       playlist: res.name,
+      author: {
+        name: res.user.name,
+        url: res.user.url,
+        avatar: res.user.thumbnail,
+      },
     }));
   } else if (res.type === "track") {
     return [
@@ -20,6 +25,11 @@ export default async (query: string): Promise<Song[]> => {
         title: res.name,
         thumbnail: "",
         duration: res.durationInSec,
+        author: {
+          name: res.user.name,
+          url: res.user.url,
+          avatar: res.user.thumbnail,
+        },
       },
     ];
   } else {

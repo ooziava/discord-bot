@@ -6,7 +6,7 @@ import {
 import { createAudioPlayer } from "@discordjs/voice";
 
 import { type Bot, type Command } from "interfaces/discordjs";
-import { addSongsToQueue } from "../../services/queue.js";
+import { addSongsToQueue, getSong } from "../../services/queue.js";
 import { play } from "../../services/play.js";
 import { search } from "../../services/search.js";
 import createConnection from "../../utils/createConnection.js";
@@ -28,7 +28,7 @@ const execute = async (
   const connection = createConnection(interaction);
   if (!connection) return;
 
-  interaction.deferReply();
+  await interaction.deferReply();
   const songs = await search(prompt).catch(() => {
     interaction.editReply(`Error searching for song.`);
     return [];
@@ -51,10 +51,11 @@ const execute = async (
     const newSubscription = connection.subscribe(player)!;
 
     bot.subscriptions.set(interaction.guild!.id, newSubscription);
-    play(interaction, bot, songs[0]);
     isNewQueue = true;
-  }
-  addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
+    const index = addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
+    const song = getSong(interaction.guild!.id, index)!;
+    play(interaction, bot, song);
+  } else addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
 };
 
 export const command: Command = {

@@ -8,7 +8,11 @@ import { createAudioPlayer } from "@discordjs/voice";
 
 import { Bot, Command } from "interfaces/discordjs";
 import { play } from "../../services/play.js";
-import { getSong, setCurrentSong } from "../../services/queue.js";
+import {
+  getQueueLength,
+  getSong,
+  setCurrentSong,
+} from "../../services/queue.js";
 import { setSongList } from "../../utils/queueMessage.js";
 import createConnection from "../../utils/createConnection.js";
 import { paginationRow } from "../../utils/actionBuilder.js";
@@ -33,7 +37,10 @@ const execute = async (
     const connection = createConnection(interaction);
     if (!connection) return;
 
-    const index = parseInt(prompt) - 1;
+    const index =
+      prompt === "last"
+        ? getQueueLength(interaction.guildId!) - 1
+        : parseInt(prompt) - 1;
     const song = getSong(interaction.guild!.id, index);
 
     if (!song) {
@@ -48,8 +55,8 @@ const execute = async (
       await interaction.editReply(`Playing: ${song.title}`);
       subscription = connection.subscribe(player)!;
       bot.subscriptions.set(interaction.guild!.id, subscription);
-      setCurrentSong(interaction.guild!.id, index);
       await play(interaction, bot, song);
+      setCurrentSong(interaction.guild!.id, index);
     } else {
       setCurrentSong(interaction.guild!.id, index - 1);
       await interaction.editReply(`Next song: ${song.title}`);

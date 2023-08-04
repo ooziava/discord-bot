@@ -18,7 +18,7 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
       console.error(error);
 
       const reply =
-        interaction.replied || interaction.deferred
+        interaction?.replied || interaction?.deferred
           ? interaction.followUp
           : interaction.reply;
       await reply({
