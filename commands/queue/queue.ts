@@ -40,11 +40,24 @@ const execute = async (
     const index =
       prompt === "last"
         ? getQueueLength(interaction.guildId!) - 1
+        : prompt === "first"
+        ? 0
         : parseInt(prompt) - 1;
+
+    if (isNaN(index)) {
+      await interaction.reply({
+        content: "Invalid index",
+        ephemeral: true,
+      });
+      return;
+    }
     const song = getSong(interaction.guild!.id, index);
 
     if (!song) {
-      await interaction.reply(`Invalid index.`);
+      await interaction.reply({
+        content: "Song not found",
+        ephemeral: true,
+      });
       return;
     }
     const player = createAudioPlayer();

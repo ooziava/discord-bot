@@ -12,17 +12,23 @@ const data = new SlashCommandBuilder()
 const execute = async (interaction: CommandInteraction, bot: Bot) => {
   const channel = (interaction.member as GuildMember).voice.channel;
   if (!channel) {
-    await interaction.reply(`You must be in a voice channel.`);
+    await interaction.reply({
+      content: "You need to be in a voice channel to use this command.",
+      ephemeral: true,
+    });
     return;
   }
 
   const { player } = bot.subscriptions.get(channel.guildId)!;
 
   if (player.state.status === "idle") {
-    await interaction.reply(`I am not playing anything.`);
+    await interaction.reply({
+      content: "There is no song playing.",
+      ephemeral: true,
+    });
   } else {
     player.stop();
-    await interaction.reply(`Skipped!`);
+    await interaction.reply("Skipped!");
   }
 };
 

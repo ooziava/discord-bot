@@ -11,7 +11,7 @@ const execute = async (interaction: CommandInteraction) => {
   if (!connection) return;
 
   connection.disconnect();
-  await interaction.reply(`Left`);
+  await interaction.reply("Left");
 };
 
 export const command: Command = {

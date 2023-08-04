@@ -5,15 +5,16 @@ import { getSong } from "../services/queue.js";
 const createPlayerEmbed = (
   interaction: CommandInteraction,
   song: Song,
-  index: number
+  timastamp: number
 ) => {
   const songList = Array.from({ length: 6 }, (_, i) =>
-    getSong(interaction.guild!.id, index - 2 + i)
+    getSong(interaction.guild!.id, song.index! - 2 + i)
   ).filter(Boolean) as Song[];
-  const songListStrings = songList.map((song, i) =>
-    i === 2
-      ? `***${song.index! + 1}. ${song.title}***`
-      : `${song.index! + 1}. ${song.title}\n`
+
+  const songListStrings = songList.map((s) =>
+    s.index === song.index!
+      ? `***${s.index! + 1}. ${s.title}***`
+      : `${s.index! + 1}. ${s.title}\n`
   );
 
   const exampleEmbed = new EmbedBuilder()
@@ -28,7 +29,7 @@ const createPlayerEmbed = (
       value: songListStrings.join(""),
       inline: true,
     })
-    .setTimestamp()
+    .setTimestamp(timastamp)
     .setFooter({
       text: "Created by: " + interaction.user.username,
       iconURL: interaction.user.avatarURL() ?? undefined,

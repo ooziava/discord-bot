@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { createAudioPlayer } from "@discordjs/voice";
 
-import { type Bot, type Command } from "interfaces/discordjs";
+import { Song, type Bot, type Command } from "interfaces/discordjs";
 import { addSongsToQueue, getSong } from "../../services/queue.js";
 import { play } from "../../services/play.js";
 import { search } from "../../services/search.js";
@@ -29,13 +29,16 @@ const execute = async (
   if (!connection) return;
 
   await interaction.deferReply();
-  const songs = await search(prompt).catch(() => {
-    interaction.editReply(`Error searching for song.`);
-    return [];
-  });
+  let songs: Song[] = [];
+  try {
+    songs = await search(prompt);
+  } catch (error) {
+    interaction.editReply("Something went wrong while searching for the song.");
+    return;
+  }
 
   if (!songs.length) {
-    interaction.editReply(`No song found.`);
+    interaction.editReply("No song found.");
     return;
   }
 

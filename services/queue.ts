@@ -110,6 +110,21 @@ const getQueueLength = (guildId: string): number => {
   return queue.songs.length;
 };
 
+const shuffleQueue = (guildId: string): void => {
+  const queue = queues[guildId] || loadQueue(guildId);
+  const currentIndex = queue.lastAddedIndex;
+  const currentSong = queue.songs[currentIndex];
+  const songs = queue.songs.filter((_, index) => index !== currentIndex);
+  for (let i = songs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [songs[i], songs[j]] = [songs[j], songs[i]];
+  }
+  songs.unshift(currentSong);
+  queue.songs = songs;
+  queue.lastAddedIndex = 1;
+  saveQueue(guildId, queue);
+};
+
 export {
   addSongsToQueue,
   removeSongFromQueue,
@@ -120,4 +135,5 @@ export {
   getPrevSongInQueue,
   setCurrentSong,
   getQueueLength,
+  shuffleQueue,
 };
