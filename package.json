@@ -6,7 +6,6 @@
   "type": "module",
   "exports": "./dist/index.js",
   "scripts": {
-    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm/transpile-only .\\test\\index.ts",
     "dev:server": "nodemon --watch \"./**/*.ts\" --exec \"node --experimental-specifier-resolution=node --loader ts-node/esm\" index.ts",
     "watch": "nodemon --watch \"./**/*.{ts,graphql}\" --exec \"node --experimental-specifier-resolution=node  --loader ts-node/esm/transpile-only\" index.ts",
     "dev": "tsc-watch --onSuccess \"npm run watch\"",
