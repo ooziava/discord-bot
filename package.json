@@ -1,0 +1,45 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "scripts": {
+    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm/transpile-only .\\test\\index.ts",
+    "dev:server": "nodemon --watch \"./**/*.ts\" --exec \"node --experimental-specifier-resolution=node --loader ts-node/esm\" index.ts",
+    "watch": "nodemon --watch \"./**/*.{ts,graphql}\" --exec \"node --experimental-specifier-resolution=node  --loader ts-node/esm/transpile-only\" index.ts",
+    "dev": "tsc-watch --onSuccess \"npm run watch\"",
+    "build": "tsc",
+    "start": "node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "_moduleAliases": {},
+  "_moduleDirectories": [
+    "node_modules_custom"
+  ],
+  "devDependencies": {
+    "@types/module-alias": "^2.0.1",
+    "@types/node": "^20.4.5",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "eslint": "^8.46.0",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "tsc-watch": "^6.0.4",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.16.0",
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.3.1",
+    "ffmpeg-static": "^5.1.0",
+    "libsodium-wrappers": "^0.7.11",
+    "module-alias": "^2.2.3",
+    "play-dl": "^1.9.6",
+    "sodium-native": "^4.0.4"
+  }
+}
