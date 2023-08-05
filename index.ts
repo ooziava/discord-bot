@@ -37,7 +37,11 @@ client.once(Events.ClientReady, async (c) => {
 const bot: Bot = {
   client,
   commands,
-  subscriptions: new Map(),
+  activeMessageIds: new Collection(),
+  songAttributes: new Collection(),
+  subscriptions: new Collection(),
+  interactions: new Collection(),
+  currentSong: new Collection(),
 };
 
 client.login(process.env.DISCORD_TOKEN);

@@ -1,10 +1,14 @@
 import { PlayerSubscription } from "@discordjs/voice";
-import { Collection } from "discord.js";
+import { Collection, CommandInteraction } from "discord.js";
 
 export interface Bot {
   commands: Collection<string, Command>;
   client: Client;
-  subscriptions: Map<string, PlayerSubscription>;
+  subscriptions: Collection<string, PlayerSubscription>;
+  interactions: Collection<string, CommandInteraction>;
+  songAttributes: Collection<string, SongAttributes>;
+  currentSong: Collection<string, Song>;
+  activeMessageIds: Collection<string, string>;
 }
 
 export interface Command {
@@ -12,13 +16,12 @@ export interface Command {
   execute: (interaction: CommandInteraction, bot: Bot) => Promise<void>;
 }
 
-export interface Author {
-  name: string;
-  url: string;
-  avatar: string;
-}
-
 export interface Commands extends Collection<string, Command> {}
+
+export interface Queue {
+  lastAddedIndex: number;
+  songs: Song[];
+}
 
 export interface Song {
   index?: number;
@@ -30,7 +33,14 @@ export interface Song {
   author?: Author;
 }
 
-export interface Queue {
-  lastAddedIndex: number;
-  songs: Song[];
+export interface SongAttributes {
+  isLooping?: boolean;
+  isQueueLooping?: boolean;
+  optionsVisible?: boolean;
+}
+
+export interface Author {
+  name: string;
+  url: string;
+  avatar: string;
 }

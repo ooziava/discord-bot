@@ -1,34 +1,34 @@
 import {
   VoiceConnection,
+  VoiceConnectionStatus,
   getVoiceConnection,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import { CommandInteraction, GuildMember } from "discord.js";
+import { CommandInteraction } from "discord.js";
+import checkUser from "./checkUser.js";
 
-export default (
-  interaction: CommandInteraction
-): VoiceConnection | undefined => {
-  const channel = (interaction.member as GuildMember)?.voice.channel;
-  if (!channel) {
-    interaction.reply({
-      content: "You need to be in a voice channel to use this command",
-      ephemeral: true,
+export default (interaction: CommandInteraction): VoiceConnection | null => {
+  const channel = checkUser(interaction);
+  if (channel) {
+    const connection =
+      getVoiceConnection(channel.guild.id) ||
+      joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator,
+      });
+
+    connection.on("error", (error) => {
+      console.error(error);
+      connection.destroy();
     });
-    return;
+
+    connection.on(VoiceConnectionStatus.Disconnected, () => {
+      connection.destroy();
+    });
+
+    return connection;
+  } else {
+    return null;
   }
-
-  const connection =
-    getVoiceConnection(channel.guild.id) ||
-    joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
-    });
-
-  connection.on("error", (error) => {
-    console.error(error);
-    connection.destroy();
-  });
-
-  return connection;
 };

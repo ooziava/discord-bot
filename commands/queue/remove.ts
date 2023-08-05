@@ -17,6 +17,8 @@ const data = new SlashCommandBuilder()
       .setName("index")
       .setDescription("The index of the song to remove")
       .setRequired(true)
+      .setMaxLength(4)
+      .setMinLength(1)
   );
 
 const execute = async (interaction: CommandInteraction): Promise<void> => {
@@ -32,6 +34,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     });
     return;
   }
+
   const song = getSong(interaction.guildId!, index);
   if (!song) {
     await interaction.reply({
@@ -46,6 +49,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     content: `Are you sure you want to remove ${song.title}  from the queue?`,
     components: [row],
   });
+
   await createConfirmarion(interaction, response, async (confirmation) => {
     removeSongFromQueue(interaction.guildId!, index);
     await confirmation.update({

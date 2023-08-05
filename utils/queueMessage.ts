@@ -6,8 +6,7 @@ type ListUpdater = (page?: string) => string;
 const SONG_PER_PAGE = 15;
 const setSongList = (interaction: CommandInteraction): ListUpdater => {
   const queue = getQueue(interaction.guild!.id);
-  let index =
-      Math.floor(queue.songs.length / SONG_PER_PAGE - 1) * SONG_PER_PAGE,
+  let index = Math.ceil(queue.songs.length / SONG_PER_PAGE - 1) * SONG_PER_PAGE,
     message;
   return function (page?: string): string {
     if (page === "prev") {

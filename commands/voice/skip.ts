@@ -1,26 +1,25 @@
-import {
-  CommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
-} from "discord.js";
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Bot, Command } from "interfaces/discordjs";
+import checkUser from "../../utils/checkUser.js";
 
 const data = new SlashCommandBuilder()
   .setName("skip")
   .setDescription("Skip the current song");
 
 const execute = async (interaction: CommandInteraction, bot: Bot) => {
-  const channel = (interaction.member as GuildMember).voice.channel;
-  if (!channel) {
+  const channel = checkUser(interaction);
+  if (!channel) return;
+
+  const subscription = bot.subscriptions.get(channel.guildId);
+  if (!subscription) {
     await interaction.reply({
-      content: "You need to be in a voice channel to use this command.",
+      content: "There is no song playing.",
       ephemeral: true,
     });
     return;
   }
 
-  const { player } = bot.subscriptions.get(channel.guildId)!;
-
+  const player = subscription.player;
   if (player.state.status === "idle") {
     await interaction.reply({
       content: "There is no song playing.",
@@ -28,7 +27,10 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
     });
   } else {
     player.stop();
-    await interaction.reply("Skipped!");
+    await interaction.reply({
+      content: "Skipped the current song.",
+      ephemeral: true,
+    });
   }
 };
 

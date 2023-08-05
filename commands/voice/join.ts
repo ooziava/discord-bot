@@ -7,7 +7,8 @@ const data = new SlashCommandBuilder()
   .setDescription("Joins the voice channel you are in.");
 
 const execute = async (interaction: CommandInteraction): Promise<void> => {
-  createConnection(interaction);
+  const connection = createConnection(interaction);
+  if (connection) await interaction.reply("Joined voice channel!");
 };
 
 export const command: Command = {

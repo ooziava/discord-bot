@@ -1,46 +1,39 @@
-import { AudioPlayerStatus, createAudioResource } from "@discordjs/voice";
-import { CommandInteraction } from "discord.js";
-import { stream } from "play-dl";
-import { Bot, Song } from "interfaces/discordjs";
-import { getNextSongInQueue } from "./queue.js";
-import { createPlayerEmbed } from "../utils/embedBuilder.js";
 import {
-  featureRow,
-  playerOptionsRow,
-  playerRow,
-} from "../utils/actionBuilder.js";
-import { createPlayer } from "../utils/actionHandlers.js";
+  AudioPlayerStatus,
+  VoiceConnectionStatus,
+  createAudioResource,
+} from "@discordjs/voice";
+import { stream } from "play-dl";
+import { Bot } from "interfaces/discordjs";
+import { createPlayerEmbed } from "../utils/embedBuilder.js";
+import { playerRow } from "../utils/actionBuilder.js";
+import { playNext } from "./playNext.js";
+import { setCurrentSong } from "./queue.js";
+import { ComponentType } from "discord.js";
 
-export const play = async (
-  interaction: CommandInteraction,
-  bot: Bot,
-  firstSong: Song
-): Promise<void> => {
-  const subscription = bot.subscriptions.get(interaction.guild!.id)!;
-  const timastamp = Date.now();
-  let song = firstSong;
+export const play = async (guildId: string, bot: Bot): Promise<void> => {
+  const interaction = bot.interactions.get(guildId);
+  const subscription = bot.subscriptions.get(guildId);
+  const song = bot.currentSong.get(guildId);
+
+  if (!interaction) {
+    console.log("Interaction not found!");
+    return;
+  }
+  if (!(interaction?.replied || interaction?.deferred))
+    await interaction.deferReply();
+  if (!subscription || !song) {
+    await interaction.editReply("Something went wrong!");
+    return;
+  }
 
   subscription.player.on(AudioPlayerStatus.Idle, async () => {
-    const nextSong = getNextSongInQueue(interaction.guild!.id);
-
-    if (nextSong) {
-      song = nextSong;
-      const strm = await stream(nextSong.url, { quality: 2 });
-      const resource = createAudioResource(strm.stream, {
-        inputType: strm.type,
-      });
-      subscription.player.play(resource);
-      await interaction.editReply({
-        content: " ",
-        components: [playerRow()],
-        embeds: [createPlayerEmbed(interaction, song, timastamp)],
-      });
-    } else {
-      await interaction.editReply("Queue is empty!");
-      subscription.player.stop();
-      subscription.unsubscribe();
-      bot.subscriptions.delete(interaction.guild!.id);
+    const loop = bot.songAttributes.get(guildId)?.isLooping;
+    if (loop) {
+      const song = bot.currentSong.get(guildId)!;
+      setCurrentSong(guildId, song.index! - 1);
     }
+    await playNext(guildId, bot);
   });
 
   subscription.player.on("error", () => {
@@ -48,10 +41,35 @@ export const play = async (
     subscription.player.stop();
   });
 
+  subscription.connection.on(VoiceConnectionStatus.Disconnected, () => {
+    bot.subscriptions.delete(guildId);
+    bot.currentSong.delete(guildId);
+    bot.interactions.delete(guildId);
+    bot.activeMessageIds.delete(interaction.guildId!);
+
+    subscription.player.stop(true);
+    subscription.unsubscribe();
+    interaction.editReply({
+      content: "Disconnected!",
+      components: [],
+      embeds: [],
+    });
+  });
+
+  const str = await stream(song.url, { quality: 2 }).catch(() => null);
+  if (!str) {
+    subscription.player.emit(AudioPlayerStatus.Idle);
+    return;
+  }
+  const resource = createAudioResource(str.stream, {
+    inputType: str.type,
+  });
+  subscription.player.play(resource);
+
   const response = await interaction.editReply({
     content: " ",
     components: [playerRow()],
-    embeds: [createPlayerEmbed(interaction, song, timastamp)],
+    embeds: [createPlayerEmbed(interaction, song)],
   });
-  await createPlayer(interaction, response, bot, song);
+  bot.activeMessageIds.set(interaction.guildId!, response.id);
 };

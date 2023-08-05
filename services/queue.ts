@@ -30,7 +30,7 @@ const loadQueue = (guildId: string): Queue => {
   }
 };
 
-const saveQueue = (guildId: string, queue: Queue): void => {
+const saveQueue = (guildId: string, queue: Queue): boolean => {
   queue.songs = queue.songs.map((song, index) => ({ ...song, index }));
   queues[guildId] = queue;
   const filePath = path.join(__dirname, "../data", `${guildId}.json`);
@@ -39,78 +39,90 @@ const saveQueue = (guildId: string, queue: Queue): void => {
   }
   try {
     fs.writeFileSync(filePath, JSON.stringify(queue));
+    return true;
   } catch (err) {
     console.error(`Error saving queue for guild ${guildId}: ${err}`);
+    return false;
   }
 };
 
-const addSongsToQueue = (
+export const addSongsToQueue = (
   guildId: string,
   songs: Song[],
   options?: { isNewQueue?: boolean }
-): number => {
+): Song => {
   const queue = queues[guildId] || loadQueue(guildId);
   queue.songs.push(...songs);
   saveQueue(guildId, queue);
 
   const index = queue.songs.length - songs.length;
   if (options?.isNewQueue) queue.lastAddedIndex = index;
-  return index;
+  return queue.songs[index];
 };
 
-const removeSongFromQueue = (guildId: string, index: number): void => {
+export const removeSongFromQueue = (
+  guildId: string,
+  index: number
+): boolean => {
   const queue = queues[guildId] || loadQueue(guildId);
+  if (queue.lastAddedIndex >= queue.songs.length) return false;
+  else queue.lastAddedIndex -= 1;
   queue.songs.splice(index, 1);
-  if (queue.lastAddedIndex >= queue.songs.length)
-    queue.lastAddedIndex = queue.songs.length - 1;
   saveQueue(guildId, queue);
+  return true;
 };
 
-const clearQueue = (guildId: string): void => {
+export const getNextSongInQueue = (guildId: string): Song | null => {
   const queue = queues[guildId] || loadQueue(guildId);
-  queue.songs = [];
-  queues[guildId] = queue;
-  saveQueue(guildId, queue);
-};
-
-const getNextSongInQueue = (guildId: string): Song | undefined => {
-  const queue = queues[guildId] || loadQueue(guildId);
-  if (queue.lastAddedIndex + 1 >= queue.songs.length) return undefined;
+  if (queue.lastAddedIndex + 1 >= queue.songs.length) return null;
 
   queue.lastAddedIndex += 1;
   const song = queue.songs[queue.lastAddedIndex];
   saveQueue(guildId, queue);
   return song;
 };
-const getPrevSongInQueue = (guildId: string): Song | undefined => {
+
+export const getPrevSongInQueue = (guildId: string): Song | null => {
   const queue = queues[guildId] || loadQueue(guildId);
-  if (queue.lastAddedIndex - 1 < 0) return undefined;
+  if (queue.lastAddedIndex - 1 < 0) return null;
 
   queue.lastAddedIndex -= 1;
   const song = queue.songs[queue.lastAddedIndex];
   saveQueue(guildId, queue);
   return song;
 };
-const getSong = (guildId: string, index: number): Song | undefined => {
-  const queue = queues[guildId] || loadQueue(guildId);
 
-  return queue.songs[index];
+export const getSong = (guildId: string, index: number): Song | null => {
+  const queue = queues[guildId] || loadQueue(guildId);
+  return queue.songs[index] || null;
 };
 
-const setCurrentSong = (guildId: string, index: number): void => {
+export const setCurrentSong = (guildId: string, index: number): boolean => {
   const queue = queues[guildId] || loadQueue(guildId);
-  queue.lastAddedIndex = index;
+  if (index >= queue.songs.length || index < -1) return false;
+  else queue.lastAddedIndex = index;
+
   saveQueue(guildId, queue);
+  return true;
 };
-const getQueue = (guildId: string): Queue =>
+
+export const clearQueue = (guildId: string): boolean => {
+  const queue = queues[guildId] || loadQueue(guildId);
+  queue.songs = [];
+  queue.lastAddedIndex = -1;
+  queues[guildId] = queue;
+  return saveQueue(guildId, queue);
+};
+
+export const getQueue = (guildId: string): Queue =>
   queues[guildId] || loadQueue(guildId);
 
-const getQueueLength = (guildId: string): number => {
+export const getQueueLength = (guildId: string): number => {
   const queue = queues[guildId] || loadQueue(guildId);
   return queue.songs.length;
 };
 
-const shuffleQueue = (guildId: string): void => {
+export const shuffleQueue = (guildId: string): Song => {
   const queue = queues[guildId] || loadQueue(guildId);
   const currentIndex = queue.lastAddedIndex;
   const currentSong = queue.songs[currentIndex];
@@ -120,20 +132,10 @@ const shuffleQueue = (guildId: string): void => {
     [songs[i], songs[j]] = [songs[j], songs[i]];
   }
   songs.unshift(currentSong);
-  queue.songs = songs;
+  songs.forEach((song, index) => {
+    song.index = index;
+  });
   queue.lastAddedIndex = 1;
   saveQueue(guildId, queue);
-};
-
-export {
-  addSongsToQueue,
-  removeSongFromQueue,
-  getNextSongInQueue,
-  getQueue,
-  clearQueue,
-  getSong,
-  getPrevSongInQueue,
-  setCurrentSong,
-  getQueueLength,
-  shuffleQueue,
+  return currentSong;
 };

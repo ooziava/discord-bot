@@ -6,7 +6,7 @@ import {
 import { createAudioPlayer } from "@discordjs/voice";
 
 import { Song, type Bot, type Command } from "interfaces/discordjs";
-import { addSongsToQueue, getSong } from "../../services/queue.js";
+import { addSongsToQueue } from "../../services/queue.js";
 import { play } from "../../services/play.js";
 import { search } from "../../services/search.js";
 import createConnection from "../../utils/createConnection.js";
@@ -25,6 +25,7 @@ const execute = async (
   const prompt = (
     interaction.options as CommandInteractionOptionResolver
   ).getString("song")!;
+
   const connection = createConnection(interaction);
   if (!connection) return;
 
@@ -33,32 +34,37 @@ const execute = async (
   try {
     songs = await search(prompt);
   } catch (error) {
-    interaction.editReply("Something went wrong while searching for the song.");
+    interaction.editReply("Something went wrong.");
     return;
   }
 
   if (!songs.length) {
     interaction.editReply("No song found.");
     return;
+  } else {
+    await interaction.editReply(
+      songs.length > 1
+        ? `Added to queue: ${songs.length} songs from ${songs[0].playlist}`
+        : `Added to queue: ${songs[0].title}`
+    );
   }
 
-  const reply =
-    songs.length > 1
-      ? `Added to queue: ${songs.length} songs from ${songs[0].playlist}`
-      : `Added to queue: ${songs[0].title}`;
-  await interaction.editReply(reply);
-
-  const player = createAudioPlayer();
   let isNewQueue = false;
-  if (!bot.subscriptions.get(interaction.guild!.id)) {
-    const newSubscription = connection.subscribe(player)!;
-
-    bot.subscriptions.set(interaction.guild!.id, newSubscription);
+  const player = createAudioPlayer();
+  if (bot.subscriptions.has(interaction.guild!.id)) {
+    addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
+  } else {
     isNewQueue = true;
-    const index = addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
-    const song = getSong(interaction.guild!.id, index)!;
-    play(interaction, bot, song);
-  } else addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
+    const subscription = connection.subscribe(player)!;
+    const song = addSongsToQueue(interaction.guild!.id, songs, { isNewQueue });
+
+    bot.subscriptions.set(interaction.guild!.id, subscription);
+    bot.currentSong.set(interaction.guild!.id, song);
+    if (!bot.interactions.has(interaction.guild!.id))
+      bot.interactions.set(interaction.guild!.id, interaction);
+
+    play(interaction.guild!.id, bot);
+  }
 };
 
 export const command: Command = {

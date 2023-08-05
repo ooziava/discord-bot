@@ -1,11 +1,14 @@
-import { CommandInteraction, EmbedBuilder } from "discord.js";
+import {
+  ButtonInteraction,
+  CommandInteraction,
+  EmbedBuilder,
+} from "discord.js";
 import { Song } from "interfaces/discordjs.js";
 import { getSong } from "../services/queue.js";
 
 const createPlayerEmbed = (
-  interaction: CommandInteraction,
-  song: Song,
-  timastamp: number
+  interaction: CommandInteraction | ButtonInteraction,
+  song: Song
 ) => {
   const songList = Array.from({ length: 6 }, (_, i) =>
     getSong(interaction.guild!.id, song.index! - 2 + i)
@@ -16,7 +19,7 @@ const createPlayerEmbed = (
       ? `***${s.index! + 1}. ${s.title}***`
       : `${s.index! + 1}. ${s.title}\n`
   );
-
+  const timastamp = new Date();
   const exampleEmbed = new EmbedBuilder()
     .setColor(0x545fd6)
     .setTitle(song.title)

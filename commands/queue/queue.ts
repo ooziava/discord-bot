@@ -7,12 +7,12 @@ import {
 import { createAudioPlayer } from "@discordjs/voice";
 
 import { Bot, Command } from "interfaces/discordjs";
-import { play } from "../../services/play.js";
 import {
   getQueueLength,
   getSong,
   setCurrentSong,
 } from "../../services/queue.js";
+import { play } from "../../services/play.js";
 import { setSongList } from "../../utils/queueMessage.js";
 import createConnection from "../../utils/createConnection.js";
 import { paginationRow } from "../../utils/actionBuilder.js";
@@ -22,7 +22,11 @@ const data = new SlashCommandBuilder()
   .setName("queue")
   .setDescription("Shows the current queue")
   .addStringOption((option) =>
-    option.setName("index").setDescription("The index of the queue")
+    option
+      .setName("index")
+      .setDescription("The index of the queue")
+      .setMaxLength(5)
+      .setMinLength(1)
   );
 
 const execute = async (
@@ -60,32 +64,62 @@ const execute = async (
       });
       return;
     }
-    const player = createAudioPlayer();
-    await interaction.deferReply();
 
-    let subscription = bot.subscriptions.get(interaction.guild!.id);
-    if (!subscription) {
-      await interaction.editReply(`Playing: ${song.title}`);
-      subscription = connection.subscribe(player)!;
-      bot.subscriptions.set(interaction.guild!.id, subscription);
-      await play(interaction, bot, song);
-      setCurrentSong(interaction.guild!.id, index);
+    const player = createAudioPlayer();
+
+    if (bot.subscriptions.has(interaction.guild!.id)) {
+      setCurrentSong(interaction.guild!.id, index - 1)
+        ? await interaction.reply({
+            content: `Next song: ${song.title}`,
+            ephemeral: true,
+          })
+        : await interaction.reply({
+            content: "Invalid index",
+            ephemeral: true,
+          });
     } else {
-      setCurrentSong(interaction.guild!.id, index - 1);
-      await interaction.editReply(`Next song: ${song.title}`);
+      const subscription = connection.subscribe(player);
+      if (!subscription) {
+        await interaction.reply({
+          content: "Error connecting to audio",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      bot.subscriptions.set(interaction.guild!.id, subscription);
+      bot.currentSong.set(interaction.guild!.id, song);
+
+      const isSetted = setCurrentSong(interaction.guild!.id, index);
+      if (!isSetted || !subscription) {
+        await interaction.reply({
+          content: "Something went wrong!",
+          ephemeral: true,
+        });
+      } else {
+        if (!bot.interactions.has(interaction.guild!.id)) {
+          bot.interactions.set(interaction.guild!.id, interaction);
+          await interaction.reply(`Now playing: ${song.title}`);
+        } else
+          await interaction.reply({
+            content: `Now playing: ${song.title}`,
+            ephemeral: true,
+          });
+        await play(interaction.guild!.id, bot);
+      }
     }
     return;
   }
-
   const updateSongList = setSongList(interaction);
   let message = updateSongList();
 
   const row = paginationRow();
-
   const response = await interaction.reply({
     content: message,
     components: [row],
+    ephemeral: true,
   });
+
   const nextPage = async (confirmation: ButtonInteraction) => {
     message = updateSongList("next");
     await confirmation.update({
