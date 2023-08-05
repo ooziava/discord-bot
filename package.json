@@ -20,6 +20,7 @@
     "node_modules_custom"
   ],
   "devDependencies": {
+    "@types/express": "^4.17.17",
     "@types/module-alias": "^2.0.1",
     "@types/node": "^20.4.5",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
@@ -35,6 +36,7 @@
     "@discordjs/voice": "^0.16.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "ffmpeg-static": "^5.1.0",
     "libsodium-wrappers": "^0.7.11",
     "module-alias": "^2.2.3",
