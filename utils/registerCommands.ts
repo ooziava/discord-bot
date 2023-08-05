@@ -15,21 +15,27 @@ export default async (commandCollection: Commands): Promise<void> => {
   );
 
   try {
-    const data = (await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID!,
-        process.env.GUILD_ID!
-      ),
-      { body: commands }
-    )) as unknown as Array<unknown>;
-
-    // (await rest.put(
-    //   Routes.applicationGuildCommands(
-    //     process.env.CLIENT_ID!,
-    //     process.env.SUBGUILD_ID!
-    //   ),
-    //   { body: commands }
-    // )) as unknown as Array<unknown>;
+    let data;
+    if (process.env.DEV) {
+      data = (await rest.put(
+        Routes.applicationGuildCommands(
+          process.env.CLIENT_ID!,
+          process.env.GUILD_ID!
+        ),
+        { body: commands }
+      )) as unknown as Array<unknown>;
+    } else {
+      data = (await rest.put(
+        Routes.applicationGuildCommands(
+          process.env.CLIENT_ID!,
+          process.env.GUILD_ID!
+        ),
+        { body: [] }
+      )) as unknown as Array<unknown>;
+      (await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), {
+        body: commands,
+      })) as unknown as Array<unknown>;
+    }
 
     console.log(
       `Successfully reloaded ${data.length} application (/) commands.`
