@@ -9,7 +9,6 @@ import { createPlayerEmbed } from "../utils/embedBuilder.js";
 import { playerRow } from "../utils/actionBuilder.js";
 import { playNext } from "./playNext.js";
 import { setCurrentSong } from "./queue.js";
-import { ComponentType } from "discord.js";
 
 export const play = async (guildId: string, bot: Bot): Promise<void> => {
   const interaction = bot.interactions.get(guildId);

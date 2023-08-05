@@ -31,6 +31,8 @@ export interface Song {
   thumbnail: string;
   playlist?: string;
   author?: Author;
+  user?: Author;
+  timestamp: Date;
 }
 
 export interface SongAttributes {

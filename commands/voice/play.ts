@@ -42,6 +42,15 @@ const execute = async (
     interaction.editReply("No song found.");
     return;
   } else {
+    songs.forEach((song, index) => {
+      song.user = {
+        name: interaction.user.username,
+        url: interaction.user.displayAvatarURL(),
+        avatar: interaction.user.displayAvatarURL(),
+      };
+      song.index = index;
+    });
+
     await interaction.editReply(
       songs.length > 1
         ? `Added to queue: ${songs.length} songs from ${songs[0].playlist}`

@@ -17,13 +17,16 @@ export default (interaction: CommandInteraction): VoiceConnection | null => {
         guildId: channel.guild.id,
         adapterCreator: channel.guild.voiceAdapterCreator,
       });
+    if (channel.id !== connection.joinConfig.channelId) {
+      connection.rejoin({
+        channelId: channel.id,
+        selfDeaf: true,
+        selfMute: false,
+      });
+    }
 
     connection.on("error", (error) => {
       console.error(error);
-      connection.destroy();
-    });
-
-    connection.on(VoiceConnectionStatus.Disconnected, () => {
       connection.destroy();
     });
 

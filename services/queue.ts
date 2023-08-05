@@ -135,7 +135,8 @@ export const shuffleQueue = (guildId: string): Song => {
   songs.forEach((song, index) => {
     song.index = index;
   });
-  queue.lastAddedIndex = 1;
+  queue.songs = songs;
+  queue.lastAddedIndex = 0;
   saveQueue(guildId, queue);
   return currentSong;
 };

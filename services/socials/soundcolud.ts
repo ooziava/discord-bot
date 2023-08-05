@@ -17,6 +17,7 @@ export default async (query: string): Promise<Song[]> => {
         url: res.user.url,
         avatar: res.user.thumbnail,
       },
+      timestamp: new Date(),
     }));
   } else if (res.type === "track") {
     return [
@@ -30,6 +31,7 @@ export default async (query: string): Promise<Song[]> => {
           url: res.user.url,
           avatar: res.user.thumbnail,
         },
+        timestamp: new Date(),
       },
     ];
   } else {

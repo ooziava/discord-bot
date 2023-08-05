@@ -16,6 +16,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
           url: song.channel!.url ?? "",
           avatar: song.channel!.iconURL() ?? "",
         },
+        timestamp: new Date(),
       },
     ];
   }
@@ -37,6 +38,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
         url: track.channel!.url ?? "",
         avatar: track.channel!.iconURL() ?? "",
       },
+      timestamp: new Date(),
     }));
   }
 
@@ -53,6 +55,7 @@ export default async (query: string, info: string): Promise<Song[]> => {
         url: video.video_details?.channel?.url ?? "",
         avatar: video.video_details?.channel?.iconURL() ?? "",
       },
+      timestamp: new Date(),
     },
   ];
 };

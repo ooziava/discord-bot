@@ -12,6 +12,7 @@ export default async (query: string): Promise<Song[]> => {
       thumbnail: track.thumbnail?.url ?? "",
       duration: track.durationInSec,
       playlist: res.name,
+      timestamp: new Date(),
     }));
 
     return Promise.all(
@@ -28,6 +29,7 @@ export default async (query: string): Promise<Song[]> => {
       title: res.name,
       thumbnail: res.thumbnail?.url ?? "",
       duration: 0,
+      timestamp: new Date(),
     };
 
     const newSong = await search(song.title, { limit: 1 });

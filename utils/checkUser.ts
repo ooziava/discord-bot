@@ -8,6 +8,12 @@ export default (interaction: CommandInteraction): VoiceBasedChannel | null => {
       ephemeral: true,
     });
     return null;
+  } else if (!channel.joinable) {
+    interaction.reply({
+      content: "I don't have permission to join this voice channel",
+      ephemeral: true,
+    });
+    return null;
   } else {
     return channel;
   }

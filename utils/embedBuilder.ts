@@ -19,7 +19,6 @@ const createPlayerEmbed = (
       ? `***${s.index! + 1}. ${s.title}***`
       : `${s.index! + 1}. ${s.title}\n`
   );
-  const timastamp = new Date();
   const exampleEmbed = new EmbedBuilder()
     .setColor(0x545fd6)
     .setTitle(song.title)
@@ -32,10 +31,10 @@ const createPlayerEmbed = (
       value: songListStrings.join(""),
       inline: true,
     })
-    .setTimestamp(timastamp)
+    .setTimestamp(song.timestamp)
     .setFooter({
-      text: "Created by: " + interaction.user.username,
-      iconURL: interaction.user.avatarURL() ?? undefined,
+      text: "Added by: " + song.user?.name || interaction.user.username,
+      iconURL: song.user?.avatar || interaction.user.avatarURL() || undefined,
     });
 
   if (song.thumbnail && song.thumbnail !== "") {
