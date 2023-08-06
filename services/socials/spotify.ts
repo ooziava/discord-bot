@@ -11,7 +11,7 @@ export default async (query: string): Promise<Song[]> => {
       tracks.map(async (song) => {
         const [newSong] = await search(
           `${song.name} ${song.artists.map((artst) => artst.name).join(" ")}`,
-          { limit: 1 }
+          { limit: 1, source: { youtube: "video" } }
         );
 
         return {
