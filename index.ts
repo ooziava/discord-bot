@@ -1,5 +1,6 @@
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
+import express from "express";
 
 import { type Bot, type Command } from "interfaces/discordjs";
 import loadCommands from "./utils/loadCommands.js";
@@ -46,3 +47,14 @@ const bot: Bot = {
 
 client.login(process.env.DISCORD_TOKEN);
 export default bot;
+
+const app = express();
+const port = 3000;
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
