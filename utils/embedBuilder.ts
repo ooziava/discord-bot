@@ -31,7 +31,7 @@ const createPlayerEmbed = (
       value: songListStrings.join(""),
       inline: true,
     })
-    .setTimestamp(song.timestamp)
+    .setTimestamp(new Date(song.timestamp))
     .setFooter({
       text: "Added by: " + song.user?.name || interaction.user.username,
       iconURL: song.user?.avatar || interaction.user.avatarURL() || undefined,

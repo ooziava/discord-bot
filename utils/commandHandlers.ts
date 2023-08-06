@@ -28,14 +28,29 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
     } catch (error) {
       console.error(error);
 
-      const reply =
-        interaction?.replied || interaction?.deferred
-          ? interaction.followUp
-          : interaction.reply;
-      await reply({
-        content: "There was an error while executing this command!",
-        ephemeral: true,
-      });
+      console.error(error);
+
+      if (interaction) {
+        const reply =
+          interaction.replied || interaction.deferred === true
+            ? interaction.followUp
+            : interaction.reply;
+        try {
+          await reply({
+            content: "There was an error while executing this command!",
+            ephemeral: true,
+          });
+        } catch (error) {
+          console.error(error);
+          interaction.channel?.send(
+            "There was an error while executing this command!"
+          );
+        }
+      } else {
+        console.error(
+          "Interaction object is undefined or does not have a reply or followUp method."
+        );
+      }
     }
   } else if (interaction.isButton()) {
     // Check if the current message ID matches the last interaction message ID
