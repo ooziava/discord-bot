@@ -3,7 +3,7 @@ import {
   CommandInteraction,
   EmbedBuilder,
 } from "discord.js";
-import { Song } from "interfaces/discordjs.js";
+import { type Song } from "interfaces/discordjs.js";
 import { getSong } from "../services/queue.js";
 
 const createPlayerEmbed = (
@@ -33,7 +33,7 @@ const createPlayerEmbed = (
     })
     .setTimestamp(new Date(song.timestamp))
     .setFooter({
-      text: "Added by: " + song.user?.name || interaction.user.username,
+      text: "Added by " + song.user?.name || interaction.user.username,
       iconURL: song.user?.avatar || interaction.user.avatarURL() || undefined,
     });
 

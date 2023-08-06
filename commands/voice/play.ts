@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { createAudioPlayer } from "@discordjs/voice";
 
-import { Song, type Bot, type Command } from "interfaces/discordjs";
+import { type Song, type Bot, type Command } from "interfaces/discordjs";
 import { addSongsToQueue } from "../../services/queue.js";
 import { play } from "../../services/play.js";
 import { search } from "../../services/search.js";

@@ -1,4 +1,4 @@
-import { Song } from "interfaces/discordjs";
+import { type Song } from "interfaces/discordjs";
 import { soundcloud, SoundCloudPlaylist } from "play-dl";
 
 export default async (query: string): Promise<Song[]> => {

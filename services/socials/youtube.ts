@@ -1,4 +1,4 @@
-import { Song } from "interfaces/discordjs";
+import { type Song } from "interfaces/discordjs";
 import { search, playlist_info, video_info } from "play-dl";
 
 export default async (query: string, info: string): Promise<Song[]> => {

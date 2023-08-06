@@ -4,7 +4,6 @@ import {
   ButtonStyle,
   MessageActionRowComponentBuilder,
 } from "discord.js";
-import { Bot, SongAttributes } from "interfaces/discordjs.js";
 
 const confirmationRow = (): ActionRowBuilder<ButtonBuilder> => {
   const confirm = new ButtonBuilder()

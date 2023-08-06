@@ -4,11 +4,11 @@ import {
   getVoiceConnection,
 } from "@discordjs/voice";
 import { stream } from "play-dl";
-import { Bot } from "interfaces/discordjs.js";
 
-import { getNextSongInQueue, getSong, setCurrentSong } from "./queue.js";
+import { type Bot } from "interfaces/discordjs.js";
 import { playerRow } from "../utils/actionBuilder.js";
 import { createPlayerEmbed } from "../utils/embedBuilder.js";
+import { getNextSongInQueue, getSong, setCurrentSong } from "./queue.js";
 
 export const playNext = async (guildId: string, bot: Bot): Promise<void> => {
   const interaction = bot.interactions.get(guildId);

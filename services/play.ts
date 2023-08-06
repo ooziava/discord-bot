@@ -4,7 +4,8 @@ import {
   createAudioResource,
 } from "@discordjs/voice";
 import { stream } from "play-dl";
-import { Bot } from "interfaces/discordjs";
+
+import { type Bot } from "interfaces/discordjs";
 import { createPlayerEmbed } from "../utils/embedBuilder.js";
 import { playerRow } from "../utils/actionBuilder.js";
 import { playNext } from "./playNext.js";
@@ -40,19 +41,32 @@ export const play = async (guildId: string, bot: Bot): Promise<void> => {
     subscription.player.stop();
   });
 
-  subscription.connection.on(VoiceConnectionStatus.Disconnected, () => {
+  subscription.connection.on(VoiceConnectionStatus.Disconnected, async () => {
     bot.subscriptions.delete(guildId);
     bot.currentSong.delete(guildId);
-    bot.interactions.delete(guildId);
     bot.activeMessageIds.delete(interaction.guildId!);
-
     subscription.player.stop(true);
     subscription.unsubscribe();
-    interaction.editReply({
-      content: "Disconnected!",
-      components: [],
-      embeds: [],
-    });
+
+    try {
+      const inter = bot.interactions.get(guildId);
+      if (inter) {
+        bot.interactions.delete(guildId);
+        await inter.editReply({
+          content: "Disconnected!",
+          components: [],
+          embeds: [],
+        });
+      } else {
+        await interaction.editReply({
+          content: "Disconnected!",
+          components: [],
+          embeds: [],
+        });
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    }
   });
 
   const str = await stream(song.url, { quality: 2 }).catch(() => null);

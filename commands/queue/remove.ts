@@ -4,7 +4,7 @@ import {
   CommandInteractionOptionResolver,
 } from "discord.js";
 
-import { Command } from "interfaces/discordjs";
+import { type Command } from "interfaces/discordjs";
 import { getSong, removeSongFromQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
 import { createConfirmarion } from "../../utils/actionHandlers.js";

@@ -4,16 +4,16 @@ import {
   getVoiceConnection,
 } from "@discordjs/voice";
 import { stream } from "play-dl";
-import { Bot } from "interfaces/discordjs.js";
 
+import { type Bot } from "interfaces/discordjs.js";
+import { playerRow } from "../utils/actionBuilder.js";
+import { createPlayerEmbed } from "../utils/embedBuilder.js";
 import {
   getPrevSongInQueue,
   getQueueLength,
   getSong,
   setCurrentSong,
 } from "./queue.js";
-import { playerRow } from "../utils/actionBuilder.js";
-import { createPlayerEmbed } from "../utils/embedBuilder.js";
 
 export const playPrev = async (guildId: string, bot: Bot): Promise<void> => {
   const interaction = bot.interactions.get(guildId);

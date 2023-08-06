@@ -1,5 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Command } from "interfaces/discordjs";
+
+import { type Command } from "interfaces/discordjs";
 import createConnection from "../../utils/createConnection.js";
 
 const data = new SlashCommandBuilder()

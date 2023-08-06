@@ -1,6 +1,5 @@
 import {
   VoiceConnection,
-  VoiceConnectionStatus,
   getVoiceConnection,
   joinVoiceChannel,
 } from "@discordjs/voice";

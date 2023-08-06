@@ -1,7 +1,7 @@
 import { CommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 
-import { Command } from "interfaces/discordjs";
+import { type Command } from "interfaces/discordjs";
 import { clearQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
 import { createConfirmarion } from "../../utils/actionHandlers.js";

@@ -1,4 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { type Bot, type Command } from "interfaces/discordjs";
 import checkUser from "../../utils/checkUser.js";
 

@@ -1,6 +1,7 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Bot, Command } from "interfaces/discordjs";
 import { getVoiceConnection } from "@discordjs/voice";
+
+import { type Bot, type Command } from "interfaces/discordjs";
 
 const data = new SlashCommandBuilder()
   .setName("leave")

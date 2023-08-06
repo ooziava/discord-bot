@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { createAudioPlayer } from "@discordjs/voice";
 
-import { Bot, Command } from "interfaces/discordjs";
+import { type Bot, type Command } from "interfaces/discordjs";
 import {
   getQueueLength,
   getSong,

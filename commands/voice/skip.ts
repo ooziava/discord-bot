@@ -1,5 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Bot, Command } from "interfaces/discordjs";
+
+import { type Bot, type Command } from "interfaces/discordjs";
 import checkUser from "../../utils/checkUser.js";
 
 const data = new SlashCommandBuilder()

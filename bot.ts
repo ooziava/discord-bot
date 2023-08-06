@@ -1,7 +1,7 @@
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 
-import { Bot, Command } from "interfaces/discordjs";
+import { type Bot, type Command } from "interfaces/discordjs";
 import loadCommands from "./utils/loadCommands.js";
 import registerCommands from "./utils/registerCommands.js";
 import commandHandler from "./utils/commandHandlers.js";
