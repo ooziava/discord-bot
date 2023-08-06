@@ -7,6 +7,7 @@ import {
   setCurrentSong,
   shuffleQueue,
 } from "../services/queue.js";
+import { play } from "../services/play.js";
 import { playPrev } from "../services/playPrev.js";
 import { playNext } from "../services/playNext.js";
 import { createPlayerEmbed } from "./embedBuilder.js";
@@ -75,10 +76,12 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
 
     const song = bot.currentSong.get(interaction.guild!.id)!;
     if (interaction.customId === "prev") {
-      await playPrev(interaction.guild!.id, bot);
+      const res = await playPrev(interaction.guild!.id, bot);
+      if (!res) play(interaction.guild!.id, bot);
       interaction.deferUpdate();
     } else if (interaction.customId === "next") {
-      await playNext(interaction.guild!.id, bot);
+      const res = await playNext(interaction.guild!.id, bot);
+      if (!res) play(interaction.guild!.id, bot);
       interaction.deferUpdate();
     } else if (interaction.customId === "pause") {
       if (subscription) {
@@ -156,7 +159,8 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
       const result = removeSongFromQueue(interaction.guild!.id, index);
       if (result) {
         setCurrentSong(interaction.guild!.id, index - 1);
-        await playNext(interaction.guild!.id, bot);
+        const res = await playNext(interaction.guild!.id, bot);
+        if (!res) play(interaction.guild!.id, bot);
       } else {
         await inter.editReply("Failed to remove song from queue!");
       }

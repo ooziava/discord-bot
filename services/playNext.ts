@@ -10,11 +10,11 @@ import { playerRow } from "../utils/actionBuilder.js";
 import { createPlayerEmbed } from "../utils/embedBuilder.js";
 import { getNextSongInQueue, getSong, setCurrentSong } from "./queue.js";
 
-export const playNext = async (guildId: string, bot: Bot): Promise<void> => {
+export const playNext = async (guildId: string, bot: Bot): Promise<boolean> => {
   const interaction = bot.interactions.get(guildId);
   if (!interaction) {
     console.log("Interaction not found!");
-    return;
+    return false;
   }
 
   let nextSong = getNextSongInQueue(guildId);
@@ -24,11 +24,12 @@ export const playNext = async (guildId: string, bot: Bot): Promise<void> => {
     subscription = getVoiceConnection(guildId)!.subscribe(player);
     if (!subscription) {
       console.log("Subscription not found!");
-      return;
+      return false;
     }
     bot.subscriptions.set(guildId, subscription);
     setCurrentSong(guildId, 0);
     nextSong = getSong(guildId, 0);
+    return false;
   }
 
   bot.songAttributes.set(guildId, {
@@ -40,7 +41,7 @@ export const playNext = async (guildId: string, bot: Bot): Promise<void> => {
     const strm = await stream(nextSong.url, { quality: 2 }).catch(() => null);
     if (!strm) {
       playNext(guildId, bot);
-      return;
+      return false;
     }
     bot.currentSong.set(guildId, nextSong);
     const resource = createAudioResource(strm.stream, {
@@ -58,4 +59,5 @@ export const playNext = async (guildId: string, bot: Bot): Promise<void> => {
     subscription.unsubscribe();
     bot.subscriptions.delete(guildId);
   }
+  return true;
 };

@@ -33,7 +33,8 @@ export const play = async (guildId: string, bot: Bot): Promise<void> => {
       const song = bot.currentSong.get(guildId)!;
       setCurrentSong(guildId, song.index! - 1);
     }
-    await playNext(guildId, bot);
+    const res = await playNext(guildId, bot);
+    if (!res) play(guildId, bot);
   });
 
   subscription.player.on("error", () => {
