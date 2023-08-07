@@ -35,7 +35,7 @@ const execute = async (interaction) => {
         return;
     const song = query
         ? findSong(interaction.guildId, query)
-        : getSongByIndex(interaction.guildId, parseInt(index));
+        : getSongByIndex(interaction.guildId, parseInt(index) - 1);
     if (!song) {
         await interaction.reply("Song not found.");
         return;
