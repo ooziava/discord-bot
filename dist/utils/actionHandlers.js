@@ -1,9 +1,8 @@
 import { ComponentType, } from "discord.js";
 import { userFilter } from "./collectorFilters.js";
 const createConfirmation = async (interaction, response, confirm) => {
-    const { awaitMessageComponent } = response;
     try {
-        const confirmation = (await awaitMessageComponent({
+        const confirmation = (await response.awaitMessageComponent({
             filter: userFilter(interaction),
             time: 60000,
         }));
