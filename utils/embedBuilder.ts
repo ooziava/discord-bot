@@ -4,7 +4,7 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { type Song } from "interfaces/discordjs.js";
-import { getSong } from "../services/queue.js";
+import { getSongByIndex } from "../services/queue.js";
 
 export const createPlayerEmbed = (
   interaction: CommandInteraction | ButtonInteraction,
@@ -20,7 +20,7 @@ export const createPlayerEmbed = (
   const songListLength = 6;
   const songList: Song[] = [];
   for (let i = song.index! - 2; i < song.index! + songListLength - 2; i++) {
-    const s = getSong(guild.id, i);
+    const s = getSongByIndex(guild.id, i);
     if (s) {
       songList.push(s);
     }

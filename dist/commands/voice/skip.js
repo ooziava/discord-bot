@@ -1,22 +1,23 @@
 import { SlashCommandBuilder } from "discord.js";
-import checkUser from "../../utils/checkUser.js";
+import { checkUser } from "../../utils/checkUser.js";
+import { AudioPlayerStatus } from "@discordjs/voice";
+import bot from "../../index.js";
 const data = new SlashCommandBuilder()
     .setName("skip")
     .setDescription("Skip the current song");
-const execute = async (interaction, bot) => {
+const execute = async (interaction) => {
     const channel = checkUser(interaction);
     if (!channel)
         return;
-    const subscription = bot.subscriptions.get(channel.guildId);
-    if (!subscription) {
+    const player = bot.players.get(interaction.guildId);
+    if (!player) {
         await interaction.reply({
             content: "There is no song playing.",
             ephemeral: true,
         });
         return;
     }
-    const player = subscription.player;
-    if (player.state.status === "idle") {
+    if (player.state.status === AudioPlayerStatus.Idle) {
         await interaction.reply({
             content: "There is no song playing.",
             ephemeral: true,
@@ -33,4 +34,5 @@ const execute = async (interaction, bot) => {
 export const command = {
     data,
     execute,
+    voice: true,
 };

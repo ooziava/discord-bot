@@ -1,7 +1,6 @@
-import { CommandInteraction } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 
-import { type Command } from "interfaces/discordjs";
+import { type Execute, type Command } from "interfaces/discordjs";
 import { clearQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
 import { createConfirmation } from "../../utils/actionHandlers.js";
@@ -10,7 +9,7 @@ const data = new SlashCommandBuilder()
   .setName("clear")
   .setDescription("Clears the queue");
 
-const execute = async (interaction: CommandInteraction): Promise<void> => {
+const execute: Execute = async (interaction) => {
   const row = confirmationRow();
   const response = await interaction.reply({
     content: "Are you sure you want to clear the queue?",
@@ -29,4 +28,5 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
 export const command: Command = {
   data,
   execute,
+  voice: false,
 };

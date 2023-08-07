@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { getSong, removeSongFromQueue } from "../../services/queue.js";
+import { getSongByIndex, removeSong } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
 import { createConfirmation } from "../../utils/actionHandlers.js";
 const data = new SlashCommandBuilder()
@@ -8,9 +8,7 @@ const data = new SlashCommandBuilder()
     .addStringOption((option) => option
     .setName("index")
     .setDescription("The index of the song to remove")
-    .setRequired(true)
-    .setMaxLength(4)
-    .setMinLength(1));
+    .setRequired(true));
 const execute = async (interaction) => {
     const prompt = interaction.options
         .getString("index")
@@ -23,7 +21,7 @@ const execute = async (interaction) => {
         });
         return;
     }
-    const song = getSong(interaction.guildId, index);
+    const song = getSongByIndex(interaction.guildId, index);
     if (!song) {
         await interaction.reply({
             content: "Song not found",
@@ -37,7 +35,7 @@ const execute = async (interaction) => {
         components: [row],
     });
     await createConfirmation(interaction, response, async (confirmation) => {
-        removeSongFromQueue(interaction.guildId, index);
+        removeSong(interaction.guildId, index);
         await confirmation.update({
             content: `Removed ${song.title} from the queue`,
             components: [],
@@ -47,4 +45,5 @@ const execute = async (interaction) => {
 export const command = {
     data,
     execute,
+    voice: false,
 };

@@ -1,11 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import {
-  CommandInteraction,
-  CommandInteractionOptionResolver,
-} from "discord.js";
+import { CommandInteractionOptionResolver } from "discord.js";
 
-import { type Command } from "interfaces/discordjs";
-import { getSong, removeSongFromQueue } from "../../services/queue.js";
+import { type Execute, type Command } from "interfaces/discordjs";
+import { getSongByIndex, removeSong } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
 import { createConfirmation } from "../../utils/actionHandlers.js";
 
@@ -17,11 +14,9 @@ const data = new SlashCommandBuilder()
       .setName("index")
       .setDescription("The index of the song to remove")
       .setRequired(true)
-      .setMaxLength(4)
-      .setMinLength(1)
   );
 
-const execute = async (interaction: CommandInteraction): Promise<void> => {
+const execute: Execute = async (interaction) => {
   const prompt = (interaction.options as CommandInteractionOptionResolver)
     .getString("index")!
     .match(/\d+/)?.[0];
@@ -35,7 +30,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     return;
   }
 
-  const song = getSong(interaction.guildId!, index);
+  const song = getSongByIndex(interaction.guildId!, index);
   if (!song) {
     await interaction.reply({
       content: "Song not found",
@@ -51,7 +46,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
   });
 
   await createConfirmation(interaction, response, async (confirmation) => {
-    removeSongFromQueue(interaction.guildId!, index);
+    removeSong(interaction.guildId!, index);
     await confirmation.update({
       content: `Removed ${song.title} from the queue`,
       components: [],
@@ -62,4 +57,5 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
 export const command: Command = {
   data,
   execute,
+  voice: false,
 };

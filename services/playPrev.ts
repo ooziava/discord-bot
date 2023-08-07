@@ -1,60 +1,48 @@
-import {
-  AudioPlayerStatus,
-  createAudioPlayer,
-  createAudioResource,
-  getVoiceConnection,
-} from "@discordjs/voice";
+import { createAudioResource, getVoiceConnection } from "@discordjs/voice";
 import { stream } from "play-dl";
 
-import { type Bot } from "interfaces/discordjs.js";
 import { playerRow } from "../utils/actionBuilder.js";
 import { createPlayerEmbed } from "../utils/embedBuilder.js";
-import { getPrevSongInQueue, getQueueLength, setCurrentSong } from "./queue.js";
-import { playNext } from "./playNext.js";
-import { play } from "./play.js";
+import { getPrevSong, getQueueLength, setCurrentSong } from "./queue.js";
+import bot from "../index.js";
 
-export const playPrev = async (guildId: string, bot: Bot): Promise<boolean> => {
+export const playPrev = async (guildId: string): Promise<boolean> => {
   const interaction = bot.interactions.get(guildId);
   if (!interaction) {
     console.log("Interaction not found!");
     return false;
   }
 
-  const prevSong = getPrevSongInQueue(guildId);
-  let subscription = bot.subscriptions.get(guildId);
+  const prevSong = getPrevSong(guildId);
+  const subscription = bot.subscriptions.get(guildId);
+  const player = bot.players.get(guildId);
+
   if (!subscription) {
-    const player = createAudioPlayer();
-    subscription = getVoiceConnection(guildId)!.subscribe(player);
-    if (!subscription) {
+    if (!player) {
+      console.log("Player not found!");
+      return false;
+    }
+    const sub = getVoiceConnection(guildId)?.subscribe(player);
+    if (!sub) {
       console.log("Subscription not found!");
       return false;
     }
 
-    player.on(AudioPlayerStatus.Idle, async () => {
-      const loop = bot.songAttributes.get(guildId)?.isLooping;
-      if (loop) {
-        const song = bot.currentSong.get(guildId)!;
-        setCurrentSong(guildId, song.index! - 1);
-      }
-      const res = await playNext(guildId, bot);
-      if (!res) playNext(guildId, bot);
-    });
-    bot.subscriptions.set(guildId, subscription);
+    bot.subscriptions.set(guildId, sub);
     const index = getQueueLength(guildId);
     setCurrentSong(guildId, index);
     return false;
   }
 
-  bot.songAttributes.set(guildId, {
-    ...bot.songAttributes.get(guildId),
-    optionsVisible: false,
+  bot.playersOptions.set(guildId, {
+    ...bot.playersOptions.get(guildId),
+    visible: false,
   });
-
   if (prevSong) {
     const strm = await stream(prevSong.url, { quality: 2 }).catch(() => null);
     if (!strm) return false;
 
-    bot.currentSong.set(guildId, prevSong);
+    bot.songs.set(guildId, prevSong);
     const resource = createAudioResource(strm.stream, {
       inputType: strm.type,
     });
@@ -66,8 +54,9 @@ export const playPrev = async (guildId: string, bot: Bot): Promise<boolean> => {
       embeds: [createPlayerEmbed(interaction, prevSong)],
     });
   } else {
-    await interaction.editReply("Queue is empty!");
     subscription.player.stop();
+    subscription.unsubscribe();
+    bot.songs.delete(guildId);
     bot.subscriptions.delete(guildId);
   }
 

@@ -1,20 +1,21 @@
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
-import { type Bot, type Command } from "interfaces/discordjs";
-import checkUser from "../../utils/checkUser.js";
+import { type Command, type Execute } from "interfaces/discordjs";
+import { checkUser } from "../../utils/checkUser.js";
+import bot from "../../index.js";
 
 const data = new SlashCommandBuilder()
   .setName("stop")
   .setDescription("Stop the current song");
 
-const execute = async (interaction: CommandInteraction, bot: Bot) => {
+const execute: Execute = async (interaction) => {
   const channel = checkUser(interaction);
   if (!channel) return;
 
-  const subscription = bot.subscriptions.get(channel.guildId);
-  if (subscription) {
-    subscription.player.stop();
-    subscription.unsubscribe();
+  if (bot.subscriptions.has(channel.guildId)) {
+    const sub = bot.subscriptions.get(channel.guildId)!;
+    sub.player.stop();
+    sub.unsubscribe();
     bot.subscriptions.delete(channel.guildId);
     await interaction.reply("Stopped!");
   } else {
@@ -28,4 +29,5 @@ const execute = async (interaction: CommandInteraction, bot: Bot) => {
 export const command: Command = {
   data,
   execute,
+  voice: true,
 };

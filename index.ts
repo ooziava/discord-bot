@@ -1,7 +1,7 @@
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 
-import { type Bot, type Command } from "interfaces/discordjs";
+import { type Bot } from "interfaces/discordjs";
 import loadCommands from "./utils/loadCommands.js";
 import registerCommands from "./utils/registerCommands.js";
 import commandHandler from "./utils/commandHandlers.js";
@@ -19,29 +19,26 @@ const client = new Client({
   ],
 });
 
-let commands = new Collection<string, Command>();
-
 client.once(Events.ClientReady, async (c) => {
   await socialAuth();
-  commands = await loadCommands();
-  bot.commands = commands;
+  bot.commands = await loadCommands();
 
-  c.on(Events.InteractionCreate, (interaction) => {
-    commandHandler(interaction, bot);
-  });
+  c.on(Events.InteractionCreate, commandHandler);
+  await registerCommands(bot.commands);
 
-  await registerCommands(commands);
   console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
 const bot: Bot = {
   client,
-  commands,
-  activeMessageIds: new Collection(),
-  songAttributes: new Collection(),
-  subscriptions: new Collection(),
+  commands: new Collection(),
   interactions: new Collection(),
-  currentSong: new Collection(),
+  subscriptions: new Collection(),
+  activeMessages: new Collection(),
+  players: new Collection(),
+  playersOptions: new Collection(),
+  songs: new Collection(),
+  songAttributes: new Collection(),
 };
 
 client.login(process.env.DISCORD_TOKEN);

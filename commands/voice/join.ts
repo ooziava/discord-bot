@@ -1,13 +1,13 @@
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
-import { type Command } from "interfaces/discordjs";
-import createConnection from "../../utils/createConnection.js";
+import { type Execute, type Command } from "interfaces/discordjs";
+import { createConnection } from "../../utils/createConnection.js";
 
 const data = new SlashCommandBuilder()
   .setName("join")
   .setDescription("Joins the voice channel you are in.");
 
-const execute = async (interaction: CommandInteraction): Promise<void> => {
+const execute: Execute = async (interaction) => {
   const connection = createConnection(interaction);
   if (connection) await interaction.reply("Joined voice channel!");
 };
@@ -15,4 +15,5 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
 export const command: Command = {
   data,
   execute,
+  voice: true,
 };

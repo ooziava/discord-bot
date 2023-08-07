@@ -14,25 +14,23 @@ const client = new Client({
         GatewayIntentBits.GuildEmojisAndStickers,
     ],
 });
-let commands = new Collection();
 client.once(Events.ClientReady, async (c) => {
     await socialAuth();
-    commands = await loadCommands();
-    bot.commands = commands;
-    c.on(Events.InteractionCreate, (interaction) => {
-        commandHandler(interaction, bot);
-    });
-    await registerCommands(commands);
+    bot.commands = await loadCommands();
+    c.on(Events.InteractionCreate, commandHandler);
+    await registerCommands(bot.commands);
     console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 const bot = {
     client,
-    commands,
-    activeMessageIds: new Collection(),
-    songAttributes: new Collection(),
-    subscriptions: new Collection(),
+    commands: new Collection(),
     interactions: new Collection(),
-    currentSong: new Collection(),
+    subscriptions: new Collection(),
+    activeMessages: new Collection(),
+    players: new Collection(),
+    playersOptions: new Collection(),
+    songs: new Collection(),
+    songAttributes: new Collection(),
 };
 client.login(process.env.DISCORD_TOKEN);
 export default bot;

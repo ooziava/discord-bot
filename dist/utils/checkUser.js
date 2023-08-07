@@ -1,4 +1,4 @@
-export default (interaction) => {
+export const checkUser = (interaction) => {
     const channel = interaction.member?.voice.channel;
     if (!channel) {
         interaction.reply({

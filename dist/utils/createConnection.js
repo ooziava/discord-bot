@@ -1,6 +1,6 @@
-import { getVoiceConnection, joinVoiceChannel, } from "@discordjs/voice";
-import checkUser from "./checkUser.js";
-export default (interaction) => {
+import { VoiceConnectionStatus, getVoiceConnection, joinVoiceChannel, } from "@discordjs/voice";
+import { checkUser } from "./checkUser.js";
+export const createConnection = (interaction) => {
     const channel = checkUser(interaction);
     if (!channel) {
         return null;
@@ -20,6 +20,9 @@ export default (interaction) => {
     }
     connection.on("error", (error) => {
         console.error(error);
+        connection.destroy();
+    });
+    connection.on(VoiceConnectionStatus.Disconnected, () => {
         connection.destroy();
     });
     return connection;

@@ -22,4 +22,5 @@ const execute = async (interaction) => {
 export const command = {
     data,
     execute,
+    voice: false,
 };

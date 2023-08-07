@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
-import createConnection from "../../utils/createConnection.js";
+import { createConnection } from "../../utils/createConnection.js";
 const data = new SlashCommandBuilder()
     .setName("join")
     .setDescription("Joins the voice channel you are in.");
@@ -11,4 +11,5 @@ const execute = async (interaction) => {
 export const command = {
     data,
     execute,
+    voice: true,
 };

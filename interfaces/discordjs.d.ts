@@ -1,31 +1,36 @@
-import { PlayerSubscription } from "@discordjs/voice";
 import {
   Collection,
   CommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+import { AudioPlayer, PlayerSubscription } from "@discordjs/voice";
 
 export interface Bot {
-  commands: Collection<string, Command>;
   client: Client;
-  subscriptions: Collection<string, PlayerSubscription>;
+  commands: Collection<string, Command>;
   interactions: Collection<string, CommandInteraction>;
+  activeMessages: Collection<string, string>;
+  subscriptions: Collection<string, PlayerSubscription>;
+  players: Collection<string, AudioPlayer>;
+  playersOptions: Collection<string, PlayerOptions>;
+  songs: Collection<string, Song>;
   songAttributes: Collection<string, SongAttributes>;
-  currentSong: Collection<string, Song>;
-  activeMessageIds: Collection<string, string>;
 }
+
+export type Execute = (interaction: CommandInteraction) => Promise<void>;
 
 export interface Command {
   data:
     | SlashCommandBuilder
     | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
-  execute: (interaction: CommandInteraction, bot: Bot) => Promise<void>;
+  execute: Execute;
+  voice: boolean;
 }
 
 export interface Commands extends Collection<string, Command> {}
 
 export interface Queue {
-  lastAddedIndex: number;
+  currentSongId: number;
   songs: Song[];
 }
 
@@ -42,13 +47,15 @@ export interface Song {
 }
 
 export interface SongAttributes {
-  isLooping?: boolean;
-  isQueueLooping?: boolean;
-  optionsVisible?: boolean;
+  loop: boolean;
 }
 
 export interface Author {
   name: string;
   url: string;
   avatar: string;
+}
+
+export interface PlayerOptions {
+  visible: boolean;
 }
