@@ -6,7 +6,11 @@ import { createAudioPlayer } from "@discordjs/voice";
 
 import { type Command, Execute } from "interfaces/discordjs";
 import { play } from "../../services/play.js";
-import { findSong, setCurrentSong } from "../../services/queue.js";
+import {
+  findSong,
+  getSongByIndex,
+  setCurrentSong,
+} from "../../services/queue.js";
 import { createConnection } from "../../utils/createConnection.js";
 import bot from "../../index.js";
 
@@ -14,21 +18,30 @@ const data = new SlashCommandBuilder()
   .setName("play")
   .setDescription("Play a song")
   .addStringOption((option) =>
-    option
-      .setName("find")
-      .setDescription("Find song in queue")
-      .setRequired(true)
+    option.setName("find").setDescription("Find song in queue")
+  )
+  .addStringOption((option) =>
+    option.setName("index").setDescription("Play song by index")
   );
 
 const execute: Execute = async (interaction) => {
-  const prompt = (
+  const query = (
     interaction.options as CommandInteractionOptionResolver
-  ).getString("find")!;
+  ).getString("find");
+
+  const index = (
+    interaction.options as CommandInteractionOptionResolver
+  ).getInteger("index");
+
+  if (!query && !index) interaction.reply("Please provide a query or index");
 
   const connection = createConnection(interaction);
   if (!connection) return;
 
-  const song = findSong(interaction.guild!.id, prompt);
+  const song = query
+    ? findSong(interaction.guildId!, query)
+    : getSongByIndex(interaction.guildId!, index! - 1);
+
   if (!song) {
     await interaction.reply("Song not found.");
     return;

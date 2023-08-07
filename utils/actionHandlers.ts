@@ -13,9 +13,8 @@ const createConfirmation = async (
   response: InteractionResponse<boolean>,
   confirm: ConfirmCallback
 ): Promise<void> => {
-  const { awaitMessageComponent } = response;
   try {
-    const confirmation = (await awaitMessageComponent({
+    const confirmation = (await response.awaitMessageComponent({
       filter: userFilter(interaction),
       time: 60000,
     })) as ButtonInteraction;

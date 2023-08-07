@@ -53,7 +53,14 @@ export default async (interaction: Interaction): Promise<void> => {
     const inter = bot.interactions.get(interaction.guild!.id);
 
     if (!inter) return;
-    if (id && id !== interaction.message?.id) return;
+    if (id && id !== interaction.message?.id) {
+      await inter.reply({
+        content: "This message is no longer active!",
+        ephemeral: true,
+      });
+      bot.activeMessages.set(interaction.guild!.id, interaction.message?.id);
+      return;
+    }
 
     const { subscriptions, songs, songAttributes, playersOptions } = bot;
     const subscription = subscriptions.get(interaction.guild!.id);
