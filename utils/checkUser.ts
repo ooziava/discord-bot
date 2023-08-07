@@ -10,7 +10,7 @@ export default (interaction: CommandInteraction): VoiceBasedChannel | null => {
     return null;
   } else if (!channel.joinable) {
     interaction.reply({
-      content: "I don't have permission to join this voice channel",
+      content: "I don't have permission to join the voice channel",
       ephemeral: true,
     });
     return null;

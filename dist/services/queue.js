@@ -82,7 +82,7 @@ export const getSong = (guildId, index) => {
 };
 export const setCurrentSong = (guildId, index) => {
     const queue = queues[guildId] || loadQueue(guildId);
-    if (index >= queue.songs.length || index < -1)
+    if (index > queue.songs.length || index < -1)
         return false;
     else
         queue.lastAddedIndex = index;

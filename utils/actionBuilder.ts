@@ -50,7 +50,6 @@ const playerRow = (
     .setCustomId("prev")
     .setLabel("Prev")
     .setStyle(ButtonStyle.Primary);
-
   const next = new ButtonBuilder()
     .setCustomId("next")
     .setLabel("Next")

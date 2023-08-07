@@ -1,22 +1,28 @@
 import { ComponentType, } from "discord.js";
 import { userFilter } from "./collectorFilters.js";
-const createConfirmarion = async (interaction, response, confirm) => {
+const createConfirmation = async (interaction, response, confirm) => {
+    const { awaitMessageComponent } = response;
     try {
-        const confirmation = await response.awaitMessageComponent({
+        const confirmation = (await awaitMessageComponent({
             filter: userFilter(interaction),
             time: 60000,
-        });
-        if (confirmation.customId === "confirm") {
-            await confirm(confirmation);
-        }
-        else if (confirmation.customId === "cancel") {
-            await confirmation.update({
-                content: "Action cancelled",
-                components: [],
-            });
+        }));
+        switch (confirmation.customId) {
+            case "confirm":
+                await confirm(confirmation);
+                break;
+            case "cancel":
+                await confirmation.update({
+                    content: "Action cancelled",
+                    components: [],
+                });
+                break;
+            default:
+                break;
         }
     }
-    catch (e) {
+    catch (error) {
+        console.error(error);
         await interaction.editReply({
             content: "Confirmation not received within 1 minute, cancelling",
             components: [],
@@ -30,22 +36,26 @@ const createPagination = async (interaction, response, next, prev) => {
             time: 120000,
         });
         collector.on("collect", async (confirmation) => {
-            if (confirmation.customId === "prevPage") {
-                await prev(confirmation);
+            switch (confirmation.customId) {
+                case "prevPage":
+                    await prev(confirmation);
+                    break;
+                case "nextPage":
+                    await next(confirmation);
+                    break;
+                default:
+                    await confirmation.deferUpdate();
+                    break;
             }
-            else if (confirmation.customId === "nextPage") {
-                await next(confirmation);
-            }
-            else
-                await confirmation.deferUpdate();
             collector.resetTimer();
         });
     }
-    catch (e) {
+    catch (error) {
+        console.error(error);
         await interaction.editReply({
             content: "Something went wrong!",
             components: [],
         });
     }
 };
-export { createConfirmarion, createPagination };
+export { createConfirmation, createPagination };

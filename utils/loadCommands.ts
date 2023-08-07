@@ -3,7 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Command, type Commands } from "interfaces/discordjs";
 import { Collection } from "discord.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default async (): Promise<Commands> => {
@@ -24,6 +26,7 @@ export default async (): Promise<Commands> => {
         const command: Command = commandFile.command;
         if (command) {
           console.log(`Loaded command ${command.data.name} at ${filePath}`);
+          process.env.DEV && command.data.setName(`${command.data.name}-dev`);
           commands.set(command.data.name, command);
         } else {
           console.log(

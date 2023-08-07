@@ -99,7 +99,7 @@ export const getSong = (guildId: string, index: number): Song | null => {
 
 export const setCurrentSong = (guildId: string, index: number): boolean => {
   const queue = queues[guildId] || loadQueue(guildId);
-  if (index >= queue.songs.length || index < -1) return false;
+  if (index > queue.songs.length || index < -1) return false;
   else queue.lastAddedIndex = index;
 
   saveQueue(guildId, queue);

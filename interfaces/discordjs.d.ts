@@ -1,5 +1,9 @@
 import { PlayerSubscription } from "@discordjs/voice";
-import { Collection, CommandInteraction } from "discord.js";
+import {
+  Collection,
+  CommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 
 export interface Bot {
   commands: Collection<string, Command>;
@@ -12,7 +16,9 @@ export interface Bot {
 }
 
 export interface Command {
-  data: SlashCommandBuilder;
+  data:
+    | SlashCommandBuilder
+    | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
   execute: (interaction: CommandInteraction, bot: Bot) => Promise<void>;
 }
 

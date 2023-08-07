@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { getSong, removeSongFromQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
-import { createConfirmarion } from "../../utils/actionHandlers.js";
+import { createConfirmation } from "../../utils/actionHandlers.js";
 const data = new SlashCommandBuilder()
     .setName("remove")
     .setDescription("Removes a song from the queue")
@@ -36,7 +36,7 @@ const execute = async (interaction) => {
         content: `Are you sure you want to remove ${song.title}  from the queue?`,
         components: [row],
     });
-    await createConfirmarion(interaction, response, async (confirmation) => {
+    await createConfirmation(interaction, response, async (confirmation) => {
         removeSongFromQueue(interaction.guildId, index);
         await confirmation.update({
             content: `Removed ${song.title} from the queue`,

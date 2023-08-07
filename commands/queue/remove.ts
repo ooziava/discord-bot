@@ -7,7 +7,7 @@ import {
 import { type Command } from "interfaces/discordjs";
 import { getSong, removeSongFromQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
-import { createConfirmarion } from "../../utils/actionHandlers.js";
+import { createConfirmation } from "../../utils/actionHandlers.js";
 
 const data = new SlashCommandBuilder()
   .setName("remove")
@@ -50,7 +50,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     components: [row],
   });
 
-  await createConfirmarion(interaction, response, async (confirmation) => {
+  await createConfirmation(interaction, response, async (confirmation) => {
     removeSongFromQueue(interaction.guildId!, index);
     await confirmation.update({
       content: `Removed ${song.title} from the queue`,

@@ -2,7 +2,7 @@ import { SlashCommandBuilder, } from "discord.js";
 import { createAudioPlayer } from "@discordjs/voice";
 import { getQueueLength, getSong, setCurrentSong, } from "../../services/queue.js";
 import { play } from "../../services/play.js";
-import { setSongList } from "../../utils/queueMessage.js";
+import { createSongListUpdater } from "../../utils/queueMessage.js";
 import createConnection from "../../utils/createConnection.js";
 import { paginationRow } from "../../utils/actionBuilder.js";
 import { createPagination } from "../../utils/actionHandlers.js";
@@ -85,7 +85,7 @@ const execute = async (interaction, bot) => {
         }
         return;
     }
-    const updateSongList = setSongList(interaction);
+    const updateSongList = createSongListUpdater(interaction);
     let message = updateSongList();
     const row = paginationRow();
     const response = await interaction.reply({

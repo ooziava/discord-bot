@@ -29,13 +29,12 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
     } catch (error) {
       console.error(error);
 
-      console.error(error);
+      const reply =
+        interaction?.replied || interaction?.deferred === true
+          ? interaction?.followUp
+          : interaction?.reply;
 
-      if (interaction) {
-        const reply =
-          interaction.replied || interaction.deferred === true
-            ? interaction.followUp
-            : interaction.reply;
+      if (reply) {
         try {
           await reply({
             content: "There was an error while executing this command!",
@@ -43,7 +42,7 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
           });
         } catch (error) {
           console.error(error);
-          interaction.channel?.send(
+          interaction?.channel?.send(
             "There was an error while executing this command!"
           );
         }
@@ -54,13 +53,16 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
       }
     }
   } else if (interaction.isButton()) {
-    // Check if the current message ID matches the last interaction message ID
     const id = bot.activeMessageIds.get(interaction.guild!.id);
     const inter = bot.interactions.get(interaction.guild!.id);
     if (!inter) return;
     if (id && id !== interaction.message?.id) return;
 
-    const subscription = bot.subscriptions.get(interaction.guild!.id);
+    const { subscriptions, currentSong, songAttributes } = bot;
+    const subscription = subscriptions.get(interaction.guild!.id);
+    const song = currentSong.get(interaction.guild!.id)!;
+    const attributes = songAttributes.get(interaction.guild!.id);
+
     if (subscription) {
       if (
         (interaction.member as GuildMember)?.voice.channel?.id !==
@@ -74,112 +76,124 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
       }
     }
 
-    const song = bot.currentSong.get(interaction.guild!.id)!;
-    if (interaction.customId === "prev") {
-      const res = await playPrev(interaction.guild!.id, bot);
-      if (!res) play(interaction.guild!.id, bot);
-      interaction.deferUpdate();
-    } else if (interaction.customId === "next") {
-      const res = await playNext(interaction.guild!.id, bot);
-      if (!res) play(interaction.guild!.id, bot);
-      interaction.deferUpdate();
-    } else if (interaction.customId === "pause") {
-      if (subscription) {
-        if (subscription.player.state.status === AudioPlayerStatus.Paused) {
-          subscription.player.unpause();
-        } else {
-          subscription.player.pause();
+    switch (interaction.customId) {
+      case "prev":
+        let resPrev,
+          countPrev = 0;
+        do {
+          resPrev = await playPrev(interaction.guild!.id, bot);
+          countPrev++;
+        } while (!resPrev && countPrev < 10);
+        // if (!resPrev) play(interaction.guild!.id, bot);
+        break;
+      case "next":
+        let resNext,
+          countNext = 0;
+        do {
+          resNext = await playNext(interaction.guild!.id, bot);
+          countNext++;
+        } while (!resNext && countNext < 10);
+        // if (!resNext) play(interaction.guild!.id, bot);
+        break;
+      case "pause":
+        if (subscription) {
+          if (subscription.player.state.status === AudioPlayerStatus.Paused) {
+            subscription.player.unpause();
+          } else {
+            subscription.player.pause();
+          }
+          if (inter)
+            await inter.editReply({
+              content: " ",
+              components: [
+                playerRow(
+                  subscription.player.state.status === AudioPlayerStatus.Paused
+                ),
+              ],
+              embeds: [createPlayerEmbed(interaction, song)],
+            });
         }
-        if (inter)
+        break;
+      case "options":
+        const optionsVisible =
+          attributes?.optionsVisible === undefined
+            ? true
+            : !attributes?.optionsVisible;
+        songAttributes.set(interaction.guild!.id, {
+          ...attributes,
+          optionsVisible,
+        });
+
+        if (inter) {
           await inter.editReply({
             content: " ",
-            components: [
-              playerRow(
-                subscription.player.state.status === AudioPlayerStatus.Paused
-              ),
-            ],
+            components: optionsVisible
+              ? [
+                  playerRow(),
+                  playerOptionsRow(
+                    songAttributes.get(interaction.guild!.id)?.isLooping ||
+                      false
+                  ),
+                ]
+              : [playerRow()],
             embeds: [createPlayerEmbed(interaction, song)],
           });
-      }
-      interaction.deferUpdate();
-    } else if (interaction.customId === "options") {
-      const attributes = bot.songAttributes.get(interaction.guild!.id);
-      const optionsVisible =
-        attributes?.optionsVisible === undefined
-          ? true
-          : !attributes?.optionsVisible;
-      bot.songAttributes.set(interaction.guild!.id, {
-        ...attributes,
-        optionsVisible,
-      });
-
-      if (inter) {
+        }
+        break;
+      case "shuffle":
+        const currSong = shuffleQueue(interaction.guild!.id);
         await inter.editReply({
           content: " ",
-          components: optionsVisible
-            ? [
-                playerRow(),
-                playerOptionsRow(
-                  bot.songAttributes.get(interaction.guild!.id)?.isLooping ||
-                    false
-                ),
-              ]
-            : [playerRow()],
+          components: [playerRow()],
+          embeds: [createPlayerEmbed(interaction, currSong)],
+        });
+        break;
+      case "loop":
+        songAttributes.set(interaction.guild!.id, {
+          ...attributes,
+          isLooping: !attributes?.isLooping,
+        });
+        await inter.editReply({
+          content: " ",
+          components: [
+            playerRow(),
+            playerOptionsRow(
+              songAttributes.get(interaction.guild!.id)?.isLooping || false
+            ),
+          ],
           embeds: [createPlayerEmbed(interaction, song)],
         });
-      }
-      await interaction.deferUpdate();
-    } else if (interaction.customId === "shuffle") {
-      const currSong = shuffleQueue(interaction.guild!.id);
-      await inter.editReply({
-        content: " ",
-        components: [playerRow()],
-        embeds: [createPlayerEmbed(interaction, currSong)],
-      });
-      await interaction.deferUpdate();
-    } else if (interaction.customId === "loop") {
-      bot.songAttributes.set(interaction.guild!.id, {
-        ...bot.songAttributes.get(interaction.guild!.id),
-        isLooping: !bot.songAttributes.get(interaction.guild!.id)?.isLooping,
-      });
-      await inter.editReply({
-        content: " ",
-        components: [
-          playerRow(),
-          playerOptionsRow(
-            bot.songAttributes.get(interaction.guild!.id)?.isLooping || false
-          ),
-        ],
-        embeds: [createPlayerEmbed(interaction, song)],
-      });
-      await interaction.deferUpdate();
-    } else if (interaction.customId === "remove") {
-      const index = bot.currentSong.get(interaction.guild!.id)?.index;
-      if (index === undefined) return;
-      const result = removeSongFromQueue(interaction.guild!.id, index);
-      if (result) {
-        setCurrentSong(interaction.guild!.id, index - 1);
-        const res = await playNext(interaction.guild!.id, bot);
-        if (!res) play(interaction.guild!.id, bot);
-      } else {
-        await inter.editReply("Failed to remove song from queue!");
-      }
-      await interaction.deferUpdate();
-    } else if (interaction.customId === "stop") {
-      if (subscription) {
-        subscription.player.stop();
-        bot.subscriptions.delete(interaction.guild!.id);
-      }
-      getVoiceConnection(interaction.guild!.id)?.destroy();
-      bot.currentSong.delete(interaction.guild!.id);
-      bot.songAttributes.delete(interaction.guild!.id);
-      bot.interactions.delete(interaction.guild!.id);
+        break;
+      case "remove":
+        const index = currentSong.get(interaction.guild!.id)?.index;
+        if (index === undefined) return;
+        const result = removeSongFromQueue(interaction.guild!.id, index);
+        if (result) {
+          setCurrentSong(interaction.guild!.id, index - 1);
+          const res = await playNext(interaction.guild!.id, bot);
+          if (!res) play(interaction.guild!.id, bot);
+        } else {
+          await inter.editReply("Failed to remove song from queue!");
+        }
+        break;
+      case "stop":
+        if (subscription) {
+          subscription.player.stop();
+          subscriptions.delete(interaction.guild!.id);
+        }
+        getVoiceConnection(interaction.guild!.id)?.destroy();
+        currentSong.delete(interaction.guild!.id);
+        songAttributes.delete(interaction.guild!.id);
+        bot.interactions.delete(interaction.guild!.id);
 
-      await inter.editReply({
-        content: "Stopped playing!",
-        components: [],
-        embeds: [],
-      });
+        await inter.editReply({
+          content: "Stopped playing!",
+          components: [],
+          embeds: [],
+        });
+        break;
+      default:
+        break;
     }
     if (
       !(interaction.customId === "options" || interaction.customId === "loop")
@@ -188,6 +202,7 @@ export default async (interaction: Interaction, bot: Bot): Promise<void> => {
         ...bot.songAttributes.get(interaction.guild!.id),
         optionsVisible: false,
       });
+    await interaction.deferUpdate();
   } else if (interaction.isStringSelectMenu()) {
     // respond to the select menu
   }

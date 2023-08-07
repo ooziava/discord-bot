@@ -1,26 +1,35 @@
-import { createAudioPlayer, createAudioResource, getVoiceConnection, } from "@discordjs/voice";
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, getVoiceConnection, } from "@discordjs/voice";
 import { stream } from "play-dl";
 import { playerRow } from "../utils/actionBuilder.js";
 import { createPlayerEmbed } from "../utils/embedBuilder.js";
-import { getNextSongInQueue, getSong, setCurrentSong } from "./queue.js";
+import { getNextSongInQueue, setCurrentSong } from "./queue.js";
 export const playNext = async (guildId, bot) => {
     const interaction = bot.interactions.get(guildId);
     if (!interaction) {
         console.log("Interaction not found!");
         return false;
     }
-    let nextSong = getNextSongInQueue(guildId);
+    const nextSong = getNextSongInQueue(guildId);
     let subscription = bot.subscriptions.get(guildId);
     if (!subscription) {
         const player = createAudioPlayer();
-        subscription = getVoiceConnection(guildId).subscribe(player);
+        subscription = getVoiceConnection(guildId)?.subscribe(player);
         if (!subscription) {
             console.log("Subscription not found!");
             return false;
         }
+        player.on(AudioPlayerStatus.Idle, async () => {
+            const loop = bot.songAttributes.get(guildId)?.isLooping;
+            if (loop) {
+                const song = bot.currentSong.get(guildId);
+                setCurrentSong(guildId, song.index - 1);
+            }
+            const res = await playNext(guildId, bot);
+            if (!res)
+                playNext(guildId, bot);
+        });
         bot.subscriptions.set(guildId, subscription);
-        setCurrentSong(guildId, 0);
-        nextSong = getSong(guildId, 0);
+        setCurrentSong(guildId, -1);
         return false;
     }
     bot.songAttributes.set(guildId, {
@@ -29,10 +38,8 @@ export const playNext = async (guildId, bot) => {
     });
     if (nextSong) {
         const strm = await stream(nextSong.url, { quality: 2 }).catch(() => null);
-        if (!strm) {
-            playNext(guildId, bot);
+        if (!strm)
             return false;
-        }
         bot.currentSong.set(guildId, nextSong);
         const resource = createAudioResource(strm.stream, {
             inputType: strm.type,

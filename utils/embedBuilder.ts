@@ -6,21 +6,41 @@ import {
 import { type Song } from "interfaces/discordjs.js";
 import { getSong } from "../services/queue.js";
 
-const createPlayerEmbed = (
+export const createPlayerEmbed = (
   interaction: CommandInteraction | ButtonInteraction,
   song: Song
-) => {
-  const songList = Array.from({ length: 6 }, (_, i) =>
-    getSong(interaction.guild!.id, song.index! - 2 + i)
-  ).filter(Boolean) as Song[];
+): EmbedBuilder => {
+  const exampleEmbed = new EmbedBuilder();
+
+  const guild = interaction.guild;
+  if (!guild) {
+    return exampleEmbed;
+  }
+
+  const songListLength = 6;
+  const songList: Song[] = [];
+  for (let i = song.index! - 2; i < song.index! + songListLength - 2; i++) {
+    const s = getSong(guild.id, i);
+    if (s) {
+      songList.push(s);
+    }
+  }
+
+  if (songList.length === 0) {
+    interaction.reply({
+      content: "No songs found in the queue",
+      ephemeral: true,
+    });
+    return exampleEmbed;
+  }
 
   const songListStrings = songList.map((s) =>
     s.index === song.index!
       ? `***${s.index! + 1}. ${s.title}***`
       : `${s.index! + 1}. ${s.title}\n`
   );
-  const exampleEmbed = new EmbedBuilder()
-    .setColor(0x545fd6)
+
+  exampleEmbed
     .setTitle(song.title)
     .setURL(song.url)
     .setDescription(
@@ -52,5 +72,3 @@ const createPlayerEmbed = (
 
   return exampleEmbed;
 };
-
-export { createPlayerEmbed };

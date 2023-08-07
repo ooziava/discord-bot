@@ -1,12 +1,16 @@
-import { REST, Routes } from "discord.js";
-import { type Command, type Commands } from "interfaces/discordjs";
+import {
+  REST,
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+  Routes,
+} from "discord.js";
+import { type Commands } from "interfaces/discordjs";
 import dotenv from "dotenv";
 
 dotenv.config();
 const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
 
 export default async (commandCollection: Commands): Promise<void> => {
-  const commands: Command[] = [];
+  const commands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
   commandCollection.forEach((commandItem) =>
     commands.push(commandItem.data.toJSON())
   );

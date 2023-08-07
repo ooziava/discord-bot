@@ -4,7 +4,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { type Command } from "interfaces/discordjs";
 import { clearQueue } from "../../services/queue.js";
 import { confirmationRow } from "../../utils/actionBuilder.js";
-import { createConfirmarion } from "../../utils/actionHandlers.js";
+import { createConfirmation } from "../../utils/actionHandlers.js";
 
 const data = new SlashCommandBuilder()
   .setName("clear")
@@ -17,7 +17,7 @@ const execute = async (interaction: CommandInteraction): Promise<void> => {
     components: [row],
   });
 
-  await createConfirmarion(interaction, response, async (confirmation) => {
+  await createConfirmation(interaction, response, async (confirmation) => {
     clearQueue(interaction.guildId!);
     await confirmation.update({
       content: "Queue cleared",
