@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, } from "discord.js";
 import { createAudioPlayer } from "@discordjs/voice";
 import { play } from "../../services/play.js";
-import { findSong, getSongByIndex, setCurrentSong, } from "../../services/queue.js";
+import { findSong, getQueueLength, getSongByIndex, setCurrentSong, } from "../../services/queue.js";
 import { createConnection } from "../../utils/createConnection.js";
 import bot from "../../index.js";
 const data = new SlashCommandBuilder()
@@ -11,17 +11,31 @@ const data = new SlashCommandBuilder()
     .addStringOption((option) => option.setName("index").setDescription("Play song by index"));
 const execute = async (interaction) => {
     const query = interaction.options.getString("find");
-    const index = interaction.options.getInteger("index");
+    let index = interaction.options.getString("index");
     if (!query && !index) {
         await interaction.reply("Please provide a query or index");
         return;
+    }
+    if (index && isNaN(parseInt(index))) {
+        const length = getQueueLength(interaction.guildId);
+        if (index.toLowerCase() === "random") {
+            const randomIndex = Math.floor(Math.random() * (length - 1 - 0 + 1) + 0);
+            index = randomIndex.toString();
+        }
+        else if (index.toLowerCase() === "last") {
+            index = length.toString();
+        }
+        else {
+            await interaction.reply("Index must be a number");
+            return;
+        }
     }
     const connection = createConnection(interaction);
     if (!connection)
         return;
     const song = query
         ? findSong(interaction.guildId, query)
-        : getSongByIndex(interaction.guildId, index - 1);
+        : getSongByIndex(interaction.guildId, parseInt(index));
     if (!song) {
         await interaction.reply("Song not found.");
         return;
@@ -53,7 +67,7 @@ const execute = async (interaction) => {
         if (!bot.interactions.has(interaction.guild.id))
             bot.interactions.set(interaction.guild.id, interaction);
         setCurrentSong(interaction.guild.id, song.index);
-        await play(interaction.guildId);
+        play(interaction.guildId);
     }
 };
 export const command = {

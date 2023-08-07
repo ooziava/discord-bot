@@ -8,6 +8,7 @@ import { type Command, Execute } from "interfaces/discordjs";
 import { play } from "../../services/play.js";
 import {
   findSong,
+  getQueueLength,
   getSongByIndex,
   setCurrentSong,
 } from "../../services/queue.js";
@@ -29,20 +30,33 @@ const execute: Execute = async (interaction) => {
     interaction.options as CommandInteractionOptionResolver
   ).getString("find");
 
-  const index = (
+  let index = (
     interaction.options as CommandInteractionOptionResolver
-  ).getInteger("index");
+  ).getString("index");
 
   if (!query && !index) {
     await interaction.reply("Please provide a query or index");
     return;
   }
+  if (index && isNaN(parseInt(index))) {
+    const length = getQueueLength(interaction.guildId!);
+    if (index.toLowerCase() === "random") {
+      const randomIndex = Math.floor(Math.random() * (length - 1 - 0 + 1) + 0);
+      index = randomIndex.toString();
+    } else if (index.toLowerCase() === "last") {
+      index = length.toString();
+    } else {
+      await interaction.reply("Index must be a number");
+      return;
+    }
+  }
+
   const connection = createConnection(interaction);
   if (!connection) return;
 
   const song = query
     ? findSong(interaction.guildId!, query)
-    : getSongByIndex(interaction.guildId!, index! - 1);
+    : getSongByIndex(interaction.guildId!, parseInt(index!));
 
   if (!song) {
     await interaction.reply("Song not found.");
@@ -78,7 +92,7 @@ const execute: Execute = async (interaction) => {
       bot.interactions.set(interaction.guild!.id, interaction);
 
     setCurrentSong(interaction.guild!.id, song.index!);
-    await play(interaction.guildId!);
+    play(interaction.guildId!);
   }
 };
 
