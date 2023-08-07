@@ -33,8 +33,10 @@ const execute: Execute = async (interaction) => {
     interaction.options as CommandInteractionOptionResolver
   ).getInteger("index");
 
-  if (!query && !index) interaction.reply("Please provide a query or index");
-
+  if (!query && !index) {
+    await interaction.reply("Please provide a query or index");
+    return;
+  }
   const connection = createConnection(interaction);
   if (!connection) return;
 

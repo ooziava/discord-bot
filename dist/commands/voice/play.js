@@ -12,8 +12,10 @@ const data = new SlashCommandBuilder()
 const execute = async (interaction) => {
     const query = interaction.options.getString("find");
     const index = interaction.options.getInteger("index");
-    if (!query && !index)
-        interaction.reply("Please provide a query or index");
+    if (!query && !index) {
+        await interaction.reply("Please provide a query or index");
+        return;
+    }
     const connection = createConnection(interaction);
     if (!connection)
         return;
