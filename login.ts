@@ -4,9 +4,9 @@ import { setToken } from "play-dl";
 export default async (): Promise<void> => {
   try {
     await setToken({
-      // soundcloud: {
-      //   client_id: process.env.SOUNDCLOUD_CLIENT_ID!,
-      // },
+      soundcloud: {
+        client_id: process.env.SOUNDCLOUD_CLIENT_ID!,
+      },
       spotify: {
         client_id: process.env.SPOTIFY_CLIENT_ID!,
         client_secret: process.env.SPOTIFY_CLIENT_SECRET!,
@@ -14,7 +14,7 @@ export default async (): Promise<void> => {
         market: process.env.SPOTIFY_MARKET!,
       },
     });
-    consola.log("Token set!");
+    consola.success("Token set!");
   } catch (error) {
     consola.error(error);
   }

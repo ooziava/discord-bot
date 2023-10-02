@@ -16,7 +16,7 @@ export default async (commandCollection: Command[]) => {
       { body: commands }
     )) as any[];
 
-    consola.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    consola.success(`Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
     consola.error(error);
   }

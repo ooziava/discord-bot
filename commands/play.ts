@@ -1,50 +1,26 @@
+import consola from "consola";
 import {
+  AudioPlayerStatus,
   NoSubscriberBehavior,
+  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import consola from "consola";
-import { CommandInteractionOptionResolver, GuildMember, SlashCommandBuilder } from "discord.js";
 import {
-  search,
-  so_validate,
-  sp_validate,
-  stream,
-  yt_validate,
-  spotify,
-  soundcloud,
-  is_expired,
-  refreshToken,
-  YouTubeVideo,
-  type Spotify,
-  SpotifyTrack,
-} from "play-dl";
+  CommandInteractionOptionResolver,
+  EmbedBuilder,
+  GuildMember,
+  SlashCommandBuilder,
+} from "discord.js";
+import { stream, is_expired, refreshToken, YouTubeVideo } from "play-dl";
 
-async function getType(query: string): Promise<[string, string] | false> {
-  const spType = sp_validate(query);
-  if (spType) {
-    return ["sp", spType];
-  }
+import { getType, searchYtVideo, trackToSong } from "../utils/play-dl.js";
+import getYtFromSpotify from "../search/spotify.js";
+import getYt from "../search/youtube.js";
+import { getLength, getNextSong, saveSongs } from "../mongo.js";
 
-  const soType = await so_validate(query);
-  if (soType) {
-    return ["so", soType];
-  }
-
-  const ytType = yt_validate(query);
-  if (ytType) {
-    return ["yt", ytType];
-  }
-
-  return false;
-}
-
-async function searchYt(query: string): Promise<YouTubeVideo> {
-  const results = await search(query, { limit: 1, source: { youtube: "video" } });
-  return results[0]!;
-}
-
+export const cooldown = 5;
 export const data = new SlashCommandBuilder()
   .setName("play")
   .setDescription("Plays a song")
@@ -57,43 +33,43 @@ export const execute: Execute = async (interaction, client) => {
   if (is_expired()) await refreshToken();
 
   const query = (interaction.options as CommandInteractionOptionResolver).getString("song")!;
-  const type = await getType(query);
-  if (!type) {
-    await interaction.reply({
-      content: "Invalid song!",
-      ephemeral: true,
-    });
-    return;
-  }
-  const [social, media] = type;
-
-  let songs = [];
-  if (media === "search") {
-    songs.push(await searchYt(query));
-  } else if (social === "sp") {
-    const song = await spotify(query);
-    if (song instanceof SpotifyTrack) {
-      const q = song.name + song.artists.reduce((a, b) => a + " " + b, "");
-      songs.push(await searchYt(q));
-    } else {
-      const tracks = await song.all_tracks();
-      consola.log(tracks.length);
-      const playlist = await Promise.all(
-        tracks.map(async (track) => {
-          return await searchYt(track.name + track.artists.reduce((a, b) => a + " " + b, ""));
-        })
-      );
-      songs = playlist;
+  let tracks: Track[] = [];
+  try {
+    const qtype = await getType(query);
+    if (!qtype) {
+      await interaction.followUp({
+        content: "Invalid song!",
+        ephemeral: true,
+      });
+      return;
     }
-  } else if (social === "yt") {
-    songs = await search(query, { source: { youtube: "video" } });
-  } else {
+    const [social, type] = qtype;
+
+    if (type === "search") {
+      const track = await searchYtVideo(query);
+      tracks = track ? [track] : [];
+    } else if (social === "sp") tracks = await getYtFromSpotify(query, type as SpotifyType);
+    else if (social === "yt") tracks = await getYt(query, type as YouTubeType);
+    else {
+      await interaction.followUp({
+        content: "Invalid request!",
+        ephemeral: true,
+      });
+      return;
+    }
+  } catch (error) {
+    consola.error(error);
     await interaction.followUp({
-      content: "Invalid song!",
+      content: "Error while searching for song!",
       ephemeral: true,
     });
     return;
   }
+  const songs = tracks
+    .filter((track) => track && track.url)
+    .map((track) =>
+      trackToSong(track, interaction.user.username, interaction.user.displayAvatarURL())
+    );
 
   if (!songs.length) {
     await interaction.followUp({
@@ -102,24 +78,119 @@ export const execute: Execute = async (interaction, client) => {
     });
     return;
   }
+  try {
+    const length = await getLength(interaction.guildId!);
+    const [first] = songs;
+    first.id = length;
+    client.songs.set(interaction.guildId!, first);
+    saveSongs(songs, interaction.guildId!);
+  } catch (error) {
+    consola.error(error);
+    await interaction.followUp({
+      content: "Error while saving song!",
+      ephemeral: true,
+    });
+    return;
+  }
+  const member = interaction.member as GuildMember;
+  if (!member.voice.channelId) {
+    await interaction.followUp({
+      content: "You must be in a voice channel!",
+      ephemeral: true,
+    });
+    return;
+  }
+  const subscription = client.subscriptions.get(interaction.guildId!);
 
-  const connection = joinVoiceChannel({
-    channelId: (interaction.member as GuildMember).voice.channelId!,
-    guildId: interaction.guildId!,
-    adapterCreator: interaction.guild!.voiceAdapterCreator,
-  });
+  const onDisconnect = () => {
+    const sub = client.subscriptions.get(interaction.guildId!);
+    if (sub) {
+      sub.unsubscribe();
+      sub.player.stop();
+      client.subscriptions.delete(interaction.guildId!);
+    }
+  };
 
-  const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
-  const audiostream = await stream(songs[0].url, { quality: 2 });
-  const resource = createAudioResource(audiostream.stream, {
-    inputType: audiostream.type,
-    inlineVolume: true,
-  });
+  const onPlayerIdle = async () => {
+    const sub = client.subscriptions.get(interaction.guildId!);
+    consola.info("Player idle");
+    if (sub) {
+      const id = client.songs.get(interaction.guildId!)?.id;
+      const song = await getNextSong(interaction.guildId!, id || 0);
+      if (song) {
+        const audiostream = await stream(song.url, { quality: 2 });
+        const resource = createAudioResource(audiostream.stream, {
+          inputType: audiostream.type,
+          inlineVolume: true,
+        });
+        sub.player.play(resource);
+        client.songs.set(interaction.guildId!, song);
 
-  connection.subscribe(player);
-  player.play(resource);
+        await interaction.followUp({
+          content: `Now playing ${song.title} [one of ${songs.length}]`,
+        });
+        return;
+      } else {
+        sub.unsubscribe();
+        sub.player.stop();
+        client.subscriptions.delete(interaction.guildId!);
+        await interaction.followUp({
+          content: "No more songs in queue!",
+        });
+        return;
+      }
+    }
+  };
 
+  if (!subscription) {
+    const connection = joinVoiceChannel({
+      channelId: member.voice.channelId,
+      guildId: interaction.guildId!,
+      adapterCreator: interaction.guild!.voiceAdapterCreator,
+    });
+    const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+
+    connection.on(VoiceConnectionStatus.Disconnected, onDisconnect);
+    player.on(AudioPlayerStatus.Idle, onPlayerIdle);
+
+    const sub = connection.subscribe(player)!;
+    client.subscriptions.set(interaction.guildId!, sub);
+  }
+
+  const player = client.subscriptions.get(interaction.guildId!)!.player;
+
+  try {
+    const audiostream = await stream(songs[0]!.url, { quality: 2 });
+    consola.info("Now player started");
+    const resource = createAudioResource(audiostream.stream, {
+      inputType: audiostream.type,
+      inlineVolume: true,
+    });
+    player.play(resource);
+  } catch (error) {
+    consola.error(error);
+    await interaction.followUp({
+      content: "Error while playing song!",
+      ephemeral: true,
+    });
+    return;
+  }
+  const track = client.songs.get(interaction.guildId!)!;
   await interaction.followUp({
-    content: `Now playing ${songs[0].title} (${media}, ${social})`,
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x0099ff)
+        .setTitle(track.title)
+        .setURL(track.url)
+        .setAuthor({
+          name: track.author.name,
+          iconURL: track.author.thumbnail,
+          url: track.author.url,
+        })
+        .setDescription("Some description here")
+        .setThumbnail(track.thumbnail)
+        .setTimestamp(track.timestamp)
+        .setFooter({ text: `Added by ${track.user.name}`, iconURL: track.user.thumbnail }),
+    ],
   });
 };
