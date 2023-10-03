@@ -83,12 +83,9 @@ export const execute: Execute = async (interaction, client) => {
     });
     return;
   }
+  const length = await getLength(interaction.guildId!);
   try {
-    const length = await getLength(interaction.guildId!);
-    const [first] = songs;
-    first.id = length;
-    client.songs.set(interaction.guildId!, first);
-    saveSongs(songs, interaction.guildId!);
+    await saveSongs(songs, interaction.guildId!);
   } catch (error) {
     consola.error(error);
     await interaction.followUp({
@@ -104,8 +101,8 @@ export const execute: Execute = async (interaction, client) => {
       sub.unsubscribe();
       sub.player.stop();
       client.subscriptions.delete(interaction.guildId!);
+      await interaction.deleteReply().catch(() => consola.info("No reply to delete"));
     }
-    await interaction.deleteReply();
   };
 
   const onPlayerIdle = async () => {
@@ -113,8 +110,10 @@ export const execute: Execute = async (interaction, client) => {
     consola.info("Player idle");
     if (sub) {
       const id = client.songs.get(interaction.guildId!)?.id;
-      const song = await getNextSong(interaction.guildId!, id || 0);
+      const length = await getLength(interaction.guildId!);
+      const song = await getNextSong(interaction.guildId!, id || length - 1);
       if (song) {
+        consola.info("Now playing next song");
         const audiostream = await stream(song.url, { quality: 2 });
         const resource = createAudioResource(audiostream.stream, {
           inputType: audiostream.type,
@@ -123,8 +122,9 @@ export const execute: Execute = async (interaction, client) => {
         sub.player.play(resource);
         client.songs.set(interaction.guildId!, song);
 
+        const next = await getNextSong(interaction.guildId!, song.id!);
         await interaction.editReply({
-          embeds: [EmbedTrack(song)],
+          embeds: [EmbedTrack(song, next)],
         });
         return;
       } else {
@@ -156,6 +156,10 @@ export const execute: Execute = async (interaction, client) => {
     });
     return;
   }
+
+  const [first] = songs;
+  first.id = length;
+  client.songs.set(interaction.guildId!, first);
 
   const connection = joinVoiceChannel({
     channelId: member.voice.channelId,

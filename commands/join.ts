@@ -1,3 +1,11 @@
+import consola from "consola";
+import { stream } from "play-dl";
+import {
+  type GuildMember,
+  SlashCommandBuilder,
+  ComponentType,
+  ButtonInteraction,
+} from "discord.js";
 import {
   AudioPlayerStatus,
   NoSubscriberBehavior,
@@ -6,20 +14,12 @@ import {
   createAudioResource,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import {
-  type GuildMember,
-  SlashCommandBuilder,
-  ComponentType,
-  ButtonInteraction,
-} from "discord.js";
 
 import EmbedTrack from "../embeds/track.js";
 import EmbedNoTrack from "../embeds/notrack.js";
 import EmbedFullBar from "../embeds/full-bar.js";
 import EmbedShortBar from "../embeds/short-bar.js";
-import { getNextSong, getPrevSong, getSong } from "../mongo.js";
-import consola from "consola";
-import { stream } from "play-dl";
+import { getLength, getNextSong, getPrevSong, getSong } from "../mongo.js";
 
 export const data = new SlashCommandBuilder()
   .setName("join")
@@ -51,14 +51,15 @@ export const execute: Execute = async (interaction, client) => {
       sub.player.stop();
       client.subscriptions.delete(interaction.guildId!);
     }
-    await interaction.deleteReply();
+    await interaction.deleteReply().catch(() => consola.info("No reply to delete"));
   };
   const onPlayerIdle = async () => {
     const sub = client.subscriptions.get(interaction.guildId!);
     consola.info("Player idle");
     if (sub) {
       const id = client.songs.get(interaction.guildId!)?.id;
-      const song = await getNextSong(interaction.guildId!, id || 0);
+      const length = await getLength(interaction.guildId!);
+      const song = await getSong(interaction.guildId!, id || length - 1);
       if (song) {
         const audiostream = await stream(song.url, { quality: 2 });
         const resource = createAudioResource(audiostream.stream, {
@@ -72,8 +73,9 @@ export const execute: Execute = async (interaction, client) => {
           pause: sub.player.state.status === AudioPlayerStatus.Paused,
         });
 
+        const next = await getNextSong(interaction.guildId!, song.id!);
         await interaction.editReply({
-          embeds: [EmbedTrack(song)],
+          embeds: [EmbedTrack(song, next)],
           components: [bar()],
         });
         return;
@@ -92,7 +94,8 @@ export const execute: Execute = async (interaction, client) => {
     const sub = client.subscriptions.get(interaction.guildId!);
     if (sub) {
       const id = client.songs.get(interaction.guildId!)?.id;
-      const song = await getSong(interaction.guildId!, id || 0);
+      const length = await getLength(interaction.guildId!);
+      const song = await getSong(interaction.guildId!, id || length - 1);
       if (song) {
         try {
           const audiostream = await stream(song.url, { quality: 2 });
@@ -103,8 +106,10 @@ export const execute: Execute = async (interaction, client) => {
           sub.player.play(resource);
           client.songs.set(interaction.guildId!, song);
 
+          const next = await getNextSong(interaction.guildId!, song.id!);
           await interaction.update({
-            embeds: [EmbedTrack(song)],
+            embeds: [EmbedTrack(song, next)],
+            components: [bar()],
           });
         } catch (e) {
           await interaction.reply({
@@ -144,8 +149,18 @@ export const execute: Execute = async (interaction, client) => {
   const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
   const sub = connection.subscribe(player)!;
 
-  connection.on(VoiceConnectionStatus.Disconnected, onDisconnect);
+  connection.once(VoiceConnectionStatus.Disconnected, onDisconnect);
   player.on(AudioPlayerStatus.Idle, onPlayerIdle);
+
+  let timeout: null | NodeJS.Timeout = null;
+  player.on("stateChange", (old, newState) => {
+    if (newState.status === AudioPlayerStatus.Playing) {
+      if (timeout) clearTimeout(timeout);
+    } else if (newState.status === AudioPlayerStatus.Idle) {
+      timeout = setTimeout(onDisconnect, 60_000 * 5);
+    }
+  });
+
   client.subscriptions.set(interaction.guildId!, sub);
 
   try {
@@ -155,7 +170,6 @@ export const execute: Execute = async (interaction, client) => {
       inlineVolume: true,
     });
     sub.player.play(resource);
-    client.songs.set(interaction.guildId!, song);
   } catch (e) {
     await interaction.reply({
       content: "Error while playing song!",
@@ -173,6 +187,11 @@ export const execute: Execute = async (interaction, client) => {
     const collector = response.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: 60_000 * 5,
+    });
+    player.on("stateChange", async (oldState, newState) => {
+      if (newState.status === AudioPlayerStatus.Playing) {
+        collector.resetTimer();
+      }
     });
 
     collector.on("collect", async (button) => {
@@ -211,10 +230,6 @@ export const execute: Execute = async (interaction, client) => {
           break;
         case "kill":
           connection.disconnect();
-          await button.update({
-            components: [],
-          });
-          await interaction.deleteReply();
           break;
         default:
           await button.reply({
@@ -225,6 +240,7 @@ export const execute: Execute = async (interaction, client) => {
       }
     });
   } catch (e) {
+    consola.error(e);
     await interaction.editReply({
       embeds: song ? [EmbedTrack(song)] : [],
       components: [EmbedShortBar()],

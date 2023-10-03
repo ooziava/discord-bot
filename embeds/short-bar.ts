@@ -1,11 +1,12 @@
 import { ButtonBuilder } from "@discordjs/builders";
 import { ActionRowBuilder } from "discord.js";
-import { more, next, pause, play, remove } from "../buttons.js";
+import { add, more, next, pause, play, prev } from "../buttons.js";
 
 export default (options?: { pause?: boolean }) =>
   new ActionRowBuilder<ButtonBuilder>().addComponents([
+    prev,
     next,
     options?.pause ? play : pause,
-    remove,
+    add,
     more,
   ]);
