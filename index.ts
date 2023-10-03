@@ -3,14 +3,15 @@ import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import type { PlayerSubscription } from "@discordjs/voice";
 
 import registerCommands from "./register-commands.js";
-import commands from "./commands/index.js";
+import getCommands from "./commands/index.js";
 import login from "./login.js";
 
 export class MyClient extends Client {
-  songs = new Collection<string, Song>();
   commands = new Collection<string, Command>();
+  buttons = new Collection<string, Button>();
   cooldowns = new Collection<string, Collection<string, number>>();
   subscriptions = new Collection<string, PlayerSubscription>();
+  songs = new Collection<string, Song>();
 }
 
 const client = new MyClient({
@@ -32,12 +33,13 @@ const client = new MyClient({
   ],
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
+  const commands = await getCommands();
   for (const command of commands) {
     client.commands.set(command.data.name, command);
   }
-  registerCommands(commands);
-  login();
+  await registerCommands(commands);
+  await login();
   consola.success(`Ready! Logged in as ${c.user.username}`);
 });
 

@@ -1,5 +1,5 @@
-import { spotify } from "play-dl";
-import type { SpotifyAlbum, SpotifyPlaylist, SpotifyTrack, YouTubeVideo } from "play-dl";
+import { spotify, SpotifyTrack } from "play-dl";
+import type { SpotifyAlbum, SpotifyPlaylist, YouTubeVideo } from "play-dl";
 import { searchYtVideo } from "../utils/play-dl.js";
 
 const getYtFromSpotify = async (url: string, type: SpotifyType): Promise<Track[]> => {
@@ -15,7 +15,8 @@ const getYtFromSpotify = async (url: string, type: SpotifyType): Promise<Track[]
       const video = await searchYtVideo(
         `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
       );
-      console.log(`${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`);
+      if (!(sp instanceof SpotifyTrack) && video)
+        video.playlist = { title: sp.name, url: sp.url, thumbnail: sp.thumbnail.url };
       return video;
     })
   );

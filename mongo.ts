@@ -11,10 +11,10 @@ const client = new MongoClient(
     cert: credentials,
   }
 );
+await client.connect();
 
 export async function getLength(guildId: string) {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const length = await collection.countDocuments();
@@ -22,14 +22,11 @@ export async function getLength(guildId: string) {
   } catch (error) {
     consola.error(error);
     return 0;
-  } finally {
-    await client.close();
   }
 }
 
-export async function getNextSong(guildId: string, id: number) {
+export const getNextSong: GetSong = async (guildId, id) => {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const song = await collection.findOne({ id: { $gt: id } });
@@ -37,15 +34,43 @@ export async function getNextSong(guildId: string, id: number) {
   } catch (error) {
     consola.error(error);
     return null;
-  } finally {
-    await client.close();
   }
-}
+};
+
+export const getPrevSong: GetSong = async (guildId, id) => {
+  try {
+    const database = client.db("songs");
+    const collection = database.collection(guildId);
+
+    const song = await collection
+      .find({ id: { $lt: id } })
+      .sort({ id: -1 })
+      .limit(1)
+      .next();
+
+    return song as unknown as Song;
+  } catch (error) {
+    consola.error(error);
+    return null;
+  }
+};
+
+export const getSong: GetSong = async (guildId, id) => {
+  try {
+    const database = client.db("songs");
+    const collection = database.collection(guildId);
+    const song = await collection.findOne({ id });
+    return song as unknown as Song;
+  } catch (error) {
+    consola.error(error);
+    return null;
+  }
+};
 
 export async function saveSongs(songs: Song[], guildId: string) {
   try {
     const length = await getLength(guildId);
-    await client.connect();
+
     const database = client.db("songs");
     const collection = database.collection(guildId);
     await collection.insertMany(songs.map((song, index) => ({ ...song, id: length + index })));
@@ -54,44 +79,23 @@ export async function saveSongs(songs: Song[], guildId: string) {
   } catch (error) {
     consola.error(error);
     return false;
-  } finally {
-    await client.close();
   }
 }
 
 export async function getSongs(guildId: string) {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
-    const songs = await collection.find({}).sort({ timestamp: 1 }).toArray();
+    const songs = await collection.find().sort({ timestamp: 1 }).toArray();
     return songs as unknown[] as Song[];
   } catch (error) {
     consola.error(error);
     return [];
-  } finally {
-    await client.close();
-  }
-}
-
-export async function getSong(guildId: string, id: number) {
-  try {
-    await client.connect();
-    const database = client.db("songs");
-    const collection = database.collection(guildId);
-    const song = await collection.findOne({ id });
-    return song as unknown as Song;
-  } catch (error) {
-    consola.error(error);
-    return null;
-  } finally {
-    await client.close();
   }
 }
 
 export async function removeSong(guildId: string, id: number) {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
     await collection.deleteOne({ id });
@@ -100,14 +104,11 @@ export async function removeSong(guildId: string, id: number) {
   } catch (error) {
     consola.error(error);
     return false;
-  } finally {
-    await client.close();
   }
 }
 
 export async function clearSongs(guildId: string) {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
     await collection.deleteMany({});
@@ -116,14 +117,11 @@ export async function clearSongs(guildId: string) {
   } catch (error) {
     consola.error(error);
     return false;
-  } finally {
-    await client.close();
   }
 }
 
 export async function findSong(guildId: string, query: string) {
   try {
-    await client.connect();
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const song = await collection.findOne({ title: { $regex: query, $options: "i" } });
@@ -131,7 +129,10 @@ export async function findSong(guildId: string, query: string) {
   } catch (error) {
     consola.error(error);
     return null;
-  } finally {
-    await client.close();
   }
 }
+
+process.on("SIGINT", async () => {
+  await client.close();
+  process.exit(0);
+});

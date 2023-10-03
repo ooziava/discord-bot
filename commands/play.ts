@@ -1,24 +1,27 @@
 import consola from "consola";
 import {
-  AudioPlayerStatus,
-  NoSubscriberBehavior,
-  VoiceConnectionStatus,
-  createAudioPlayer,
-  createAudioResource,
-  joinVoiceChannel,
-} from "@discordjs/voice";
-import {
-  CommandInteractionOptionResolver,
+  type GuildMember,
+  type CommandInteractionOptionResolver,
   EmbedBuilder,
-  GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import { stream, is_expired, refreshToken, YouTubeVideo } from "play-dl";
+import {
+  joinVoiceChannel,
+  AudioPlayerStatus,
+  createAudioPlayer,
+  createAudioResource,
+  NoSubscriberBehavior,
+  VoiceConnectionStatus,
+} from "@discordjs/voice";
+import { stream, is_expired, refreshToken } from "play-dl";
 
-import { getType, searchYtVideo, trackToSong } from "../utils/play-dl.js";
-import getYtFromSpotify from "../search/spotify.js";
 import getYt from "../search/youtube.js";
+import EmbedTrack from "../embeds/track.js";
+import EmbedNoTrack from "../embeds/notrack.js";
+import EmbedNewSong from "../embeds/newsong.js";
+import getYtFromSpotify from "../search/spotify.js";
 import { getLength, getNextSong, saveSongs } from "../mongo.js";
+import { getType, searchYtVideo, trackToSong } from "../utils/play-dl.js";
 
 export const cooldown = 5;
 export const data = new SlashCommandBuilder()
@@ -34,6 +37,7 @@ export const execute: Execute = async (interaction, client) => {
 
   const query = (interaction.options as CommandInteractionOptionResolver).getString("song")!;
   let tracks: Track[] = [];
+
   try {
     const qtype = await getType(query);
     if (!qtype) {
@@ -43,9 +47,9 @@ export const execute: Execute = async (interaction, client) => {
       });
       return;
     }
-    const [social, type] = qtype;
 
-    if (type === "search") {
+    const [social, type] = qtype;
+    if (type === "search" || social === "search") {
       const track = await searchYtVideo(query);
       tracks = track ? [track] : [];
     } else if (social === "sp") tracks = await getYtFromSpotify(query, type as SpotifyType);
@@ -65,6 +69,7 @@ export const execute: Execute = async (interaction, client) => {
     });
     return;
   }
+
   const songs = tracks
     .filter((track) => track && track.url)
     .map((track) =>
@@ -92,23 +97,15 @@ export const execute: Execute = async (interaction, client) => {
     });
     return;
   }
-  const member = interaction.member as GuildMember;
-  if (!member.voice.channelId) {
-    await interaction.followUp({
-      content: "You must be in a voice channel!",
-      ephemeral: true,
-    });
-    return;
-  }
-  const subscription = client.subscriptions.get(interaction.guildId!);
 
-  const onDisconnect = () => {
+  const onDisconnect = async () => {
     const sub = client.subscriptions.get(interaction.guildId!);
     if (sub) {
       sub.unsubscribe();
       sub.player.stop();
       client.subscriptions.delete(interaction.guildId!);
     }
+    await interaction.deleteReply();
   };
 
   const onPlayerIdle = async () => {
@@ -126,38 +123,52 @@ export const execute: Execute = async (interaction, client) => {
         sub.player.play(resource);
         client.songs.set(interaction.guildId!, song);
 
-        await interaction.followUp({
-          content: `Now playing ${song.title} [one of ${songs.length}]`,
+        await interaction.editReply({
+          embeds: [EmbedTrack(song)],
         });
         return;
       } else {
         sub.unsubscribe();
         sub.player.stop();
         client.subscriptions.delete(interaction.guildId!);
-        await interaction.followUp({
-          content: "No more songs in queue!",
+        await interaction.editReply({
+          embeds: [EmbedNoTrack()],
         });
         return;
       }
     }
   };
 
-  if (!subscription) {
-    const connection = joinVoiceChannel({
-      channelId: member.voice.channelId,
-      guildId: interaction.guildId!,
-      adapterCreator: interaction.guild!.voiceAdapterCreator,
+  const member = interaction.member as GuildMember;
+  if (!member.voice.channelId) {
+    await interaction.followUp({
+      content: "You must be in a voice channel!",
+      ephemeral: true,
     });
-    const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+    return;
+  }
+  const subscription = client.subscriptions.get(interaction.guildId!);
 
-    connection.on(VoiceConnectionStatus.Disconnected, onDisconnect);
-    player.on(AudioPlayerStatus.Idle, onPlayerIdle);
-
-    const sub = connection.subscribe(player)!;
-    client.subscriptions.set(interaction.guildId!, sub);
+  if (subscription) {
+    await interaction.followUp({
+      embeds: [EmbedNewSong(songs[0])],
+      ephemeral: true,
+    });
+    return;
   }
 
-  const player = client.subscriptions.get(interaction.guildId!)!.player;
+  const connection = joinVoiceChannel({
+    channelId: member.voice.channelId,
+    guildId: interaction.guildId!,
+    adapterCreator: interaction.guild!.voiceAdapterCreator,
+  });
+  const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+
+  connection.on(VoiceConnectionStatus.Disconnected, onDisconnect);
+  player.on(AudioPlayerStatus.Idle, onPlayerIdle);
+
+  const sub = connection.subscribe(player)!;
+  client.subscriptions.set(interaction.guildId!, sub);
 
   try {
     const audiostream = await stream(songs[0]!.url, { quality: 2 });
@@ -177,20 +188,6 @@ export const execute: Execute = async (interaction, client) => {
   }
   const track = client.songs.get(interaction.guildId!)!;
   await interaction.followUp({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle(track.title)
-        .setURL(track.url)
-        .setAuthor({
-          name: track.author.name,
-          iconURL: track.author.thumbnail,
-          url: track.author.url,
-        })
-        .setDescription("Some description here")
-        .setThumbnail(track.thumbnail)
-        .setTimestamp(track.timestamp)
-        .setFooter({ text: `Added by ${track.user.name}`, iconURL: track.user.thumbnail }),
-    ],
+    embeds: [EmbedTrack(track)],
   });
 };

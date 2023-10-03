@@ -7,7 +7,11 @@ const getYt = async (url: string, type: YouTubeType): Promise<Track[]> => {
     return tracks.map((track) => {
       const song = track as Track;
       if (playlist.title && playlist.url)
-        song.playlist = { title: playlist.title, url: playlist.url };
+        song.playlist = {
+          title: playlist.title,
+          url: playlist.url,
+          thumbnail: playlist.thumbnail?.url ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+        };
       return song;
     });
   } else {

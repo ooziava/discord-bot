@@ -1,4 +1,4 @@
-import { type YouTubeVideo, search, validate } from "play-dl";
+import { search, validate } from "play-dl";
 
 export const getType = async (query: string): Promise<[string, string] | false> => {
   const res = await validate(query);
