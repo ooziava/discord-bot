@@ -10,6 +10,7 @@
     "watch": "nodemon --watch \"./**/*.{ts,graphql}\" --exec \"node --env-file=.env --experimental-specifier-resolution=node  --loader ts-node/esm/transpile-only\" index.ts",
     "dev": "tsc-watch --onSuccess \"npm run watch\"",
     "build": "tsc",
+    "prestart": "npm run build",
     "start": "node --env-file=.env ./dist/index.js"
   },
   "keywords": [],
