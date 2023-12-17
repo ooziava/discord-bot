@@ -1,6 +1,7 @@
 import {
   AudioPlayerStatus,
   NoSubscriberBehavior,
+  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
   getVoiceConnection,
@@ -30,13 +31,27 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   const guild = interaction.guild;
   if (!guild) throw new Error("There was an error while reading your guild ID!");
 
-  const connection =
-    getVoiceConnection(guild.id) ??
-    joinVoiceChannel({
+  let connection = getVoiceConnection(guild.id);
+
+  if (!connection) {
+    connection = joinVoiceChannel({
       channelId: channel.id,
       guildId: guild.id,
       adapterCreator: guild?.voiceAdapterCreator!,
     });
+
+    connection.on(VoiceConnectionStatus.Disconnected, async () => {
+      const subscription = client.subscriptions.get(guild.id);
+      if (subscription) {
+        subscription.player.removeAllListeners();
+        subscription.player.stop();
+        subscription.connection.destroy();
+
+        subscription.unsubscribe();
+        client.subscriptions.delete(guild.id);
+      }
+    });
+  }
 
   if (connection.joinConfig.channelId !== channel.id)
     throw new Error("You must be in the same voice channel as the bot to play a song!");
@@ -51,6 +66,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     subscription = connection.subscribe(player)!;
     client.subscriptions.set(guild.id, subscription);
     currentSong = await getSong(guild.id, 0);
+
     const onIdle = async () => {
       const nextSong = await getNextSong(guild.id, currentSong?.id!);
       if (!nextSong) {
