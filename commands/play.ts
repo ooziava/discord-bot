@@ -47,7 +47,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   let subscription = client.subscriptions.get(guild.id);
   let currentSong = await getSong(guild.id, 0);
   if (!subscription) {
-    const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+    const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Stop } });
     subscription = connection.subscribe(player)!;
     client.subscriptions.set(guild.id, subscription);
 
@@ -56,7 +56,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
       if (!currentSong) {
         consola.info("No more songs to play!");
         // player.removeListener(AudioPlayerStatus.Idle, onIdle);
-        return await interaction.followUp({ embeds: [notrack()] });
+        return await interaction.followUp({ embeds: [notrack("No more songs in queue!")] });
       }
       consola.info("Playing next song!");
       const audiostream = await stream(currentSong.url, { quality: 2 });
@@ -73,7 +73,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     return await addSongToQueue(song, interaction, client);
 
   await interaction.deferReply();
-  await interaction.editReply("Searching for song...");
+  await interaction.editReply({ embeds: [notrack("Searching for your song...")] });
 
   if (is_expired()) await refreshToken();
   await clearSongs(guild.id);

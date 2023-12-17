@@ -6,7 +6,6 @@ const getYt = async (url: string, type: YouTubeType): Promise<Video[]> => {
   if (type === "playlist") {
     const parsedUrl = parseYtPlaylistUrl(url);
     consola.info("Getting playlist info by URL...");
-    consola.info(parsedUrl);
     const playlist = await playlist_info(parsedUrl, { incomplete: true });
     const tracks = await playlist.all_videos();
     return tracks.map((video) => {

@@ -11,6 +11,7 @@ import { saveSongs } from "../utils/mongo.js";
 import getYt from "./youtube.js";
 import getSoundlcoud from "./soundcloud.js";
 import getSpotify from "./spotify.js";
+import notrack from "../components/notrack.js";
 
 export const addSongToQueue = async (
   songName: string,
@@ -22,14 +23,14 @@ export const addSongToQueue = async (
 
   consola.info("Validating query...");
   const qInfo = await validateQuery(songName);
-  if (!qInfo) return await interaction.editReply("No results found!");
+  if (!qInfo) return await interaction.editReply({ embeds: [notrack("No results found!")] });
   const [social, type] = qInfo;
 
   switch (social) {
     case "search":
       consola.info("Searching for song on YouTube...");
       const song = await searchYtVideo(songName);
-      if (!song) return await interaction.editReply("No results found!");
+      if (!song) return await interaction.editReply({ embeds: [notrack("No results found!")] });
       const storedSong = createStoredSongByVideo(
         song,
         interaction.user.username,
@@ -43,7 +44,8 @@ export const addSongToQueue = async (
     case "yt":
       consola.info("Searching on YouTube...");
       const videos = await getYt(songName, type as YouTubeType);
-      if (!videos || !videos.length) return await interaction.editReply("No results found!");
+      if (!videos || !videos.length)
+        return await interaction.editReply({ embeds: [notrack("No results found!")] });
       const songs = videos.map((video) =>
         createStoredSongByVideo(video, interaction.user.username, interaction.user.avatarURL())
       );
@@ -55,7 +57,7 @@ export const addSongToQueue = async (
     case "so":
       consola.info("Searching on SoundCloud...");
       const [track] = await getSoundlcoud(songName, type as SpotifyType);
-      if (!track) return await interaction.editReply("No results found!");
+      if (!track) return await interaction.editReply({ embeds: [notrack("No results found!")] });
       const soStoredSong = createStoredSongBySoTrack(
         track,
         interaction.user.username,
@@ -69,7 +71,8 @@ export const addSongToQueue = async (
     case "sp":
       consola.info("Searching on Spotify...");
       const spTracks = await getSpotify(songName, type as SpotifyType);
-      if (!spTracks || !spTracks.length) return await interaction.editReply("No results found!");
+      if (!spTracks || !spTracks.length)
+        return await interaction.editReply({ embeds: [notrack("No results found!")] });
       // const spSongs = spTracks.map(({ track, playlist }) =>
       //   createStoredSongBySpTrack(
       //     track,
@@ -87,5 +90,5 @@ export const addSongToQueue = async (
       break;
   }
 
-  await interaction.editReply("Song added to queue!");
+  await interaction.editReply({ embeds: [notrack("Song added to queue!")] });
 };

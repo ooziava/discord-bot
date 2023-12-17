@@ -5,6 +5,7 @@ import type { PlayerSubscription } from "@discordjs/voice";
 import registerCommands from "./utils/register-commands.js";
 import getCommands from "./commands/index.js";
 import login from "./utils/login.js";
+import notrack from "./components/notrack.js";
 
 export class MyClient extends Client {
   commands = new Collection<string, Command>();
@@ -64,12 +65,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!command) {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
-        content: "There was an error while executing this command!",
+        embeds: [notrack("There was an error while executing this command!")],
         ephemeral: true,
       });
     } else {
       await interaction.reply({
-        content: "There was an error while executing this command!",
+        embeds: [notrack("There was an error while executing this command!")],
         ephemeral: true,
       });
     }
@@ -90,16 +91,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const timeLeft = (expirationTime - now) / 1000;
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
-              command.data.name
-            }\` command.`,
+            embeds: [
+              notrack(
+                `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
+                  command.data.name
+                }\` command.`
+              ),
+            ],
             ephemeral: true,
           });
         } else {
           await interaction.reply({
-            content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
-              command.data.name
-            }\` command.`,
+            embeds: [
+              notrack(
+                `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
+                  command.data.name
+                }\` command.`
+              ),
+            ],
             ephemeral: true,
           });
         }
@@ -112,17 +121,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
     await command.execute(interaction, client);
-    consola.info("Command nteraction received!");
+    consola.info(interaction.commandName + " command executed!");
   } catch (error) {
     consola.error(error);
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
-        content: "There was an error while executing this command!",
+        embeds: [notrack("There was an error while executing this command!")],
         ephemeral: true,
       });
     } else {
       await interaction.reply({
-        content: "There was an error while executing this command!",
+        embeds: [notrack("There was an error while executing this command!")],
         ephemeral: true,
       });
     }
