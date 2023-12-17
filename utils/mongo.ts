@@ -25,19 +25,19 @@ export async function getLength(guildId: string) {
   }
 }
 
-export const getNextSong: GetSong = async (guildId, id) => {
+export const getNextSong: GetStoredSong = async (guildId, id) => {
   try {
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const song = await collection.findOne({ id: { $gt: id } });
-    return song as unknown as Song;
+    return song as unknown as StoredSong;
   } catch (error) {
     consola.error(error);
     return null;
   }
 };
 
-export const getPrevSong: GetSong = async (guildId, id) => {
+export const getPrevSong: GetStoredSong = async (guildId, id) => {
   try {
     const database = client.db("songs");
     const collection = database.collection(guildId);
@@ -48,26 +48,26 @@ export const getPrevSong: GetSong = async (guildId, id) => {
       .limit(1)
       .next();
 
-    return song as unknown as Song;
+    return song as unknown as StoredSong;
   } catch (error) {
     consola.error(error);
     return null;
   }
 };
 
-export const getSong: GetSong = async (guildId, id) => {
+export const getSong: GetStoredSong = async (guildId, id) => {
   try {
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const song = await collection.findOne({ id });
-    return song as unknown as Song;
+    return song as unknown as StoredSong;
   } catch (error) {
     consola.error(error);
     return null;
   }
 };
 
-export async function saveSongs(songs: Song[], guildId: string) {
+export async function saveSongs(guildId: string, songs: StoredSong[]) {
   try {
     const length = await getLength(guildId);
 
@@ -87,7 +87,7 @@ export async function getSongs(guildId: string) {
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const songs = await collection.find().sort({ timestamp: 1 }).toArray();
-    return songs as unknown[] as Song[];
+    return songs as unknown[] as StoredSong[];
   } catch (error) {
     consola.error(error);
     return [];
@@ -125,7 +125,7 @@ export async function findSong(guildId: string, query: string) {
     const database = client.db("songs");
     const collection = database.collection(guildId);
     const song = await collection.findOne({ title: { $regex: query, $options: "i" } });
-    return song as unknown as Song;
+    return song as unknown as StoredSong;
   } catch (error) {
     consola.error(error);
     return null;

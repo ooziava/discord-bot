@@ -5,29 +5,29 @@ type SpotifyType = "album" | "playlist" | "track";
 type SoundCloudType = "playlist" | "track";
 type YouTubeType = "playlist" | "video";
 
-type Execute = (
+type ExecuteCommand = (
   interaction: import("discord.js").CommandInteraction,
   client: MyClient
-) => Promise<void>;
+) => Promise<any>;
 
-type OnPress = (
+type ExecuteButton = (
   interaction: import("discord.js").ButtonInteraction,
   client: MyClient
-) => Promise<void>;
+) => Promise<any>;
 
 interface Command {
-  data: import("discord.js").SlashCommandBuilder<any>;
-  execute: Execute;
+  data: import("discord.js").SlashCommandBuilder;
+  execute: ExecuteCommand;
   cooldown?: number;
 }
 
 interface Button {
-  data: import("discord.js").ButtonBuilder<any>;
+  data: import("discord.js").ButtonBuilder;
   execute: onPress;
   cooldown?: number;
 }
 
-interface Track extends YouTubeVideo {
+interface Video extends YouTubeVideo {
   playlist?: {
     url: string;
     title: string;
@@ -35,9 +35,7 @@ interface Track extends YouTubeVideo {
   };
 }
 
-type GetSong = (guildId: string, id: number) => Promise<Song | null>;
-
-interface Song {
+interface StoredSong {
   id?: number;
   url: string;
   title: string;
@@ -59,3 +57,5 @@ interface Song {
     thumbnail: string;
   };
 }
+
+type GetStoredSong = (guildId: string, id: number) => Promise<StoredSong | null>;

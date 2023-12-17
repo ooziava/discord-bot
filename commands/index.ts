@@ -8,7 +8,12 @@ const __dirname = dirname(__filename);
 const getCommands = async (): Promise<Command[]> =>
   await Promise.all(
     readdirSync(resolve(__dirname))
-      .filter((file) => file !== "index.ts" && (file.endsWith(".js") || file.endsWith(".ts")))
+      .filter(
+        (file) =>
+          file !== "index.ts" &&
+          file !== "index.js" &&
+          (file.endsWith(".js") || file.endsWith(".ts"))
+      )
       .map(async (file) => {
         const command = await import(`./${file}`);
         return { ...command };

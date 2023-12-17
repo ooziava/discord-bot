@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-export default (song: Song) =>
+export default (song: StoredSong) =>
   new EmbedBuilder()
     .setColor(0x0099ff)
     .setDescription("Song added to queue!")

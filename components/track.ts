@@ -1,8 +1,8 @@
 import { EmbedBuilder } from "discord.js";
 
 export default (
-  { title, duration, url, author, thumbnail, timestamp, user }: Song,
-  next?: Song | null
+  { title, duration, url, author, thumbnail, timestamp, user }: StoredSong,
+  next?: StoredSong | null
 ) =>
   new EmbedBuilder()
     .setColor(0x0099ff)

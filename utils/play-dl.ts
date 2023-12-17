@@ -1,32 +1,91 @@
-import { search, validate } from "play-dl";
+import { type SoundCloudTrack, search, validate, SpotifyTrack } from "play-dl";
 
-export const getType = async (query: string): Promise<[string, string] | false> => {
+export const validateQuery = async (query: string): Promise<[string, string] | undefined> => {
   const res = await validate(query);
-  return res ? (res.split("_") as [string, string]) : false;
+  if (res) return res.split("_") as [string, string];
 };
 
-export const searchYtVideo = async (query: string): Promise<Track | undefined> => {
+export const searchYtVideo = async (query: string): Promise<Video | undefined> => {
   const results = await search(query, { limit: 1, source: { youtube: "video" } });
   return results[0];
 };
 
-export const trackToSong = (track: Track, username?: string, usertthumbnail?: string): Song => ({
-  title: track.title ?? "Unknown title",
+export const parseYtPlaylistUrl = (url: string): string => {
+  const parsedUrl = new URL(url);
+  const playlistId = parsedUrl.searchParams.get("list");
+  if (!playlistId) throw new Error("There was an error while reading your playlist ID!");
+  return "https://music.youtube.com/playlist?list=" + playlistId;
+};
+
+export const createStoredSongByVideo = (
+  song: Video,
+  username?: string,
+  userThumbnail?: string | null
+): StoredSong => ({
+  url: song.url,
+  title: song.title ?? "Unknown title",
+  duration: song.durationInSec ?? 0,
   timestamp: new Date().getTime(),
-  url: track.url,
-  thumbnail:
-    track.thumbnails && track.thumbnails[0]
-      ? track.thumbnails[0].url
-      : "https://cdn.discordapp.com/embed/avatars/0.png",
-  duration: track.durationInSec ?? 0,
+  author: {
+    url: song.channel?.url ?? "https://www.youtube.com/",
+    name: song.channel?.name ?? "Unknown author",
+    thumbnail: song.channel?.iconURL() ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+  },
   user: {
     name: username ?? "Anonymous",
-    thumbnail: usertthumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+    thumbnail: userThumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
   },
+  thumbnail:
+    song.thumbnails && song.thumbnails[0]
+      ? song.thumbnails[0].url
+      : "https://cdn.discordapp.com/embed/avatars/0.png",
+  playlist: song.playlist,
+});
+
+export const createStoredSongBySoTrack = (
+  track: SoundCloudTrack,
+  username?: string,
+  userThumbnail?: string | null
+): StoredSong => ({
+  url: track.url,
+  title: track.name ?? "Unknown title",
+  duration: track.durationInSec ?? 0,
+  timestamp: new Date().getTime(),
+  thumbnail: track.thumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
   author: {
-    name: track.channel?.name ?? "Unknown author",
-    url: track.channel?.url ?? "",
-    thumbnail: track.channel?.iconURL() ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+    url: track.user.url ?? "https://soundcloud.com/",
+    name: track.user.full_name ?? "Unknown author",
+    thumbnail: track.user.thumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
   },
-  playlist: track.playlist ?? undefined,
+  user: {
+    name: username ?? "Anonymous",
+    thumbnail: userThumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+  },
+});
+
+export const createStoredSongBySpTrack = (
+  track: SpotifyTrack,
+  username?: string,
+  userThumbnail?: string | null,
+  playlist?: {
+    title: string;
+    url: string;
+    thumbnail: string;
+  }
+): StoredSong => ({
+  url: track.url,
+  title: track.name ?? "Unknown title",
+  duration: track.durationInSec ?? 0,
+  timestamp: new Date().getTime(),
+  thumbnail: track.thumbnail?.url ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+  author: {
+    url: track.artists[0].url ?? "https://open.spotify.com/",
+    name: track.artists[0].name ?? "Unknown author",
+    thumbnail: "https://cdn.discordapp.com/embed/avatars/0.png",
+  },
+  user: {
+    name: username ?? "Anonymous",
+    thumbnail: userThumbnail ?? "https://cdn.discordapp.com/embed/avatars/0.png",
+  },
+  playlist: playlist,
 });

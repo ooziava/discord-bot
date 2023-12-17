@@ -1,197 +1,92 @@
-import consola from "consola";
 import {
-  type GuildMember,
-  type CommandInteractionOptionResolver,
-  EmbedBuilder,
-  SlashCommandBuilder,
-} from "discord.js";
-import {
-  joinVoiceChannel,
   AudioPlayerStatus,
+  NoSubscriberBehavior,
   createAudioPlayer,
   createAudioResource,
-  NoSubscriberBehavior,
-  VoiceConnectionStatus,
+  getVoiceConnection,
+  joinVoiceChannel,
 } from "@discordjs/voice";
-import { stream, is_expired, refreshToken } from "play-dl";
-
-import getYt from "../search/youtube.js";
-import EmbedTrack from "../embeds/track.js";
-import EmbedNoTrack from "../embeds/notrack.js";
-import EmbedNewSong from "../embeds/newsong.js";
-import getYtFromSpotify from "../search/spotify.js";
-import { getLength, getNextSong, saveSongs } from "../mongo.js";
-import { getType, searchYtVideo, trackToSong } from "../utils/play-dl.js";
+import { SlashCommandBuilder } from "discord.js";
+import { GuildMember } from "discord.js";
+import { addSongToQueue } from "../services/add-song.js";
+import { clearSongs, getNextSong, getSong } from "../utils/mongo.js";
+import { is_expired, refreshToken, stream } from "play-dl";
+import consola from "consola";
+import track from "../components/track.js";
+import notrack from "../components/notrack.js";
 
 export const cooldown = 5;
 export const data = new SlashCommandBuilder()
   .setName("play")
-  .setDescription("Plays a song")
+  .setDescription("Play a song")
   .addStringOption((option) =>
     option.setName("song").setDescription("The song to play").setRequired(true)
   );
 
-export const execute: Execute = async (interaction, client) => {
-  await interaction.deferReply();
-  if (is_expired()) await refreshToken();
+export const execute: ExecuteCommand = async (interaction, client) => {
+  const channel = (interaction.member as GuildMember)?.voice.channel;
+  if (!channel) throw new Error("You must be in a voice channel to play a song!");
 
-  const query = (interaction.options as CommandInteractionOptionResolver).getString("song")!;
-  let tracks: Track[] = [];
+  const guild = interaction.guild;
+  if (!guild) throw new Error("There was an error while reading your guild ID!");
 
-  try {
-    const qtype = await getType(query);
-    if (!qtype) {
-      await interaction.followUp({
-        content: "Invalid song!",
-        ephemeral: true,
-      });
-      return;
-    }
-
-    const [social, type] = qtype;
-    if (type === "search" || social === "search") {
-      const track = await searchYtVideo(query);
-      tracks = track ? [track] : [];
-    } else if (social === "sp") tracks = await getYtFromSpotify(query, type as SpotifyType);
-    else if (social === "yt") tracks = await getYt(query, type as YouTubeType);
-    else {
-      await interaction.followUp({
-        content: "Invalid request!",
-        ephemeral: true,
-      });
-      return;
-    }
-  } catch (error) {
-    consola.error(error);
-    await interaction.followUp({
-      content: "Error while searching for song!",
-      ephemeral: true,
+  const connection =
+    getVoiceConnection(guild.id) ??
+    joinVoiceChannel({
+      channelId: channel.id,
+      guildId: guild.id,
+      adapterCreator: guild?.voiceAdapterCreator!,
     });
-    return;
-  }
 
-  const songs = tracks
-    .filter((track) => track && track.url)
-    .map((track) =>
-      trackToSong(track, interaction.user.username, interaction.user.displayAvatarURL())
-    );
+  if (connection.joinConfig.channelId !== channel.id)
+    throw new Error("You must be in the same voice channel as the bot to play a song!");
 
-  if (!songs.length) {
-    await interaction.followUp({
-      content: "No results found!",
-      ephemeral: true,
-    });
-    return;
-  }
-  const length = await getLength(interaction.guildId!);
-  try {
-    await saveSongs(songs, interaction.guildId!);
-  } catch (error) {
-    consola.error(error);
-    await interaction.followUp({
-      content: "Error while saving song!",
-      ephemeral: true,
-    });
-    return;
-  }
+  const song = interaction.options.get("song", true).value;
+  if (typeof song !== "string") throw new Error("There was an error while reading your song name!");
 
-  const onDisconnect = async () => {
-    const sub = client.subscriptions.get(interaction.guildId!);
-    if (sub) {
-      sub.unsubscribe();
-      sub.player.stop();
-      client.subscriptions.delete(interaction.guildId!);
-      await interaction.deleteReply().catch(() => consola.info("No reply to delete"));
-    }
-  };
+  let subscription = client.subscriptions.get(guild.id);
+  let currentSong = await getSong(guild.id, 0);
+  if (!subscription) {
+    const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+    subscription = connection.subscribe(player)!;
+    client.subscriptions.set(guild.id, subscription);
 
-  const onPlayerIdle = async () => {
-    const sub = client.subscriptions.get(interaction.guildId!);
-    consola.info("Player idle");
-    if (sub) {
-      const id = client.songs.get(interaction.guildId!)?.id;
-      const length = await getLength(interaction.guildId!);
-      const song = await getNextSong(interaction.guildId!, id || length - 1);
-      if (song) {
-        consola.info("Now playing next song");
-        const audiostream = await stream(song.url, { quality: 2 });
-        const resource = createAudioResource(audiostream.stream, {
-          inputType: audiostream.type,
-          inlineVolume: true,
-        });
-        sub.player.play(resource);
-        client.songs.set(interaction.guildId!, song);
-
-        const next = await getNextSong(interaction.guildId!, song.id!);
-        await interaction.editReply({
-          embeds: [EmbedTrack(song, next)],
-        });
-        return;
-      } else {
-        sub.unsubscribe();
-        sub.player.stop();
-        client.subscriptions.delete(interaction.guildId!);
-        await interaction.editReply({
-          embeds: [EmbedNoTrack()],
-        });
-        return;
+    const onIdle = async () => {
+      currentSong = await getNextSong(guild.id, currentSong?.id!);
+      if (!currentSong) {
+        consola.info("No more songs to play!");
+        // player.removeListener(AudioPlayerStatus.Idle, onIdle);
+        return await interaction.followUp({ embeds: [notrack()] });
       }
-    }
-  };
-
-  const member = interaction.member as GuildMember;
-  if (!member.voice.channelId) {
-    await interaction.followUp({
-      content: "You must be in a voice channel!",
-      ephemeral: true,
-    });
-    return;
+      consola.info("Playing next song!");
+      const audiostream = await stream(currentSong.url, { quality: 2 });
+      const resource = createAudioResource(audiostream.stream, {
+        inputType: audiostream.type,
+        inlineVolume: true,
+      });
+      player.play(resource);
+      await interaction.followUp({ embeds: [track(currentSong)] });
+    };
+    player.on(AudioPlayerStatus.Idle, onIdle);
   }
-  const subscription = client.subscriptions.get(interaction.guildId!);
+  if (subscription.player.state.status === AudioPlayerStatus.Playing)
+    return await addSongToQueue(song, interaction, client);
 
-  if (subscription) {
-    await interaction.followUp({
-      embeds: [EmbedNewSong(songs[0])],
-      ephemeral: true,
-    });
-    return;
-  }
+  await interaction.deferReply();
+  await interaction.editReply("Searching for song...");
 
-  const [first] = songs;
-  first.id = length;
-  client.songs.set(interaction.guildId!, first);
+  if (is_expired()) await refreshToken();
+  await clearSongs(guild.id);
+  await addSongToQueue(song, interaction, client);
+  currentSong = await getSong(guild.id, 0);
+  if (!currentSong) throw new Error("There was an error while reading your song!");
 
-  const connection = joinVoiceChannel({
-    channelId: member.voice.channelId,
-    guildId: interaction.guildId!,
-    adapterCreator: interaction.guild!.voiceAdapterCreator,
+  const audiostream = await stream(currentSong.url, { quality: 2 });
+  const resource = createAudioResource(audiostream.stream, {
+    inputType: audiostream.type,
+    inlineVolume: true,
   });
-  const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Pause } });
+  subscription.player.play(resource);
 
-  connection.on(VoiceConnectionStatus.Disconnected, onDisconnect);
-  player.on(AudioPlayerStatus.Idle, onPlayerIdle);
-
-  const sub = connection.subscribe(player)!;
-  client.subscriptions.set(interaction.guildId!, sub);
-
-  try {
-    const audiostream = await stream(songs[0]!.url, { quality: 2 });
-    consola.info("Now player started");
-    const resource = createAudioResource(audiostream.stream, {
-      inputType: audiostream.type,
-      inlineVolume: true,
-    });
-    player.play(resource);
-  } catch (error) {
-    consola.error(error);
-    await interaction.followUp({
-      content: "Error while playing song!",
-      ephemeral: true,
-    });
-    return;
-  }
-  const track = client.songs.get(interaction.guildId!)!;
-  await interaction.followUp({
-    embeds: [EmbedTrack(track)],
-  });
+  await interaction.followUp({ embeds: [track(currentSong)] });
 };

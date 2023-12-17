@@ -1,17 +1,16 @@
 import consola from "consola";
-import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
+import { Client, Collection, Events, GatewayIntentBits, type Interaction } from "discord.js";
 import type { PlayerSubscription } from "@discordjs/voice";
 
-import registerCommands from "./register-commands.js";
+import registerCommands from "./utils/register-commands.js";
 import getCommands from "./commands/index.js";
-import login from "./login.js";
+import login from "./utils/login.js";
 
 export class MyClient extends Client {
   commands = new Collection<string, Command>();
-  buttons = new Collection<string, Button>();
-  cooldowns = new Collection<string, Collection<string, number>>();
+  interactions = new Collection<string, Interaction>();
   subscriptions = new Collection<string, PlayerSubscription>();
-  songs = new Collection<string, Song>();
+  cooldowns = new Collection<string, Collection<string, number>>();
 }
 
 const client = new MyClient({
@@ -34,23 +33,46 @@ const client = new MyClient({
 });
 
 client.once(Events.ClientReady, async (c) => {
-  const commands = await getCommands();
-  for (const command of commands) {
-    client.commands.set(command.data.name, command);
+  try {
+    consola.info("Loading commands...");
+    const commands = await getCommands();
+    consola.success("Commands loaded!");
+
+    consola.info("Registering commands...");
+    commands.forEach((command) => {
+      client.commands.set(command.data.name, command);
+    });
+
+    await registerCommands(commands);
+    consola.success("Commands registered!");
+
+    consola.info("Logging in to services...");
+    await login();
+    consola.success("Logged in to services!");
+  } catch (error) {
+    consola.error(error);
+    process.exit(1);
   }
-  await registerCommands(commands);
-  await login();
+
   consola.success(`Ready! Logged in as ${c.user.username}`);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isCommand()) return;
+  interaction.commandName = interaction.commandName.split("_")[0];
   const command = client.commands.get(interaction.commandName);
   if (!command) {
-    await interaction.reply({
-      content: "There was an error while executing this command!",
-      ephemeral: true,
-    });
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
+    }
     consola.error(`Command ${interaction.commandName} not found!`);
     return;
   }
@@ -66,20 +88,31 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const expirationTime = timestamps.get(interaction.user.id)! + cooldownAmount;
       if (now < expirationTime) {
         const timeLeft = (expirationTime - now) / 1000;
-        await interaction.reply({
-          content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
-            command.data.name
-          }\` command.`,
-          ephemeral: true,
-        });
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
+              command.data.name
+            }\` command.`,
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
+              command.data.name
+            }\` command.`,
+            ephemeral: true,
+          });
+        }
         return;
       }
     }
     timestamps.set(interaction.user.id, now);
     setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
   }
+
   try {
-    command.execute(interaction, client);
+    await command.execute(interaction, client);
+    consola.info("Command nteraction received!");
   } catch (error) {
     consola.error(error);
     if (interaction.replied || interaction.deferred) {
@@ -96,9 +129,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(process.env.TOKEN!).catch((error) => {
-  consola.fatal(error);
-  process.exit(1);
-});
-
 consola.start("Logging in...");
+client
+  .login(process.env.RESET_TOKEN)
+  .then(() => {
+    consola.log("Logged in!");
+  })
+  .catch((error) => {
+    consola.error("Failed to login!");
+    consola.fatal(error);
+    process.exit(1);
+  });

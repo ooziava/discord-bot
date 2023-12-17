@@ -2,9 +2,31 @@ import { spotify, SpotifyTrack } from "play-dl";
 import type { SpotifyAlbum, SpotifyPlaylist, YouTubeVideo } from "play-dl";
 import { searchYtVideo } from "../utils/play-dl.js";
 
-const getYtFromSpotify = async (url: string, type: SpotifyType): Promise<Track[]> => {
+const getSpotify = async (url: string, type: SpotifyType): Promise<Video[]> => {
+  // {
+  //   track: SpotifyTrack;
+  //   playlist?: {
+  //     title: string;
+  //     url: string;
+  //     thumbnail: string;
+  //   };
+  // }[]
   const sp = await spotify(url);
-
+  // if (type === "album" || type === "playlist") {
+  //   const spAlbum = sp as SpotifyAlbum | SpotifyPlaylist;
+  //   const tracks = (await spAlbum.all_tracks()).map((track) => ({
+  //     track,
+  //     playlist: { title: spAlbum.name, url: spAlbum.url, thumbnail: spAlbum.thumbnail.url },
+  //   }));
+  //   return tracks;
+  // } else {
+  //   const track = sp as SpotifyTrack;
+  //   const video = await searchYtVideo(
+  //     `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
+  //   );
+  //   if (video) video.playlist = undefined;
+  //   return [{ track }];
+  // }
   const tracks =
     type === "album" || type === "playlist"
       ? await (sp as SpotifyAlbum | SpotifyPlaylist).all_tracks()
@@ -30,7 +52,7 @@ const getYtFromSpotify = async (url: string, type: SpotifyType): Promise<Track[]
   //   videos.push(video);
   // }
 
-  return videos.filter((video) => video) as YouTubeVideo[] | Track[];
+  return videos.filter((video) => video) as Video[];
 };
 
-export default getYtFromSpotify;
+export default getSpotify;
