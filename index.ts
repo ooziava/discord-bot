@@ -39,7 +39,7 @@ client.once(Events.ClientReady, async (c) => {
     const commands = await getCommands();
     consola.success("Commands loaded!");
 
-    consola.info("Registering commands...");
+    consola.info("Starting command registration...");
     commands.forEach((command) => {
       client.commands.set(command.data.name, command);
     });

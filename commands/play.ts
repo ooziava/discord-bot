@@ -45,27 +45,28 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   if (typeof song !== "string") throw new Error("There was an error while reading your song name!");
 
   let subscription = client.subscriptions.get(guild.id);
-  let currentSong = await getSong(guild.id, 0);
+  let currentSong: StoredSong | null = null;
   if (!subscription) {
     const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Stop } });
     subscription = connection.subscribe(player)!;
     client.subscriptions.set(guild.id, subscription);
-
+    currentSong = await getSong(guild.id, 0);
     const onIdle = async () => {
-      currentSong = await getNextSong(guild.id, currentSong?.id!);
-      if (!currentSong) {
+      const nextSong = await getNextSong(guild.id, currentSong?.id!);
+      if (!nextSong) {
         consola.info("No more songs to play!");
         // player.removeListener(AudioPlayerStatus.Idle, onIdle);
         return await interaction.followUp({ embeds: [notrack("No more songs in queue!")] });
       }
-      consola.info("Playing next song!");
-      const audiostream = await stream(currentSong.url, { quality: 2 });
+      currentSong = nextSong;
+      const audiostream = await stream(nextSong.url, { quality: 2 });
       const resource = createAudioResource(audiostream.stream, {
         inputType: audiostream.type,
         inlineVolume: true,
       });
       player.play(resource);
-      await interaction.followUp({ embeds: [track(currentSong)] });
+      consola.info("Playing next song!");
+      await interaction.followUp({ embeds: [track(nextSong)] });
     };
     player.on(AudioPlayerStatus.Idle, onIdle);
   }

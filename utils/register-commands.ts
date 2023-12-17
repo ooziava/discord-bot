@@ -10,12 +10,7 @@ if (!token || !clientId || !serverId) throw new Error("Missing environment varia
 const rest = new REST().setToken(token);
 
 export default async (commandCollection: Command[]) => {
-  await rest.put(
-    process.env.NODE_ENV === "development"
-      ? Routes.applicationGuildCommands(clientId, serverId)
-      : Routes.applicationCommands(clientId),
-    { body: [] }
-  );
+  consola.info("Formatting commands...");
   if (!commandCollection.length) throw new Error("No commands found");
   const commands =
     process.env.NODE_ENV === "development"
@@ -27,12 +22,16 @@ export default async (commandCollection: Command[]) => {
         })
       : commandCollection.map((commandItem) => commandItem.data.toJSON());
 
-  const data = (await rest.put(
+  const method =
     process.env.NODE_ENV === "development"
       ? Routes.applicationGuildCommands(clientId, serverId)
-      : Routes.applicationCommands(clientId),
-    { body: commands }
-  )) as any[];
+      : Routes.applicationCommands(clientId);
+
+  consola.info("Clearing commands...");
+  await rest.put(method, { body: [] });
+
+  consola.info("Registering commands...");
+  const data = (await rest.put(method, { body: commands })) as any[];
 
   consola.success(`Successfully reloaded ${data.length} application (/) commands.`);
 };
