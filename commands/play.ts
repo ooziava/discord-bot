@@ -119,24 +119,23 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     };
     player.on(AudioPlayerStatus.Idle, onIdle);
     player.on(AudioPlayerStatus.Playing, onStateChange);
-    return await addSongToQueue(song, interaction, client);
-  }
 
-  await interaction.deferReply();
-  await interaction.editReply({ embeds: [notrack("Searching for your song...")] });
+    await interaction.deferReply();
+    await interaction.editReply({ embeds: [notrack("Searching for your song...")] });
 
-  if (is_expired()) await refreshToken();
-  await clearSongs(guild.id);
-  await addSongToQueue(song, interaction, client);
-  currentSong = await getSong(guild.id, 0);
-  if (!currentSong) throw new Error("There was an error while reading your song!");
+    if (is_expired()) await refreshToken();
+    await clearSongs(guild.id);
+    await addSongToQueue(song, interaction, client);
+    currentSong = await getSong(guild.id, 0);
+    if (!currentSong) throw new Error("There was an error while reading your song!");
 
-  const audiostream = await stream(currentSong.url, { quality: 2 });
-  const resource = createAudioResource(audiostream.stream, {
-    inputType: audiostream.type,
-    inlineVolume: true,
-  });
-  subscription.player.play(resource);
+    const audiostream = await stream(currentSong.url, { quality: 2 });
+    const resource = createAudioResource(audiostream.stream, {
+      inputType: audiostream.type,
+      inlineVolume: true,
+    });
+    subscription.player.play(resource);
 
-  await interaction.followUp({ embeds: [track(currentSong)] });
+    await interaction.followUp({ embeds: [track(currentSong)] });
+  } else await addSongToQueue(song, interaction, client);
 };
