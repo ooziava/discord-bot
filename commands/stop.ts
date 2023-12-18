@@ -17,6 +17,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   player.removeAllListeners();
   player.stop();
   subscription.unsubscribe();
+  subscription.connection.disconnect();
   client.subscriptions.delete(guild.id);
   await interaction.reply({ embeds: [notrack("Stopped the current song!")] });
 };
