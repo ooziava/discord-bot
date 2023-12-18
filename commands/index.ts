@@ -1,12 +1,13 @@
+import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 import { readdirSync } from "fs";
 
-const filename = require.main!.filename;
-const dirName = dirname(filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const getCommands = async (): Promise<Command[]> =>
   await Promise.all(
-    readdirSync(resolve(dirName))
+    readdirSync(resolve(__dirname))
       .filter(
         (file) =>
           file !== "index.ts" &&
