@@ -96,7 +96,10 @@ export const execute: ExecuteCommand = async (interaction, client) => {
       const nextSong = await getNextSong(guild.id, currentSong?.id!);
       if (!nextSong) {
         consola.info("No more songs to play!");
-        // player.removeListener(AudioPlayerStatus.Idle, onIdle);
+        player.removeAllListeners();
+        player.stop();
+        subscription?.unsubscribe();
+        client.subscriptions.delete(guild.id);
         return await interaction.channel?.send({ embeds: [notrack("No more songs in queue!")] });
       }
       currentSong = nextSong;
@@ -116,9 +119,8 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     };
     player.on(AudioPlayerStatus.Idle, onIdle);
     player.on(AudioPlayerStatus.Playing, onStateChange);
-  }
-  if (subscription.player.state.status != AudioPlayerStatus.Idle)
     return await addSongToQueue(song, interaction, client);
+  }
 
   await interaction.deferReply();
   await interaction.editReply({ embeds: [notrack("Searching for your song...")] });
