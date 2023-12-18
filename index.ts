@@ -44,8 +44,8 @@ client.once(Events.ClientReady, async (c) => {
       client.commands.set(command.data.name, command);
     });
 
-    await registerCommands(commands);
-    consola.success("Commands registered!");
+    // await registerCommands(commands);
+    // consola.success("Commands registered!");
 
     consola.info("Logging in to services...");
     await login();

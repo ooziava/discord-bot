@@ -6,6 +6,7 @@ import {
   createAudioResource,
   getVoiceConnection,
   joinVoiceChannel,
+  type AudioPlayerState,
 } from "@discordjs/voice";
 import { SlashCommandBuilder } from "discord.js";
 import { GuildMember } from "discord.js";
@@ -15,6 +16,8 @@ import { is_expired, refreshToken, stream } from "play-dl";
 import consola from "consola";
 import track from "../components/track.js";
 import notrack from "../components/notrack.js";
+
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
 
 export const cooldown = 5;
 export const data = new SlashCommandBuilder()
@@ -61,6 +64,26 @@ export const execute: ExecuteCommand = async (interaction, client) => {
 
   let subscription = client.subscriptions.get(guild.id);
   let currentSong: StoredSong | null = null;
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  const startTimeout = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      if (connection) {
+        connection.disconnect();
+        interaction.followUp({ embeds: [notrack("Disconnected due to inactivity!")] });
+      }
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  const stopTimeout = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
   if (!subscription) {
     const player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Stop } });
     subscription = connection.subscribe(player)!;
@@ -68,6 +91,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     currentSong = await getSong(guild.id, 0);
 
     const onIdle = async () => {
+      startTimeout();
       const nextSong = await getNextSong(guild.id, currentSong?.id!);
       if (!nextSong) {
         consola.info("No more songs to play!");
@@ -84,7 +108,13 @@ export const execute: ExecuteCommand = async (interaction, client) => {
       consola.info("Playing next song!");
       await interaction.followUp({ embeds: [track(nextSong)] });
     };
+    const onStateChange = (oldState: AudioPlayerState, newState: AudioPlayerState) => {
+      if (newState.status === AudioPlayerStatus.Playing) {
+        stopTimeout();
+      }
+    };
     player.on(AudioPlayerStatus.Idle, onIdle);
+    player.on(AudioPlayerStatus.Playing, onStateChange);
   }
   if (subscription.player.state.status === AudioPlayerStatus.Playing)
     return await addSongToQueue(song, interaction, client);

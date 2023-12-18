@@ -13,7 +13,6 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   const subscription = client.subscriptions.get(guild.id);
   if (!subscription) throw new Error("There is no song playing!");
 
-  const player = subscription.player;
-  player.stop();
+  subscription.player.stop();
   await interaction.reply({ embeds: [notrack("Skipped the current song!")] });
 };

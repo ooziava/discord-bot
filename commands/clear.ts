@@ -8,6 +8,6 @@ export const data = new SlashCommandBuilder().setName("clear").setDescription("C
 export const execute: ExecuteCommand = async (interaction, client) => {
   await interaction.deferReply();
   const isCleared = await clearSongs(interaction.guildId!);
-  const content = isCleared ? "Queue cleared!" : "Error while clearing queue!";
+  const content = isCleared ? "Queue cleared!" : "There was an error while clearing the queue!";
   await interaction.followUp({ embeds: [notrack(content)] });
 };
