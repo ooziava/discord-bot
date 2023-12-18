@@ -58,6 +58,10 @@ client.once(Events.ClientReady, async (c) => {
   consola.success(`Ready! Logged in as ${c.user.username}`);
 });
 
+client.on(Events.Error, (error) => {
+  consola.error(error);
+});
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) return;
   interaction.commandName = interaction.commandName.split("_")[0];
