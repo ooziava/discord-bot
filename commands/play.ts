@@ -69,10 +69,11 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   const startTimeout = () => {
     if (timeoutId) clearTimeout(timeoutId);
 
-    timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(async () => {
       if (connection) {
+        consola.info("Disconnected due to inactivity!");
         connection.disconnect();
-        interaction.followUp({ embeds: [notrack("Disconnected due to inactivity!")] });
+        await interaction.channel?.send({ embeds: [notrack("Disconnected due to inactivity!")] });
       }
     }, INACTIVITY_TIMEOUT);
   };
@@ -116,7 +117,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     player.on(AudioPlayerStatus.Idle, onIdle);
     player.on(AudioPlayerStatus.Playing, onStateChange);
   }
-  if (subscription.player.state.status === AudioPlayerStatus.Playing)
+  if (subscription.player.state.status != AudioPlayerStatus.Idle)
     return await addSongToQueue(song, interaction, client);
 
   await interaction.deferReply();
