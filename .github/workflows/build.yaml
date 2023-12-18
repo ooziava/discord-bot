@@ -27,7 +27,7 @@ jobs:
         run: |
           npm run build
           cp LICENSE dist/
-          cp -r node_modules dist/
+          cp package.json dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
