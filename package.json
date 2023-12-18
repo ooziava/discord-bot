@@ -2,7 +2,7 @@
   "name": "discord-bot",
   "version": "2.0.0",
   "description": "A discord bot that plays music and does other stuff",
-  "main": "./dist/index.js",
+  "main": "./index.js",
   "type": "module",
   "exports": "./dist/index.js",
   "scripts": {

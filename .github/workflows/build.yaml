@@ -26,8 +26,6 @@ jobs:
       - name: Build TypeScript app
         run: |
           npm run build
-          cp LICENSE dist/
-          cp package.json dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2

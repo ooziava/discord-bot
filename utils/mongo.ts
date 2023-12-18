@@ -11,7 +11,7 @@ const client = new MongoClient(
     cert: credentials,
   }
 );
-await client.connect();
+client.connect();
 
 export async function getLength(guildId: string) {
   try {
