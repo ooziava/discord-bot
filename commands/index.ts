@@ -1,12 +1,12 @@
 import { dirname, resolve } from "path";
 import { readdirSync } from "fs";
 
-const __filename = require.main!.filename;
-const __dirname = dirname(__filename);
+const filename = require.main!.filename;
+const dirName = dirname(filename);
 
 const getCommands = async (): Promise<Command[]> =>
   await Promise.all(
-    readdirSync(resolve(__dirname))
+    readdirSync(resolve(dirName))
       .filter(
         (file) =>
           file !== "index.ts" &&
