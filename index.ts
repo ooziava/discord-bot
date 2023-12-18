@@ -64,7 +64,11 @@ client.on(Events.Error, (error) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) return;
-  interaction.commandName = interaction.commandName.split("_")[0];
+
+  const [commandName, commandType] = interaction.commandName.split("_");
+  if (process.env.NODE_ENV != "development" && commandType === "dev") return;
+
+  interaction.commandName = commandName;
   const command = client.commands.get(interaction.commandName);
   if (!command) {
     if (interaction.replied || interaction.deferred) {
