@@ -96,7 +96,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
       if (!nextSong) {
         consola.info("No more songs to play!");
         // player.removeListener(AudioPlayerStatus.Idle, onIdle);
-        return await interaction.followUp({ embeds: [notrack("No more songs in queue!")] });
+        return await interaction.channel?.send({ embeds: [notrack("No more songs in queue!")] });
       }
       currentSong = nextSong;
       const audiostream = await stream(nextSong.url, { quality: 2 });
@@ -106,7 +106,7 @@ export const execute: ExecuteCommand = async (interaction, client) => {
       });
       player.play(resource);
       consola.info("Playing next song!");
-      await interaction.followUp({ embeds: [track(nextSong)] });
+      await interaction.channel?.send({ embeds: [track(nextSong)] });
     };
     const onStateChange = (oldState: AudioPlayerState, newState: AudioPlayerState) => {
       if (newState.status === AudioPlayerStatus.Playing) {
