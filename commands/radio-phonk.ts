@@ -67,7 +67,8 @@ export const execute: ExecuteCommand = async (interaction, client) => {
     client.subscriptions.delete(guild.id);
   });
 
-  player.on(AudioPlayerStatus.Idle, async () => {
+  player.on("stateChange", async (oldState, newState) => {
+    if (newState.status != AudioPlayerStatus.Idle) return;
     const subscription = client.subscriptions.get(guild.id);
     if (subscription) {
       subscription.player.removeAllListeners();
