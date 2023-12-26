@@ -10,14 +10,20 @@ export const execute: ExecuteCommand = async (interaction, client) => {
   const guild = interaction.guild;
   if (!guild) throw new Error("There was an error while reading your guild ID!");
 
+  client.timers.delete(guild.id);
+  client.currentSongs.delete(guild.id);
   const subscription = client.subscriptions.get(guild.id);
-  if (!subscription) throw new Error("There is no song playing!");
+  if (subscription) {
+    const player = subscription.player;
+    const connection = subscription.connection;
+    player.removeAllListeners();
+    connection.removeAllListeners();
 
-  const player = subscription.player;
-  player.removeAllListeners();
-  player.stop();
-  subscription.unsubscribe();
-  subscription.connection.disconnect();
-  client.subscriptions.delete(guild.id);
+    subscription.unsubscribe();
+    connection.disconnect();
+    player.stop();
+
+    client.subscriptions.delete(guild.id);
+  }
   await interaction.reply({ embeds: [notrack("Stopped the current song!")] });
 };

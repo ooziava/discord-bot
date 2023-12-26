@@ -9,6 +9,8 @@ import notrack from "./components/notrack.js";
 
 export class MyClient extends Client {
   commands = new Collection<string, Command>();
+  timers = new Collection<string, NodeJS.Timeout>();
+  currentSongs = new Collection<string, StoredSong>();
   interactions = new Collection<string, Interaction>();
   subscriptions = new Collection<string, PlayerSubscription>();
   cooldowns = new Collection<string, Collection<string, number>>();
@@ -73,12 +75,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!command) {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
-        embeds: [notrack("There was an error while executing this command!")],
+        embeds: [notrack("There no command with that name!")],
         ephemeral: true,
       });
     } else {
       await interaction.reply({
-        embeds: [notrack("There was an error while executing this command!")],
+        embeds: [notrack("There no command with that name!")],
         ephemeral: true,
       });
     }
@@ -130,16 +132,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     await command.execute(interaction, client);
     consola.info(interaction.commandName + " command executed!");
-  } catch (error) {
+  } catch (error: any) {
     consola.error(error);
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
-        embeds: [notrack("There was an error while executing this command!")],
+        embeds: [notrack(error?.message)],
         ephemeral: true,
       });
     } else {
       await interaction.reply({
-        embeds: [notrack("There was an error while executing this command!")],
+        embeds: [notrack(error?.message)],
         ephemeral: true,
       });
     }
