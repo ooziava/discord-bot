@@ -13,11 +13,12 @@ export default (array: Video[]) => {
       compactDisplay: "short",
       notation: "compact",
     })} views • ${formatDuration(video.durationInSec)}`;
-    if (description.length > 100) {
-      description = description.substring(0, 97) + "...";
-    }
+    let title = video.title || "No title found!";
+    if (description.length > 100) description = description.substring(0, 97) + "...";
+    if (title.length > 100) title = title.substring(0, 97) + "...";
+
     return new StringSelectMenuOptionBuilder()
-      .setLabel(video.title ?? "No title found!")
+      .setLabel(title)
       .setValue(`song-${index}`)
       .setDescription(description);
   });
