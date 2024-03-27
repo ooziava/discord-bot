@@ -1,6 +1,5 @@
 import { AudioPlayerStatus } from "@discordjs/voice";
-import { SlashCommandBuilder } from "discord.js";
-import notrack from "../components/notrack.js";
+import { type GuildMember, SlashCommandBuilder } from "discord.js";
 
 export const cooldown = 5;
 export const data = new SlashCommandBuilder()
@@ -8,18 +7,18 @@ export const data = new SlashCommandBuilder()
   .setDescription("Pause the current song");
 
 export const execute: ExecuteCommand = async (interaction, client) => {
-  const guild = interaction.guild;
-  if (!guild) throw new Error("There was an error while reading your guild ID!");
+  const channel = (interaction.member as GuildMember)?.voice.channel;
+  if (!channel) throw new Error("You must be in a voice channel to play a song!");
 
-  const subscription = client.subscriptions.get(guild.id);
+  const subscription = client.subscriptions.get(interaction.guildId!);
   if (!subscription) throw new Error("There is no song playing!");
 
   const player = subscription.player;
   if (player.state.status === AudioPlayerStatus.Paused) {
     player.unpause();
-    await interaction.reply({ embeds: [notrack("Unpaused the current song!")] });
+    await interaction.reply("Unpaused");
   } else {
     player.pause();
-    await interaction.reply({ embeds: [notrack("Paused the current song!")] });
+    await interaction.reply("Paused");
   }
 };

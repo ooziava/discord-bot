@@ -5,9 +5,8 @@ export const validateQuery = async (query: string): Promise<[string, string] | u
   if (res) return res.split("_") as [string, string];
 };
 
-export const searchYtVideo = async (query: string): Promise<Video | undefined> => {
-  const results = await search(query, { limit: 1, source: { youtube: "video" } });
-  return results[0];
+export const searchYtVideo = async (query: string): Promise<Video[]> => {
+  return await search(query, { limit: 10, source: { youtube: "video" } });
 };
 
 export const parseYtPlaylistUrl = (url: string): string => {

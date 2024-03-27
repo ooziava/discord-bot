@@ -54,3 +54,8 @@ export const more = new ButtonBuilder()
   .setCustomId("more")
   .setLabel("More")
   .setStyle(ButtonStyle.Secondary);
+
+export const cancel = new ButtonBuilder()
+  .setCustomId("cancel")
+  .setLabel("Cancel")
+  .setStyle(ButtonStyle.Danger);

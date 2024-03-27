@@ -1,37 +1,32 @@
-import consola from "consola";
-import { Client, Collection, Events, GatewayIntentBits, type Interaction } from "discord.js";
 import type { PlayerSubscription } from "@discordjs/voice";
+import { Client, Collection, Events, GatewayIntentBits, type Interaction } from "discord.js";
+import consola from "consola";
 
-import registerCommands from "./utils/register-commands.js";
 import getCommands from "./commands/index.js";
-import login from "./utils/login.js";
-import notrack from "./components/notrack.js";
+import loginToSocial from "./utils/login.js";
+import { connectToDB } from "./utils/mongo.js";
+import registerCommands from "./utils/register-commands.js";
 
 export class MyClient extends Client {
   commands = new Collection<string, Command>();
   timers = new Collection<string, NodeJS.Timeout>();
-  currentSongs = new Collection<string, StoredSong>();
-  interactions = new Collection<string, Interaction>();
-  subscriptions = new Collection<string, PlayerSubscription>();
   cooldowns = new Collection<string, Collection<string, number>>();
+  currentSongs = new Collection<string, StoredSong>();
+  subscriptions = new Collection<string, PlayerSubscription>();
+  // interactions = new Collection<string, Interaction>();
 }
 
 const client = new MyClient({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildInvites,
-    GatewayIntentBits.GuildWebhooks,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildIntegrations,
     GatewayIntentBits.GuildMessageTyping,
-    GatewayIntentBits.DirectMessageTyping,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildEmojisAndStickers,
-    GatewayIntentBits.DirectMessageReactions,
   ],
 });
 
@@ -39,30 +34,24 @@ client.once(Events.ClientReady, async (c) => {
   try {
     consola.info("Loading commands...");
     const commands = await getCommands();
-    consola.success("Commands loaded!");
 
     consola.info("Starting command registration...");
     commands.forEach((command) => {
       client.commands.set(command.data.name, command);
     });
-
-    await registerCommands(commands);
-    consola.success("Commands registered!");
+    // await registerCommands(commands);
 
     consola.info("Logging in to services...");
-    await login();
-    consola.success("Logged in to services!");
+    await loginToSocial();
+    await connectToDB();
+    consola.success(`Ready! Logged in as ${c.user.username}`);
   } catch (error) {
     consola.error(error);
     process.exit(1);
   }
-
-  consola.success(`Ready! Logged in as ${c.user.username}`);
 });
 
-client.on(Events.Error, (error) => {
-  consola.error(error);
-});
+client.on(Events.Error, consola.error);
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) return;
@@ -73,89 +62,55 @@ client.on(Events.InteractionCreate, async (interaction) => {
   interaction.commandName = commandName;
   const command = client.commands.get(interaction.commandName);
   if (!command) {
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        embeds: [notrack("There no command with that name!")],
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        embeds: [notrack("There no command with that name!")],
-        ephemeral: true,
-      });
-    }
-    consola.error(`Command ${interaction.commandName} not found!`);
-    return;
-  }
+    const noCommandReply = {
+      content: "There no command with that name!",
+      ephemeral: true,
+    };
+    if (interaction.replied || interaction.deferred) await interaction.followUp(noCommandReply);
+    else await interaction.reply(noCommandReply);
+    return consola.error(`Command ${interaction.commandName} not found!`);
+  } else if (command.cooldown) {
+    const commandName = command.data.name;
+    if (!client.cooldowns.has(commandName)) client.cooldowns.set(commandName, new Collection());
 
-  if (command.cooldown) {
-    if (!client.cooldowns.has(command.data.name)) {
-      client.cooldowns.set(command.data.name, new Collection());
-    }
     const now = Date.now();
-    const timestamps = client.cooldowns.get(command.data.name)!;
+    const timestamps = client.cooldowns.get(commandName)!;
     const cooldownAmount = (command.cooldown ?? 3) * 1000;
-    if (timestamps.has(interaction.user.id)) {
-      const expirationTime = timestamps.get(interaction.user.id)! + cooldownAmount;
+    const userId = interaction.user.id;
+    if (timestamps.has(userId)) {
+      const expirationTime = timestamps.get(userId)! + cooldownAmount;
+
       if (now < expirationTime) {
         const timeLeft = (expirationTime - now) / 1000;
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({
-            embeds: [
-              notrack(
-                `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
-                  command.data.name
-                }\` command.`
-              ),
-            ],
-            ephemeral: true,
-          });
-        } else {
-          await interaction.reply({
-            embeds: [
-              notrack(
-                `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${
-                  command.data.name
-                }\` command.`
-              ),
-            ],
-            ephemeral: true,
-          });
-        }
-        return;
+        const timeLeftReply = {
+          content: `Please wait ${timeLeft.toFixed(
+            1
+          )} more second(s) before reusing the \`${commandName}\` command.`,
+          ephemeral: true,
+        };
+
+        if (interaction.replied || interaction.deferred) await interaction.followUp(timeLeftReply);
+        else await interaction.reply(timeLeftReply);
+        return consola.info(`User ${userId} is on cooldown for command ${commandName}`);
       }
     }
-    timestamps.set(interaction.user.id, now);
-    setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
+    timestamps.set(userId, now);
+    setTimeout(() => timestamps.delete(userId), cooldownAmount);
   }
 
   try {
     await command.execute(interaction, client);
-    consola.info(interaction.commandName + " command executed!");
   } catch (error: any) {
     consola.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        embeds: [notrack(error?.message)],
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        embeds: [notrack(error?.message)],
-        ephemeral: true,
-      });
-    }
+    const errorReply = {
+      content: error?.message,
+      ephemeral: true,
+    };
+
+    if (interaction.replied || interaction.deferred) await interaction.followUp(errorReply);
+    else await interaction.reply(errorReply);
   }
 });
 
 consola.start("Logging in...");
-client
-  .login(process.env.RESET_TOKEN)
-  .then(() => {
-    consola.log("Logged in!");
-  })
-  .catch((error) => {
-    consola.error("Failed to login!");
-    consola.fatal(error);
-    process.exit(1);
-  });
+client.login(process.env.RESET_TOKEN).catch(consola.error);

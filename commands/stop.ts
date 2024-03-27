@@ -1,5 +1,5 @@
-import { SlashCommandBuilder } from "discord.js";
-import notrack from "../components/notrack.js";
+import { getVoiceConnection } from "@discordjs/voice";
+import { type GuildMember, SlashCommandBuilder } from "discord.js";
 
 export const cooldown = 5;
 export const data = new SlashCommandBuilder()
@@ -7,23 +7,20 @@ export const data = new SlashCommandBuilder()
   .setDescription("Stop the current song");
 
 export const execute: ExecuteCommand = async (interaction, client) => {
-  const guild = interaction.guild;
-  if (!guild) throw new Error("There was an error while reading your guild ID!");
+  const channel = (interaction.member as GuildMember)?.voice.channel;
+  if (!channel) throw new Error("You must be in a voice channel to play a song!");
 
-  client.timers.delete(guild.id);
-  client.currentSongs.delete(guild.id);
-  const subscription = client.subscriptions.get(guild.id);
+  const guildId = interaction.guildId;
+  if (!guildId) throw new Error("There was an error while reading your guild ID!");
+
+  // client.interactions.delete(guildId);
+  const subscription = client.subscriptions.get(guildId);
   if (subscription) {
-    const player = subscription.player;
-    const connection = subscription.connection;
-    player.removeAllListeners();
-    connection.removeAllListeners();
-
-    subscription.unsubscribe();
-    connection.disconnect();
-    player.stop();
-
-    client.subscriptions.delete(guild.id);
+    subscription.connection.disconnect();
+  } else {
+    const connection = getVoiceConnection(guildId);
+    if (connection) connection.disconnect();
+    else throw new Error("Bot is not connected to any voice channel");
   }
-  await interaction.reply({ embeds: [notrack("Stopped the current song!")] });
+  await interaction.reply("Stopped");
 };

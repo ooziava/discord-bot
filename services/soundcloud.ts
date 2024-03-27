@@ -1,5 +1,5 @@
 import { SoundCloudPlaylist, SoundCloudTrack, soundcloud } from "play-dl";
-import { searchYtVideo } from "../utils/play-dl.js";
+// import { searchYtVideo } from "../utils/play-dl.js";
 
 const getSoundlcoud = async (url: string, type: SpotifyType) => {
   const so = await soundcloud(url);

@@ -1,4 +1,3 @@
-import consola from "consola";
 import { setToken } from "play-dl";
 
 const scClientId = process.env.SOUNDCLOUD_CLIENT_ID;
@@ -22,7 +21,6 @@ export default async () => {
       market: spMarket,
     },
   });
-  consola.success("Token set!");
 };
 
 // authorization();

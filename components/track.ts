@@ -1,4 +1,5 @@
 import { EmbedBuilder } from "discord.js";
+import { formatDuration } from "../utils/parsing.js";
 
 export default (
   { title, duration, url, author, thumbnail, timestamp, user }: StoredSong,
@@ -6,9 +7,7 @@ export default (
 ) =>
   new EmbedBuilder()
     .setColor(0x0099ff)
-    .setTitle(
-      `${title} (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`
-    )
+    .setTitle(`${title} (${formatDuration(duration)})`)
     .setURL(url)
     .setAuthor({
       name: author.name,

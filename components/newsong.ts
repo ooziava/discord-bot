@@ -1,12 +1,9 @@
 import { EmbedBuilder } from "discord.js";
+import { formatDuration } from "../utils/parsing.js";
 
 export default (song: StoredSong) =>
   new EmbedBuilder()
     .setColor(0x0099ff)
     .setDescription("Song added to queue!")
     .setURL(song.url)
-    .setTitle(
-      `${song.title} (${Math.floor(song.duration / 60)}:${(song.duration % 60)
-        .toString()
-        .padStart(2, "0")})`
-    );
+    .setTitle(`${song.title} (${formatDuration(song.duration)})`);

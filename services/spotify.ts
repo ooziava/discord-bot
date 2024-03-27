@@ -21,7 +21,7 @@ const getSpotify = async (url: string, type: SpotifyType): Promise<Video[]> => {
   //   return tracks;
   // } else {
   //   const track = sp as SpotifyTrack;
-  //   const video = await searchYtVideo(
+  //   const [video] = await searchYtVideo(
   //     `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
   //   );
   //   if (video) video.playlist = undefined;
@@ -34,7 +34,7 @@ const getSpotify = async (url: string, type: SpotifyType): Promise<Video[]> => {
 
   const videos = await Promise.all(
     tracks.map(async (track) => {
-      const video = await searchYtVideo(
+      const [video] = await searchYtVideo(
         `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
       );
       if (!(sp instanceof SpotifyTrack) && video)
