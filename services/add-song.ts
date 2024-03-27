@@ -23,7 +23,7 @@ import { add, cancel } from "../components/buttons.js";
 export const addSongToQueue = async (
   songName: string,
   interaction: CommandInteraction,
-  client: MyClient
+  _client: MyClient
 ) => {
   if (!interaction.replied && !interaction.deferred) await interaction.deferReply();
 

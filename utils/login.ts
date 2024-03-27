@@ -5,8 +5,9 @@ const spClientId = process.env.SPOTIFY_CLIENT_ID;
 const spClientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const spRefreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 const spMarket = process.env.SPOTIFY_MARKET;
+const ytCookie = process.env.YOUTUBE_COOKIE;
 
-if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarket)
+if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarket || !ytCookie)
   throw new Error("Missing environment variables");
 
 export default async () => {
@@ -19,6 +20,9 @@ export default async () => {
       client_secret: spClientSecret,
       refresh_token: spRefreshToken,
       market: spMarket,
+    },
+    youtube: {
+      cookie: ytCookie,
     },
   });
 };

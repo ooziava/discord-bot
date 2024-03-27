@@ -39,7 +39,7 @@ client.once(Events.ClientReady, async (c) => {
     commands.forEach((command) => {
       client.commands.set(command.data.name, command);
     });
-    // await registerCommands(commands);
+    await registerCommands(commands);
 
     consola.info("Logging in to services...");
     await loginToSocial();
