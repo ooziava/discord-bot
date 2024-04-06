@@ -1,6 +1,11 @@
+# workspace settings
+.vscode
+
+# service
 node_modules
+dist
+
+# sensitive
+/data
 .env
 cert.pem
-/.vscode
-/dist
-/data
