@@ -1,6 +1,6 @@
 import type { ISong } from "../types/song.js";
 
-export class PlaylistService {
+export default class PlaylistService {
   static async save(song: ISong) {
     // Save playlist
   }

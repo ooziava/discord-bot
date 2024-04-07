@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import type { ISong } from "../types/song.js";
 import { SourceEnum } from "../types/source.js";
+import { MongooseModelsEnum } from "../types/models.js";
 
 const songSchema: Schema = new Schema({
   title: { type: String, required: true },
@@ -11,6 +12,6 @@ const songSchema: Schema = new Schema({
   source: { type: String, enum: [SourceEnum.Youtube, SourceEnum.Spotify], required: true },
 });
 
-const Song = mongoose.model<ISong>("Song", songSchema);
+const Song = mongoose.model<ISong>(MongooseModelsEnum.Song, songSchema);
 
 export default Song;
