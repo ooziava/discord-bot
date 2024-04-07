@@ -3,7 +3,7 @@ import { REST, Routes } from "discord.js";
 import readFolders from "./read-folders.js";
 
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.SERVER_ID;
+const guildId = process.env.GUILD_ID;
 const token = process.env.DISCORD_TOKEN;
 const status = process.argv[2];
 
