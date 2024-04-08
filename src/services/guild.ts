@@ -26,12 +26,18 @@ export default class GuildService {
     return this.guild.queue[0] || null;
   }
 
-  async nextSong() {
+  async playNext() {
     const queue = this.guild.queue;
-    if (queue.length === 0) return null;
-    const song = queue.shift();
+    if (queue.length === 0) throw new Error("Queue is empty");
+    this.lastSong = queue.shift();
     await this.guild.save();
-    return song;
+  }
+
+  async playPrev() {
+    if (!this.lastSong) throw new Error("No previous song found");
+    const queue = this.guild.queue;
+    queue.unshift(this.lastSong);
+    await this.guild.save();
   }
 
   async addPlaylist(playlists: IPlaylist) {

@@ -9,6 +9,5 @@ export interface IGuild extends Document {
   prefix: string;
   volume: number;
   loop: boolean;
-  autoplay: boolean;
   maxQueueSize: number;
 }
