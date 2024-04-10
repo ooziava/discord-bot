@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
 import fs from "fs";
+import mongoose from "mongoose";
+import { guildModel, playlistModel, songModel } from "../models";
 
 export default async function connectToDB() {
   const credentials = fs.readFileSync("./cert.pem");

@@ -4,8 +4,7 @@ import type MyClient from "../../utils/client.js";
 import replies from "../../data/replies.json" assert { type: "json" };
 
 export const name = Events.InteractionCreate;
-export const execute = async (interaction: Interaction) => {
-  const client = interaction.client as MyClient;
+export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = client.commands.get(interaction.commandName);

@@ -11,32 +11,40 @@ export default class MyClient extends Client<true> {
     this.commands = new Collection();
     this.cooldowns = new Collection();
 
-    const commandPromises = readFolders("../commands").map((filePath) => {
-      return import(filePath).then((command) => {
-        if ("data" in command && "execute" in command) {
-          this.commands.set(command.data.name, command);
-        } else {
-          consola.warn(
-            `The command at ${filePath} is missing a required "data" or "execute" property.`
-          );
+    const commandPromises = readFolders("../commands").map(async (filePath) => {
+      const command = await import(filePath);
+      if ("data" in command && "execute" in command) {
+        this.commands.set(command.data.name, command);
+        const aliases = command.aliases;
+        if (aliases) {
+          if (typeof aliases === "string") {
+            this.commands.set(aliases, command);
+          } else if (Array.isArray(aliases)) {
+            aliases.forEach((alias) => {
+              this.commands.set(alias, command);
+            });
+          }
         }
-      });
+      } else {
+        consola.warn(
+          `The command at ${filePath} is missing a required "data" or "execute" property.`
+        );
+      }
     });
 
-    const eventPromises = readFolders("../events").map((filePath) => {
-      return import(filePath).then((event) => {
-        if ("name" in event && "execute" in event) {
-          if (event.once) {
-            this.once(event.name, (...args) => event.execute(...args));
-          } else {
-            this.on(event.name, (...args) => event.execute(...args));
-          }
+    const eventPromises = readFolders("../events").map(async (filePath) => {
+      const event = await import(filePath);
+      if ("name" in event && "execute" in event) {
+        if (event.once) {
+          this.once(event.name, (...args) => event.execute(this, ...args));
         } else {
-          consola.warn(
-            `The event at ${filePath} is missing a required "name" or "execute" property.`
-          );
+          this.on(event.name, (...args) => event.execute(this, ...args));
         }
-      });
+      } else {
+        consola.warn(
+          `The event at ${filePath} is missing a required "name" or "execute" property.`
+        );
+      }
     });
 
     Promise.all(commandPromises).then(() => {

@@ -11,8 +11,7 @@ export default class GuildService {
   }
 
   static async init(guildId: string) {
-    let guild = await this.getGuild(guildId);
-    if (!guild) guild = await this.createGuild(guildId);
+    const guild = (await this.getGuild(guildId)) || (await this.createGuild(guildId));
     return new GuildService(guild);
   }
   private static async getGuild(guildId: string) {
@@ -22,7 +21,7 @@ export default class GuildService {
     return await guildModel.create({ guildId });
   }
 
-  async getCurrentSong() {
+  getCurrentSong() {
     return this.guild.queue[0] || null;
   }
 
@@ -60,33 +59,29 @@ export default class GuildService {
     await this.guild.save();
   }
 
-  async getQueue() {
+  getQueue() {
     return this.guild.queue;
   }
 
-  async getPlaylists() {
+  getPlaylists() {
     return this.guild.playlists;
   }
 
   // This methods will be used later in the project
-  async getPrefix() {
+  getPrefix() {
     return this.guild.prefix;
   }
 
-  async getVolume() {
+  getVolume() {
     return this.guild.volume;
   }
 
-  async getMaxQueueSize() {
+  getMaxQueueSize() {
     return this.guild.maxQueueSize;
   }
 
-  async isLoop() {
+  isLoop() {
     return this.guild.loop;
-  }
-
-  async isAutoplay() {
-    return this.guild.autoplay;
   }
 
   async setPrefix(prefix: string) {
@@ -106,11 +101,6 @@ export default class GuildService {
 
   async setLoop(loop: boolean) {
     this.guild.loop = loop;
-    await this.guild.save();
-  }
-
-  async setAutoplay(autoplay: boolean) {
-    this.guild.autoplay = autoplay;
     await this.guild.save();
   }
 }
