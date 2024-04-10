@@ -11,8 +11,8 @@
     "dev": "tsc-watch --onSuccess \"npm run watch\"",
     "build": "tsc",
     "start": "node --env-file .env --no-warnings ./dist/index.js",
-    "deploy-commands": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts",
-    "deploy-commands:global": "node --env-file .env dist/utils/deploy-commands.js global"
+    "commands": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts",
+    "commands:global": "node --env-file .env dist/utils/deploy-commands.js global"
   },
   "keywords": [],
   "author": "ooziava",

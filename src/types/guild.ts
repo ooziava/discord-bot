@@ -2,7 +2,7 @@ import type { Document } from "mongoose";
 import type { ISong } from "./song.js";
 import type { IPlaylist } from "./playlist.js";
 
-export interface IGuild extends Document {
+export type NewGuild = {
   guildId: string;
   queue: ISong[];
   playlists: IPlaylist[];
@@ -10,4 +10,6 @@ export interface IGuild extends Document {
   volume: number;
   loop: boolean;
   maxQueueSize: number;
-}
+};
+
+export interface IGuild extends NewGuild, Document {}

@@ -2,7 +2,7 @@ import type { Document } from "mongoose";
 import type { Source } from "./source.js";
 import type { ISong } from "./song.js";
 
-export interface IPlaylist extends Document {
+export type NewPlaylist = {
   name: string;
   artist: string;
   duration: number;
@@ -10,4 +10,6 @@ export interface IPlaylist extends Document {
   thumbnail?: string;
   source: Source;
   songs: ISong[];
-}
+};
+
+export interface IPlaylist extends NewPlaylist, Document {}

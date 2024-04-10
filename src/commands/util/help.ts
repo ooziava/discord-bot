@@ -1,16 +1,14 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
+import type { Data, Execute } from "../../types/command.js";
 
-export const data = new SlashCommandBuilder()
+export const data: Data = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help with the bot")
   .addStringOption((option) =>
     option.setName("command").setDescription("The command to get help with").setRequired(false)
   );
 
-export const execute = async (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => {
+export const execute: Execute = async (interaction) => {
   await interaction.reply(`
 /play : (url)
 /search : query

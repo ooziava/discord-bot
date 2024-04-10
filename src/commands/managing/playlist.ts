@@ -1,7 +1,8 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder, Message } from "discord.js";
+import type { Aliases, Data, Execute } from "../../types/command.js";
 
-export const aliases = "pl";
-export const data = new SlashCommandBuilder()
+export const aliases: Aliases = "pl";
+export const data: Data = new SlashCommandBuilder()
   .setName("playlist")
   .setDescription("Manage the playlist")
   .addSubcommand((subcommand) =>
@@ -49,10 +50,7 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-export const execute = async (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => {
+export const execute: Execute = async (interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 

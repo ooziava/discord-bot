@@ -1,16 +1,14 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder, Message } from "discord.js";
+import type { Data, Execute } from "../../types/command.js";
 
-export const data = new SlashCommandBuilder()
+export const data: Data = new SlashCommandBuilder()
   .setName("volume")
   .setDescription("Set the volume of the player")
   .addIntegerOption((option) =>
     option.setName("volume").setDescription("The volume to set").setRequired(true)
   );
 
-export const execute = async (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => {
+export const execute: Execute = async (interaction, args) => {
   let volume;
   if (interaction instanceof Message) {
     const volumeArg = args?.[0];

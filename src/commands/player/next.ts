@@ -1,16 +1,14 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder, Message } from "discord.js";
+import type { Data, Execute } from "../../types/command.js";
 
-export const data = new SlashCommandBuilder()
+export const data: Data = new SlashCommandBuilder()
   .setName("next")
   .setDescription("Play the next song")
   .addIntegerOption((option) =>
     option.setName("amount").setDescription("The amount of songs to skip")
   );
 
-export const execute = async (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => {
+export const execute: Execute = async (interaction, args) => {
   const amount =
     interaction instanceof Message
       ? parseInt(args?.[0] ?? "1")

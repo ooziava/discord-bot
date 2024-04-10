@@ -1,7 +1,10 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder, Message } from "discord.js";
+import SongService from "../../services/song.js";
+import SearchService from "../../services/search.js";
+import type { Aliases, Autocomplete, Data, Execute } from "../../types/command.js";
 
-export const aliases = "q";
-export const data = new SlashCommandBuilder()
+export const aliases: Aliases = "q";
+export const data: Data = new SlashCommandBuilder()
   .setName("queue")
   .setDescription("Manage the queue")
   .addSubcommand((subcommand) =>
@@ -10,7 +13,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("Add a song to the queue")
       .addStringOption((option) =>
         option
-          .setName("url")
+          .setName("song")
           .setDescription("The URL of the song to add")
           .setRequired(true)
           .setAutocomplete(true)
@@ -29,18 +32,24 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the queue"));
 
-export const execute = async (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => {
+export const execute: Execute = async (interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
   switch (subcommand) {
     case "add":
-      const url = interaction instanceof Message ? args?.[1] : interaction.options.getString("url");
+      const url =
+        interaction instanceof Message ? args?.[1] : interaction.options.getString("song");
       if (!url) return await interaction.reply("Please provide a URL to add.");
-      await interaction.reply(`Adding song from ${url} to the queue`);
+
+      let song = await SongService.getByUrl(url);
+      if (!song) {
+        const result = await SearchService.search(url);
+        const newSong = SearchService.youtubeVideoToSong(result[0]);
+        song = await SongService.save(newSong);
+      }
+
+      await interaction.reply(`Added song ${song.title} to the queue`);
       break;
     case "remove":
       const search =
@@ -59,4 +68,17 @@ export const execute = async (
     default:
       await interaction.reply("Please provide a subcommand.");
   }
+};
+export const autocomplete: Autocomplete = async (interaction) => {
+  const focusedValue = interaction.options.getFocused().toLocaleLowerCase();
+  const choices = [
+    "Popular Topics: Threads",
+    "Sharding: Getting started",
+    "Library: Voice Connections",
+    "Interactions: Replying to slash commands",
+    "Popular Topics: Embed preview",
+  ];
+
+  const filtered = choices.filter((choice) => choice.toLocaleLowerCase().startsWith(focusedValue));
+  await interaction.respond(filtered.map((choice) => ({ name: choice, value: choice })));
 };

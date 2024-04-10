@@ -1,28 +1,32 @@
-import type { IPlaylist } from "../types/playlist.js";
+import type { NewPlaylist } from "../types/playlist.js";
 import type { ISong } from "../types/song.js";
 import playlistModel from "../models/playlist.js";
 
 export default class PlaylistService {
-  static async create(playlist: IPlaylist) {
+  static async save(playlist: NewPlaylist) {
     return await playlistModel.create(playlist);
   }
 
-  static async update(id: string, playlist: IPlaylist) {
-    const updatedPlaylist = await playlistModel.findByIdAndUpdate(id, playlist);
-    if (!updatedPlaylist) throw new Error("Playlist not found");
+  static async update(id: string, playlist: NewPlaylist) {
+    return await playlistModel.findByIdAndUpdate(id, playlist);
   }
 
-  static async delete(id: string) {
-    await playlistModel.findByIdAndDelete(id);
+  static async remove(id: string) {
+    return await playlistModel.findByIdAndDelete(id);
   }
 
   static async search(query: string) {
     return await playlistModel.find({ $text: { $search: query } });
   }
-  static async get(id: string) {
-    const playlist = await playlistModel.findById(id);
-    if (!playlist) throw new Error("Playlist not found");
-    return playlist;
+
+  static async getById(id: string) {
+    return await playlistModel.findById(id);
+  }
+
+  static async getByUrl(url: string) {
+    return await playlistModel.findOne({
+      url,
+    });
   }
 
   static async getAll() {
@@ -30,13 +34,13 @@ export default class PlaylistService {
   }
 
   static async getLength(id: string) {
-    const playlist = await this.get(id);
-    return playlist.songs.length;
+    const playlist = await this.getById(id);
+    return playlist?.songs.length;
   }
 
   static async getDuration(id: string) {
-    const playlist = await this.get(id);
-    return playlist.songs.reduce((acc, song) => acc + song.duration, 0);
+    const playlist = await this.getById(id);
+    return playlist?.songs.reduce((acc, song) => acc + song.duration, 0);
   }
 
   static async getDurationAll() {
@@ -48,20 +52,22 @@ export default class PlaylistService {
   }
 
   static async getPlaylistSongs(id: string) {
-    const playlist = await this.get(id);
-    await playlist.populate("songs");
-    return playlist.songs;
+    const playlist = await this.getById(id);
+    await playlist?.populate("songs");
+    return playlist?.songs;
   }
 
   static async addSong(id: string, song: ISong) {
-    const playlist = await this.get(id);
-    playlist.songs.push(song._id);
-    await playlist.save();
+    const playlist = await this.getById(id);
+    playlist?.songs.push(song._id);
+    return await playlist?.save();
   }
 
   static async removeSong(id: string, song: ISong) {
-    const playlist = await this.get(id);
+    const playlist = await this.getById(id);
+    if (!playlist) return;
+
     playlist.songs = playlist.songs.filter((s) => !s.equals(song._id));
-    await playlist.save();
+    return await playlist?.save();
   }
 }

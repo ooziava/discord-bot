@@ -27,36 +27,37 @@ export default class GuildService {
 
   async playNext() {
     const queue = this.guild.queue;
-    if (queue.length === 0) throw new Error("Queue is empty");
+    if (queue.length === 0) return;
+
     this.lastSong = queue.shift();
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async playPrev() {
-    if (!this.lastSong) throw new Error("No previous song found");
+    if (!this.lastSong) return;
     const queue = this.guild.queue;
     queue.unshift(this.lastSong);
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async addPlaylist(playlists: IPlaylist) {
     this.guild.playlists.push(playlists._id);
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async addQueue(...items: ISong[]) {
     this.guild.queue.push(...items.map((i) => i._id));
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async removePlaylist(playlist: IPlaylist) {
     this.guild.playlists = this.guild.playlists.filter((p) => !p.equals(playlist._id));
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async removeQueue(item: ISong) {
     this.guild.queue = this.guild.queue.filter((i) => !i.equals(item._id));
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   getQueue() {
@@ -67,7 +68,6 @@ export default class GuildService {
     return this.guild.playlists;
   }
 
-  // This methods will be used later in the project
   getPrefix() {
     return this.guild.prefix;
   }
@@ -86,21 +86,21 @@ export default class GuildService {
 
   async setPrefix(prefix: string) {
     this.guild.prefix = prefix;
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async setVolume(volume: number) {
     this.guild.volume = Math.min(200, Math.max(0, volume));
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async setMaxQueueSize(size: number) {
     this.guild.maxQueueSize = size;
-    await this.guild.save();
+    return await this.guild.save();
   }
 
   async setLoop(loop: boolean) {
     this.guild.loop = loop;
-    await this.guild.save();
+    return await this.guild.save();
   }
 }

@@ -1,27 +1,31 @@
-import type { ISong } from "../types/song.js";
+import type { NewSong } from "../types/song.js";
 import songModel from "../models/song.js";
 
 export default class SongService {
-  static async create(song: ISong) {
+  static async save(song: NewSong) {
     return await songModel.create(song);
   }
 
-  static async update(id: string, song: ISong) {
-    const updatedPlaylist = await songModel.findByIdAndUpdate(id, song);
-    if (!updatedPlaylist) throw new Error("Playlist not found");
+  static async update(id: string, song: NewSong) {
+    return await songModel.findByIdAndUpdate(id, song);
   }
 
-  static async delete(id: string) {
-    await songModel.findByIdAndDelete(id);
+  static async remove(id: string) {
+    return await songModel.findByIdAndDelete(id);
   }
 
   static async search(query: string) {
     return await songModel.find({ $text: { $search: query } });
   }
-  static async get(id: string) {
-    const song = await songModel.findById(id);
-    if (!song) throw new Error("Song not found");
-    return song;
+
+  static async getById(id: string) {
+    return await songModel.findById(id);
+  }
+
+  static async getByUrl(url: string) {
+    return await songModel.findOne({
+      url,
+    });
   }
 
   static async getAll() {

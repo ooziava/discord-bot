@@ -3,6 +3,7 @@ import consola from "consola";
 import type MyClient from "../../utils/client.js";
 import replies from "../../data/replies.json" assert { type: "json" };
 import GuildService from "../../services/guild.js";
+import { checkCooldown } from "../../utils/cooldowns.js";
 
 export const name = Events.MessageCreate;
 export const execute = async (client: MyClient, message: Message) => {
@@ -16,6 +17,13 @@ export const execute = async (client: MyClient, message: Message) => {
 
   const command = client.commands.get(commandName);
   if (!command) return consola.error(`No command matching ${commandName} was found.`);
+
+  const cooldown = await checkCooldown(client, message.author.id, command);
+  if (cooldown) {
+    return await message.reply({
+      content: `Please wait, you are on a cooldown for \`${command.data.name}\`. You can use it again <t:${cooldown}:R>.`,
+    });
+  }
 
   try {
     await command.execute(message, args);

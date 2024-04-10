@@ -1,6 +1,7 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, Message } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
+import type { Data, Execute } from "../../types/command.js";
 
-export const data = new SlashCommandBuilder().setName("kill").setDescription("Kill the bot");
-export const execute = async (interaction: ChatInputCommandInteraction | Message) => {
+export const data: Data = new SlashCommandBuilder().setName("kill").setDescription("Kill the bot");
+export const execute: Execute = async (interaction) => {
   await interaction.reply("Killing the bot");
 };
