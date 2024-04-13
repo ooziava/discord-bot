@@ -1,11 +1,9 @@
-import type { Document } from "mongoose";
-import type { ISong } from "./song.js";
-import type { IPlaylist } from "./playlist.js";
+import type { Document, Types } from "mongoose";
 
 export type NewGuild = {
   guildId: string;
-  queue: ISong[];
-  playlists: IPlaylist[];
+  queue: Types.ObjectId[];
+  playlists: Types.ObjectId[];
   prefix: string;
   volume: number;
   loop: boolean;

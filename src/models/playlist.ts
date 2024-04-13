@@ -6,7 +6,6 @@ import { MongooseModelsEnum } from "../types/models.js";
 const PlaylistSchema: Schema = new Schema({
   name: { type: String, required: true },
   artist: { type: String, required: true },
-  duration: { type: Number, required: true },
   url: { type: String, required: true },
   thumbnail: { type: String },
   source: { type: String, enum: [SourceEnum.Youtube, SourceEnum.Spotify], required: true },

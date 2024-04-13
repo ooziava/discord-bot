@@ -1,5 +1,5 @@
 import { GatewayIntentBits } from "discord.js";
-import MyClient from "./utils/client.js";
+import MyClient from "./client.js";
 import consola from "consola";
 
 const token = process.env.DISCORD_TOKEN;

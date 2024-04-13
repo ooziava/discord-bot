@@ -1,6 +1,6 @@
 import { Events } from "discord.js";
 import consola from "consola";
-import type MyClient from "../../utils/client.js";
+import type MyClient from "../../client.js";
 
 export const name = Events.ClientReady;
 export const once = true;

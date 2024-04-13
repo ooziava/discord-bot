@@ -7,7 +7,7 @@ import readFiles from "./read-files.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const readFolders = (parentFolder: string) => {
+function readFolders(parentFolder: string) {
   const foldersPath = path.join(__dirname, parentFolder);
   const commandFolders = fs.readdirSync(foldersPath);
   const commands: string[] = [];
@@ -17,6 +17,6 @@ const readFolders = (parentFolder: string) => {
     commands.push(...commandFiles);
   });
   return commands;
-};
+}
 
 export default readFolders;

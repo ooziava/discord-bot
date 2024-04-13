@@ -1,9 +1,9 @@
 import { Client, Collection, type ClientOptions } from "discord.js";
-import readFolders from "./read-folders.js";
+import readFolders from "./utils/read-folders.js";
 import consola from "consola";
-import connectToDB from "../services/mongodb.js";
+import connectToDB from "./mongo.js";
 
-export default class MyClient extends Client<true> {
+class MyClient extends Client<true> {
   commands: Collection<string, any>;
   cooldowns: Collection<string, Collection<string, number>>;
   constructor(options: ClientOptions) {
@@ -58,3 +58,5 @@ export default class MyClient extends Client<true> {
     });
   }
 }
+
+export default MyClient;

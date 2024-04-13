@@ -1,9 +1,7 @@
 import type { AutocompleteInteraction, ChatInputCommandInteraction, Message } from "discord.js";
 
-export type Execute = (
-  interaction: ChatInputCommandInteraction | Message,
-  args?: string[]
-) => Promise<any>;
+export type MyCommandInteraction = ChatInputCommandInteraction<"cached" | "raw"> | Message<true>;
+export type Execute = (interaction: MyCommandInteraction, args?: string[]) => Promise<any>;
 
 export type Data = {
   name: string;
@@ -13,7 +11,7 @@ export type Data = {
 
 export type Cooldown = number;
 export type Aliases = string[] | string;
-export type Autocomplete = (interaction: AutocompleteInteraction) => Promise<any>;
+export type Autocomplete = (interaction: AutocompleteInteraction<"cached" | "raw">) => Promise<any>;
 
 export type Command = {
   data: Data;

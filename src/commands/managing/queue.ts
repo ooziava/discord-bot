@@ -2,6 +2,8 @@ import { SlashCommandBuilder, Message } from "discord.js";
 import SongService from "../../services/song.js";
 import SearchService from "../../services/search.js";
 import type { Aliases, Autocomplete, Data, Execute } from "../../types/command.js";
+import reply from "../../utils/reply.js";
+import GuildService from "../../services/guild.js";
 
 export const aliases: Aliases = "q";
 export const data: Data = new SlashCommandBuilder()
@@ -39,34 +41,35 @@ export const execute: Execute = async (interaction, args) => {
   switch (subcommand) {
     case "add":
       const url =
-        interaction instanceof Message ? args?.[1] : interaction.options.getString("song");
-      if (!url) return await interaction.reply("Please provide a URL to add.");
+        interaction instanceof Message ? args?.[1] : interaction.options.getString("song", true);
+      if (!url) return await reply(interaction, "Please provide a URL to add.", true);
 
       let song = await SongService.getByUrl(url);
       if (!song) {
-        const result = await SearchService.search(url);
-        const newSong = SearchService.youtubeVideoToSong(result[0]);
+        const result = await SearchService.searchSong(url);
+        if (!result || !result.length) return await reply(interaction, "No results found.", true);
+
+        const newSong = SongService.parseYoutubeVideo(result[0]);
         song = await SongService.save(newSong);
       }
 
-      await interaction.reply(`Added song ${song.title} to the queue`);
-      break;
+      await GuildService.addToQueue(interaction.guildId, song._id);
+      return await reply(interaction, `Added to queue: ${song.title}`);
     case "remove":
       const search =
         interaction instanceof Message
           ? args?.slice(1).join(" ")
           : interaction.options.getString("song");
-      if (!search) return await interaction.reply("Please provide a song name or url to remove.");
-      await interaction.reply(`Removing song ${search} from the queue`);
-      break;
+      if (!search)
+        return await reply(interaction, "Please provide a song name or url to remove.", true);
+
+      return await reply(interaction, "Available soon");
     case "info":
-      await interaction.reply("Getting information about the queue");
-      break;
+      return await reply(interaction, "Available soon");
     case "clear":
-      await interaction.reply("Clearing the queue");
-      break;
+      return await reply(interaction, "Available soon");
     default:
-      await interaction.reply("Please provide a subcommand.");
+      return await reply(interaction, "Please provide a subcommand.", true);
   }
 };
 export const autocomplete: Autocomplete = async (interaction) => {

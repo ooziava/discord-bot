@@ -1,23 +1,32 @@
-import { YouTubeVideo, search } from "play-dl";
-import type { NewSong } from "../types/song.js";
-import { SourceEnum } from "../types/source.js";
+import { playlist_info, search, video_basic_info } from "play-dl";
+import type { Source } from "../types/source.js";
 
-export default class SearchService {
-  static async search(query: string) {
+class SearchService {
+  static async searchSong(query: string, limit = 1) {
     return await search(query, {
-      limit: 1,
+      limit,
       unblurNSFWThumbnails: true,
-    });
+    }).catch(() => null);
   }
 
-  static youtubeVideoToSong(video: YouTubeVideo): NewSong {
-    return {
-      title: video.title || "Unknown title",
-      url: video.url,
-      thumbnail: video.thumbnails[0].url,
-      duration: video.durationInSec,
-      artist: video.channel?.name || "Unknown artist",
-      source: SourceEnum.Youtube,
-    };
+  static async getSongByURL(url: string, options?: { source: Source }) {
+    switch (options?.source) {
+      case "youtube":
+      default:
+        const info = await video_basic_info(url).catch(() => null);
+        return info?.video_details;
+    }
+  }
+
+  static async getPlaylistByURL(url: string, options?: { source: Source }) {
+    switch (options?.source) {
+      case "youtube":
+      default:
+        return await playlist_info(url, {
+          incomplete: true,
+        }).catch(() => null);
+    }
   }
 }
+
+export default SearchService;

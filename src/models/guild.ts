@@ -4,7 +4,7 @@ import { MongooseModelsEnum } from "../types/models.js";
 
 const GuildSchema: Schema = new Schema({
   guildId: { type: String, required: true, unique: true },
-  queue: [{ type: [Schema.Types.ObjectId], ref: MongooseModelsEnum.Song }],
+  queue: [{ type: Schema.Types.ObjectId, ref: MongooseModelsEnum.Song }],
   playlists: [{ type: Schema.Types.ObjectId, ref: MongooseModelsEnum.Playlist }],
   prefix: { type: String, default: "!" },
   volume: { type: Number, default: 100 },

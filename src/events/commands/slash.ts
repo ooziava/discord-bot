@@ -1,12 +1,12 @@
 import { Collection, Events, type Interaction } from "discord.js";
 import consola from "consola";
-import type MyClient from "../../utils/client.js";
+import type MyClient from "../../client.js";
 import replies from "../../data/replies.json" assert { type: "json" };
-import { checkCooldown } from "../../utils/cooldowns.js";
+import checkCooldown from "../../utils/cooldowns.js";
 
 export const name = Events.InteractionCreate;
 export const execute = async (client: MyClient, interaction: Interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand() || !interaction.inGuild()) return;
 
   const command = client.commands.get(interaction.commandName);
   if (!command) return consola.error(`No command matching ${interaction.commandName} was found.`);

@@ -1,8 +1,8 @@
 import fs from "fs";
 import mongoose from "mongoose";
-import { guildModel, playlistModel, songModel } from "../models";
+import { guildModel, playlistModel, songModel } from "./models";
 
-export default async function connectToDB() {
+async function connectToDB() {
   const credentials = fs.readFileSync("./cert.pem");
   await mongoose.connect(
     "mongodb+srv://cluster0.n3wzzwl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=Cluster0",
@@ -15,3 +15,4 @@ export default async function connectToDB() {
 }
 
 process.on("SIGINT", () => mongoose.connection.close());
+export default connectToDB;

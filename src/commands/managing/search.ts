@@ -13,5 +13,5 @@ export const execute: Execute = async (interaction, args) => {
     interaction instanceof Message ? args?.join(" ") : interaction.options.getString("query", true);
 
   if (!query) return await interaction.reply("Please provide a query to search for.");
-  await interaction.reply(`Searching for ${query}`);
+  await interaction.reply("Available soon");
 };

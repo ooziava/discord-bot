@@ -1,5 +1,11 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import type { Aliases, Data, Execute } from "../../types/command.js";
+import type { Aliases, Data, Execute } from "../../../types/command.js";
+import reply from "../../../utils/reply.js";
+import addPlaylist from "./add.js";
+import removePlaylist from "./remove.js";
+import infoPlaylist from "./info.js";
+import playPlaylist from "./play.js";
+import clearPlaylists from "./clear.js";
 
 export const aliases: Aliases = "pl";
 export const data: Data = new SlashCommandBuilder()
@@ -48,55 +54,58 @@ export const data: Data = new SlashCommandBuilder()
       .addStringOption((option) =>
         option.setName("playlist").setDescription("The playlist to modify").setRequired(true)
       )
-  );
+  )
+  .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
 export const execute: Execute = async (interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
+  const query =
+    interaction instanceof Message
+      ? args?.slice(1).join(" ")
+      : interaction.options.getString("playlist");
+
   switch (subcommand) {
     case "add":
-      const url = interaction instanceof Message ? args?.[1] : interaction.options.getString("url");
-      if (!url) return await interaction.reply("Please provide a URL to save.");
-      await interaction.reply(`Saving playlist from ${url}`);
-      break;
+      let input;
+      if (interaction instanceof Message) {
+        input = args?.[1];
+        if (!input) return await reply(interaction, "Please provide a playlist URL.", true);
+      } else {
+        input = interaction.options.getString("url", true);
+        await interaction.deferReply();
+      }
+
+      return await addPlaylist(interaction, input);
+
     case "remove":
-      const search =
-        interaction instanceof Message
-          ? args?.slice(1).join(" ")
-          : interaction.options.getString("playlist");
-      if (!search)
-        return await interaction.reply("Please provide a playlist name or url to remove.");
-      await interaction.reply(`Removing playlist ${search}`);
-      break;
+      if (!query)
+        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+      else return await removePlaylist(interaction, query);
+
     case "info":
-      const playlist =
-        interaction instanceof Message
-          ? args?.slice(1).join(" ")
-          : interaction.options.getString("playlist");
-      if (!playlist) return await interaction.reply("Please provide a playlist name or url.");
-      await interaction.reply(`Getting information about the playlist ${playlist}`);
-      break;
+      if (!query)
+        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+      else return await infoPlaylist(interaction, query);
+
     case "play":
-      const playlistPlay =
-        interaction instanceof Message
-          ? args?.slice(1).join(" ")
-          : interaction.options.getString("playlist");
-      if (!playlistPlay) return await interaction.reply("Please provide a playlist name or url.");
-      await interaction.reply(`Playing the playlist ${playlistPlay}`);
-      break;
+      if (!query)
+        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+      else return await playPlaylist(interaction, query);
+
     case "create":
-      await interaction.reply("Creating a playlist");
-      break;
+      return await reply(interaction, "Available soon.");
+
     case "modify":
-      const playlistModify =
-        interaction instanceof Message
-          ? args?.slice(1).join(" ")
-          : interaction.options.getString("playlist");
-      if (!playlistModify) return await interaction.reply("Please provide a playlist name or url.");
-      await interaction.reply(`Modifying the playlist ${playlistModify}`);
-      break;
+      if (!query)
+        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+
+      return await reply(interaction, "Available soon.");
+
+    case "clear":
+      return await clearPlaylists(interaction);
     default:
-      await interaction.reply("Please provide a subcommand.");
+      await reply(interaction, "Please provide a valid subcommand.", true);
   }
 };

@@ -1,106 +1,102 @@
+import type { ObjectId } from "mongodb";
 import guildModel from "../models/guild.js";
-import type { IGuild } from "../types/guild.js";
 import type { ISong } from "../types/song.js";
 import type { IPlaylist } from "../types/playlist.js";
 
-export default class GuildService {
-  private guild: IGuild;
-  lastSong: ISong | undefined;
-  constructor(guild: IGuild) {
-    this.guild = guild;
+class GuildService {
+  // specific guild operations
+  static async getGuild(guildId: string) {
+    return (await guildModel.findOne({ guildId })) || (await guildModel.create({ guildId }));
+  }
+  static async getCurrentSong(guildId: string) {
+    const guild = await this.getGuild(guildId);
+    return guild.queue[0] || null;
   }
 
-  static async init(guildId: string) {
-    const guild = (await this.getGuild(guildId)) || (await this.createGuild(guildId));
-    return new GuildService(guild);
-  }
-  private static async getGuild(guildId: string) {
-    return await guildModel.findOne({ guildId }).populate("queue").populate("playlists");
-  }
-  private static async createGuild(guildId: string) {
-    return await guildModel.create({ guildId });
-  }
-
-  getCurrentSong() {
-    return this.guild.queue[0] || null;
-  }
-
-  async playNext() {
-    const queue = this.guild.queue;
+  static async playNext(guildId: string) {
+    const guild = await this.getGuild(guildId);
+    const queue = guild.queue;
     if (queue.length === 0) return;
 
-    this.lastSong = queue.shift();
-    return await this.guild.save();
+    // this.lastSong = queue.shift();
+    return await guild.save();
   }
 
-  async playPrev() {
-    if (!this.lastSong) return;
-    const queue = this.guild.queue;
-    queue.unshift(this.lastSong);
-    return await this.guild.save();
+  //playlist operations
+  static async addPlaylist(guildId: string, ...playlists: ObjectId[]) {
+    const guild = await this.getGuild(guildId);
+    guild.playlists.push(...playlists);
+    return await guild.save();
   }
 
-  async addPlaylist(playlists: IPlaylist) {
-    this.guild.playlists.push(playlists._id);
-    return await this.guild.save();
+  static async getPlaylists(guildId: string) {
+    const guild = await this.getGuild(guildId);
+    await guild.populate("playlists");
+    return guild.playlists as unknown as IPlaylist[];
   }
 
-  async addQueue(...items: ISong[]) {
-    this.guild.queue.push(...items.map((i) => i._id));
-    return await this.guild.save();
+  static async removePlaylist(guildId: string, playlistId: ObjectId) {
+    const guild = await this.getGuild(guildId);
+    const lenght = guild.playlists.length;
+    guild.playlists = guild.playlists.filter((p) => !p.equals(playlistId));
+
+    return lenght === guild.playlists.length ? null : await guild.save();
   }
 
-  async removePlaylist(playlist: IPlaylist) {
-    this.guild.playlists = this.guild.playlists.filter((p) => !p.equals(playlist._id));
-    return await this.guild.save();
+  static async clearPlaylists(guildId: string) {
+    const guild = await this.getGuild(guildId);
+    guild.playlists = [];
+    return await guild.save();
   }
 
-  async removeQueue(item: ISong) {
-    this.guild.queue = this.guild.queue.filter((i) => !i.equals(item._id));
-    return await this.guild.save();
+  static async hasPlaylist(guildId: string, playlistId: ObjectId) {
+    const guild = await this.getGuild(guildId);
+    return guild.playlists.some((p) => p.equals(playlistId));
   }
 
-  getQueue() {
-    return this.guild.queue;
+  //queue operations
+  static async addToQueue(guildId: string, ...songs: ObjectId[]) {
+    const guild = await this.getGuild(guildId);
+    guild.queue.push(...songs);
+    return await guild.save();
   }
 
-  getPlaylists() {
-    return this.guild.playlists;
+  static async getQueue(guildId: string) {
+    const guild = await this.getGuild(guildId);
+    await guild.populate("queue");
+    return guild.queue as unknown as ISong[];
   }
 
-  getPrefix() {
-    return this.guild.prefix;
+  static async removeFromQueue(guildId: string, songId: ObjectId) {
+    const guild = await this.getGuild(guildId);
+    guild.queue = guild.queue.filter((s) => !s.equals(songId));
+    return await guild.save();
   }
 
-  getVolume() {
-    return this.guild.volume;
+  //general operations
+  static async setPrefix(guildId: string, prefix: string) {
+    const guild = await this.getGuild(guildId);
+    guild.prefix = prefix;
+    return await guild.save();
   }
 
-  getMaxQueueSize() {
-    return this.guild.maxQueueSize;
+  static async setVolume(guildId: string, volume: number) {
+    const guild = await this.getGuild(guildId);
+    guild.volume = Math.min(200, Math.max(0, volume));
+    return await guild.save();
   }
 
-  isLoop() {
-    return this.guild.loop;
+  static async setMaxQueueSize(guildId: string, size: number) {
+    const guild = await this.getGuild(guildId);
+    guild.maxQueueSize = size;
+    return await guild.save();
   }
 
-  async setPrefix(prefix: string) {
-    this.guild.prefix = prefix;
-    return await this.guild.save();
-  }
-
-  async setVolume(volume: number) {
-    this.guild.volume = Math.min(200, Math.max(0, volume));
-    return await this.guild.save();
-  }
-
-  async setMaxQueueSize(size: number) {
-    this.guild.maxQueueSize = size;
-    return await this.guild.save();
-  }
-
-  async setLoop(loop: boolean) {
-    this.guild.loop = loop;
-    return await this.guild.save();
+  static async setLoop(guildId: string, loop: boolean) {
+    const guild = await this.getGuild(guildId);
+    guild.loop = loop;
+    return await guild.save();
   }
 }
+
+export default GuildService;

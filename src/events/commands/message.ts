@@ -1,14 +1,14 @@
 import { Events, Message } from "discord.js";
 import consola from "consola";
-import type MyClient from "../../utils/client.js";
+import type MyClient from "../../client.js";
 import replies from "../../data/replies.json" assert { type: "json" };
 import GuildService from "../../services/guild.js";
-import { checkCooldown } from "../../utils/cooldowns.js";
+import checkCooldown from "../../utils/cooldowns.js";
 
 export const name = Events.MessageCreate;
 export const execute = async (client: MyClient, message: Message) => {
-  if (message.author.bot || !message.guildId) return;
-  const prefix = (await GuildService.init(message.guildId)).getPrefix();
+  if (message.author.bot || !message.inGuild()) return;
+  const prefix = (await GuildService.getGuild(message.guildId)).prefix;
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
