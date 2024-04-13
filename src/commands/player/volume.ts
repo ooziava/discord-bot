@@ -1,5 +1,7 @@
 import { SlashCommandBuilder, Message } from "discord.js";
 import type { Data, Execute } from "../../types/command.js";
+import GuildService from "../../services/guild.js";
+import reply from "../../utils/reply.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("volume")
@@ -17,5 +19,6 @@ export const execute: Execute = async (interaction, args) => {
   } else {
     volume = interaction.options.getInteger("volume", true);
   }
-  await interaction.reply(`Setting volume to ${volume}`);
+  const guild = await GuildService.setVolume(interaction.guildId, volume);
+  return await reply(interaction, `Volume set to ${guild.volume}`);
 };

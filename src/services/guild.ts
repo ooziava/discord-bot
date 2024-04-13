@@ -13,12 +13,12 @@ class GuildService {
     return guild.queue[0] || null;
   }
 
-  static async playNext(guildId: string) {
+  static async playNext(guildId: string, amount = 1) {
     const guild = await this.getGuild(guildId);
     const queue = guild.queue;
     if (queue.length === 0) return;
 
-    // this.lastSong = queue.shift();
+    guild.queue = queue.slice(amount);
     return await guild.save();
   }
 
@@ -114,9 +114,9 @@ class GuildService {
     return await guild.save();
   }
 
-  static async setLoop(guildId: string, loop: boolean) {
+  static async toggleLoop(guildId: string) {
     const guild = await this.getGuild(guildId);
-    guild.loop = loop;
+    guild.loop = !guild.loop;
     return await guild.save();
   }
 }
