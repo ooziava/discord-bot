@@ -11,7 +11,7 @@ async function playPlaylist(interaction: MyCommandInteraction, query: string) {
   if (!songs.length) return await reply(interaction, "Playlist is empty.", true);
 
   await GuildService.addToQueue(interaction.guildId, ...songs);
-  await reply(interaction, `${songs.length} songs added to the queue.`);
+  return await reply(interaction, `${songs.length} songs added to the queue.`);
 }
 
 export default playPlaylist;

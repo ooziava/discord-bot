@@ -1,16 +1,16 @@
-import PlaylistService from "../../../services/playlist.js";
+import GuildService from "../../../services/guild.js";
 import type { MyCommandInteraction } from "../../../types/command.js";
 import type { ISong } from "../../../types/song.js";
 import reply from "../../../utils/reply.js";
 
 async function infoPlaylist(interaction: MyCommandInteraction, query: string) {
-  const playlist = await PlaylistService.getByNameOrUrl(query);
+  const playlist = await GuildService.searchPlaylist(interaction.guildId, query);
   if (!playlist) return await reply(interaction, "Playlist not found.", true);
 
   await playlist.populate("songs");
   const songs = playlist.songs as unknown as ISong[];
 
-  await reply(interaction, {
+  return await reply(interaction, {
     embeds: [
       {
         url: `https://${playlist.url}`,

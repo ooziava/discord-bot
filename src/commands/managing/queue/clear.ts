@@ -2,9 +2,9 @@ import GuildService from "../../../services/guild.js";
 import type { MyCommandInteraction } from "../../../types/command.js";
 import reply from "../../../utils/reply.js";
 
-async function clearPlaylists(interaction: MyCommandInteraction) {
-  await GuildService.clearPlaylists(interaction.guildId);
+async function clearQueue(interaction: MyCommandInteraction) {
+  await GuildService.clearQueue(interaction.guildId);
   return await reply(interaction, "Playlists cleared.");
 }
 
-export default clearPlaylists;
+export default clearQueue;

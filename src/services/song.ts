@@ -2,6 +2,7 @@ import type { NewSong } from "../types/song.js";
 import songModel from "../models/song.js";
 import type { YouTubeVideo } from "play-dl";
 import { SourceEnum } from "../types/source.js";
+import { getSongUrl } from "../utils/urls.js";
 
 class SongService {
   // crud operations
@@ -13,7 +14,8 @@ class SongService {
     return await songModel.findById(id);
   }
 
-  static async getByUrl(url: string) {
+  static async getByUrl(input: string) {
+    const url = getSongUrl(input, SourceEnum.Youtube);
     return await songModel.findOne({
       url,
     });

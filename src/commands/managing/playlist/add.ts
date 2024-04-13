@@ -10,7 +10,6 @@ async function addPlaylist(interaction: MyCommandInteraction, input: string) {
   await reply(interaction, "Searching for the playlist...");
 
   const storedPlaylist = await PlaylistService.getByUrl(input);
-  console.log(storedPlaylist);
   if (storedPlaylist) {
     if (await GuildService.hasPlaylist(interaction.guildId, storedPlaylist._id))
       return await reply(interaction, "Playlist already saved.", true);
