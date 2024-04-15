@@ -1,17 +1,21 @@
 import { Client, Collection, type ClientOptions } from "discord.js";
 import readFolders from "./utils/read-folders.js";
 import consola from "consola";
-import connectToDB from "./mongo.js";
+import type { Command } from "./types/command.js";
+import type { Action } from "./types/action.js";
 
 class MyClient extends Client<true> {
-  commands: Collection<string, any>;
+  commands: Collection<string, Command>;
   cooldowns: Collection<string, Collection<string, number>>;
+  customActions: Collection<string, Action>;
+
   constructor(options: ClientOptions) {
     super(options);
     this.commands = new Collection();
     this.cooldowns = new Collection();
+    this.customActions = new Collection();
 
-    const commandPromises = readFolders("../commands").map(async (filePath) => {
+    const commandPromises = readFolders("./commands", import.meta.url).map(async (filePath) => {
       const command = await import(filePath);
       if ("data" in command && "execute" in command) {
         this.commands.set(command.data.name, command);
@@ -25,6 +29,7 @@ class MyClient extends Client<true> {
             });
           }
         }
+        return true;
       } else {
         consola.warn(
           `The command at ${filePath} is missing a required "data" or "execute" property.`
@@ -32,7 +37,7 @@ class MyClient extends Client<true> {
       }
     });
 
-    const eventPromises = readFolders("../events").map(async (filePath) => {
+    const eventPromises = readFolders("./events", import.meta.url).map(async (filePath) => {
       const event = await import(filePath);
       if ("name" in event && "execute" in event) {
         if (event.once) {
@@ -40,6 +45,7 @@ class MyClient extends Client<true> {
         } else {
           this.on(event.name, (...args) => event.execute(this, ...args));
         }
+        return true;
       } else {
         consola.warn(
           `The event at ${filePath} is missing a required "name" or "execute" property.`
@@ -47,14 +53,26 @@ class MyClient extends Client<true> {
       }
     });
 
-    Promise.all(commandPromises).then(() => {
-      consola.success("Commands loaded");
+    const actionPromises = readFolders("./actions", import.meta.url).map(async (filePath) => {
+      const action = await import(filePath);
+      if ("name" in action && "execute" in action) {
+        this.customActions.set(action.name, action);
+        return true;
+      } else {
+        consola.warn(
+          `The action at ${filePath} is missing a required "name" or "execute" property.`
+        );
+      }
     });
-    Promise.all(eventPromises).then(() => {
-      consola.success("Events loaded");
+
+    Promise.all(commandPromises).then((res) => {
+      consola.success(`${res.filter((el) => !!el).length} commands loaded`);
     });
-    connectToDB().then(() => {
-      consola.success("Connected to MongoDB");
+    Promise.all(eventPromises).then((res) => {
+      consola.success(`${res.filter((el) => !!el).length} events loaded`);
+    });
+    Promise.all(actionPromises).then((res) => {
+      consola.success(`${res.filter((el) => !!el).length} actions loaded`);
     });
   }
 }

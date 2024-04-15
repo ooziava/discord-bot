@@ -16,7 +16,7 @@ const rest = new REST().setToken(token);
 (async () => {
   try {
     const commands: any[] = [];
-    const commandFiles = readFolders("../commands");
+    const commandFiles = readFolders("../commands", import.meta.url);
     await Promise.all(
       commandFiles.map(async (file) => {
         const command = await import(file);

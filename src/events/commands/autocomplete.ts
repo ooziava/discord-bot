@@ -7,7 +7,10 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isAutocomplete() || !interaction.inGuild()) return;
 
   const command = client.commands.get(interaction.commandName);
-  if (!command) return consola.error(`No command matching ${interaction.commandName} was found.`);
+  if (!command || !command.autocomplete)
+    return consola.error(
+      `Command ${interaction.commandName} does not have an autocomplete function.`
+    );
 
   try {
     await command.autocomplete(interaction);

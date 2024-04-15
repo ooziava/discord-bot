@@ -11,6 +11,7 @@ const songSchema: Schema = new Schema({
   thumbnail: { type: String, required: true },
   source: { type: String, enum: [SourceEnum.Youtube, SourceEnum.Spotify], required: true },
 });
+songSchema.index({ title: "text", artist: "text" });
 
 const Song = mongoose.model<ISong>(MongooseModelsEnum.Song, songSchema);
 

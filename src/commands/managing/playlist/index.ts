@@ -8,6 +8,7 @@ import playPlaylist from "./play.js";
 import clearPlaylists from "./clear.js";
 import PlaylistService from "../../../services/playlist.js";
 import GuildService from "../../../services/guild.js";
+import { playlistsEmbed } from "../../../embeds/playlist-info.js";
 
 export const aliases: Aliases = "pl";
 export const data: Data = new SlashCommandBuilder()
@@ -76,7 +77,7 @@ export const execute: Execute = async (interaction, args) => {
   const query =
     interaction instanceof Message
       ? args?.slice(1).join(" ")
-      : interaction.options.getString("playlist");
+      : interaction.options.getString("playlist") || undefined;
 
   switch (subcommand) {
     case "add":
@@ -92,9 +93,7 @@ export const execute: Execute = async (interaction, args) => {
       return await addPlaylist(interaction, input);
 
     case "remove":
-      if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
-      else return await removePlaylist(interaction, query);
+      return await removePlaylist(interaction, query);
 
     case "info":
       if (!query)
@@ -122,23 +121,7 @@ export const execute: Execute = async (interaction, args) => {
       const count = playlists.length;
 
       return await reply(interaction, {
-        embeds: [
-          {
-            title: "Saved Playlists",
-            fields: [
-              {
-                name: "",
-                value:
-                  playlists
-                    .map((playlist, i) => `${i + 1}. ${playlist.name}`)
-                    .slice(0, 15)
-                    .join("\n") + (count > 15 ? `\n...and ${count - 15} more` : ""),
-              },
-            ],
-            //dark blue
-            color: 0x00008b,
-          },
-        ],
+        embeds: [playlistsEmbed(playlists)],
       });
 
     case "clear":

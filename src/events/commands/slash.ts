@@ -1,4 +1,4 @@
-import { Collection, Events, type Interaction } from "discord.js";
+import { Events, type Interaction } from "discord.js";
 import consola from "consola";
 import type MyClient from "../../client.js";
 import replies from "../../data/replies.json" assert { type: "json" };

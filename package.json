@@ -12,7 +12,8 @@
     "build": "tsc",
     "start": "node --env-file .env --no-warnings ./dist/index.js",
     "commands": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts",
-    "commands:global": "node --env-file .env dist/utils/deploy-commands.js global"
+    "commands:global": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts --global",
+    "report": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/generate-dependency-report.ts"
   },
   "keywords": [],
   "author": "ooziava",
@@ -28,12 +29,17 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.16.1",
     "consola": "^3.2.3",
     "discord.js": "^14.14.1",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
     "mongodb": "^6.5.0",
     "mongoose": "^8.3.0",
-    "play-dl": "^1.9.7"
+    "opusscript": "^0.0.8",
+    "play-dl": "^1.9.7",
+    "sodium-native": "^4.1.1"
   },
   "engines": {
     "node": ">= 20.6.0"

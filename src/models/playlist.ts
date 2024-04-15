@@ -3,7 +3,7 @@ import type { IPlaylist } from "../types/playlist.js";
 import { SourceEnum } from "../types/source.js";
 import { MongooseModelsEnum } from "../types/models.js";
 
-const PlaylistSchema: Schema = new Schema({
+const playlistSchema: Schema = new Schema({
   name: { type: String, required: true },
   artist: { type: String, required: true },
   url: { type: String, required: true },
@@ -16,5 +16,6 @@ const PlaylistSchema: Schema = new Schema({
     },
   ],
 });
+playlistSchema.index({ name: "text", artist: "text" });
 
-export default mongoose.model<IPlaylist>(MongooseModelsEnum.Playlist, PlaylistSchema);
+export default mongoose.model<IPlaylist>(MongooseModelsEnum.Playlist, playlistSchema);

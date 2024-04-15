@@ -4,3 +4,9 @@ export enum MongooseModelsEnum {
   Playlist = "Playlist",
   Song = "Song",
 }
+
+export enum ActionsEnum {
+  SearchSelect = "search-select",
+  QueueSelect = "queue-select",
+  PlaylistSelect = "playlist-select",
+}

@@ -4,10 +4,10 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import readFiles from "./read-files.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+function readFolders(parentFolder: string, metaUrl: string) {
+  const __filename = fileURLToPath(metaUrl);
+  const __dirname = dirname(__filename);
 
-function readFolders(parentFolder: string) {
   const foldersPath = path.join(__dirname, parentFolder);
   const commandFolders = fs.readdirSync(foldersPath);
   const commands: string[] = [];

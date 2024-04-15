@@ -31,7 +31,9 @@ class SongService {
 
   // bulk operations
   static async search(query: string) {
-    return await songModel.find({ $text: { $search: query } });
+    return await songModel
+      .find({ $text: { $search: query, $caseSensitive: false, $diacriticSensitive: false } })
+      .limit(10);
   }
 
   static async getAll() {
@@ -42,7 +44,7 @@ class SongService {
   static parseYoutubeVideo(video: YouTubeVideo): NewSong {
     return {
       title: video.title || "Unknown title",
-      url: video.url,
+      url: getSongUrl(video.url, SourceEnum.Youtube) || video.url,
       thumbnail: video.thumbnails[0].url,
       duration: video.durationInSec,
       artist: video.channel?.name || "Unknown artist",

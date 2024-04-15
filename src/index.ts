@@ -1,6 +1,7 @@
 import { GatewayIntentBits } from "discord.js";
 import MyClient from "./client.js";
-import consola from "consola";
+import "./utils/generate-dependency-report.js";
+import "./mongo.js";
 
 const token = process.env.DISCORD_TOKEN;
 const client = new MyClient({
