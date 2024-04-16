@@ -35,11 +35,20 @@ class GuildService {
     return guild.playlists as unknown as IPlaylist[];
   }
 
-  static async searchPlaylist(guildId: string, query: string) {
+  static async getPlaylistByNameOrUrl(guildId: string, query: string) {
     const guild = await this.getGuild(guildId);
     await guild.populate("playlists");
     const list = guild.playlists as unknown as IPlaylist[];
     return list.find((p) => p.name.toLowerCase() === query.toLowerCase() || p.url === query);
+  }
+
+  static async searchPlaylists(guildId: string, query: string) {
+    const guild = await this.getGuild(guildId);
+    await guild.populate("playlists");
+    const list = guild.playlists as unknown as IPlaylist[];
+    return list.filter(
+      (p) => p.name.toLowerCase().includes(query.toLowerCase()) || p.url === query
+    );
   }
 
   static async removePlaylist(guildId: string, playlistId: ObjectId) {
@@ -78,15 +87,18 @@ class GuildService {
     const guild = await this.getGuild(guildId);
     await guild.populate("queue");
     const list = guild.queue as unknown as ISong[];
-    return list.filter((s) => s.title.toLowerCase() === query.toLowerCase() || s.url === query);
+    return list.filter(
+      (s) => s.title.toLowerCase().includes(query.toLowerCase()) || s.url === query
+    );
   }
 
   static async removeFromQueue(guildId: string, songId: ObjectId) {
     const guild = await this.getGuild(guildId);
-    const length = guild.queue.length;
-    guild.queue = guild.queue.filter((s) => !s.equals(songId));
+    const index = guild.queue.findIndex((s) => !s.equals(songId));
+    if (index === -1) return null;
 
-    return length === guild.queue.length ? null : await guild.save();
+    guild.queue.splice(index, 1);
+    return await guild.save();
   }
 
   static async clearQueue(guildId: string) {

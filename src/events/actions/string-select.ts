@@ -8,7 +8,7 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isStringSelectMenu() || !interaction.inGuild()) return;
 
   const action = client.customActions.get(interaction.customId);
-  if (!action) return consola.error(`No command matching ${interaction.customId} was found.`);
+  if (!action) return;
 
   try {
     await action.execute(interaction);

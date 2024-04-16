@@ -11,6 +11,9 @@ import SearchService from "../../services/search.js";
 import searchInput from "../../components/search-select.js";
 import GuildService from "../../services/guild.js";
 import { isURL } from "../../utils/urls.js";
+import searchInfoEmbed from "../../embeds/search-info.js";
+import { ActionsEnum } from "../../types/models.js";
+import consola from "consola";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("search")
@@ -32,16 +35,53 @@ export const execute: Execute = async (interaction, args) => {
     const song = await SongService.getByUrl(query);
     if (song) {
       await GuildService.addToQueue(interaction.guildId, song._id);
-      return await reply(interaction, `Added [${song.title}](${song.url}) to the queue.`);
+      return await reply(interaction, `Added **${song.title}** to the queue.`);
     }
   }
 
-  const videos = await SearchService.searchSong(query, 10);
+  const videos = await SearchService.searchSong(query, 15);
   if (!videos || !videos.length) return await reply(interaction, "No songs found.", true);
 
-  return await reply(interaction, {
-    components: [searchInput(videos)],
-  });
+  try {
+    const response = await reply(interaction, {
+      embeds: [searchInfoEmbed(videos)],
+      components: [searchInput(videos)],
+    });
+
+    const filter = (i: StringSelectMenuInteraction) =>
+      i.customId === ActionsEnum.SearchSelect &&
+      i.user.id === (interaction instanceof Message ? interaction.author.id : interaction.user.id);
+
+    const collector = response.createMessageComponentCollector({
+      componentType: ComponentType.StringSelect,
+      filter,
+      time: 30_000,
+    });
+
+    collector.on("end", async () => {
+      await response.edit({ components: [searchInput(videos, true)] });
+    });
+
+    return collector.on("collect", async (i) => {
+      const url = i.values[0];
+      const video = await SearchService.getSongByURL(url);
+      if (!video) return;
+
+      const newSong = SongService.parseYoutubeVideo(video);
+      const stored = await SongService.getByUrl(newSong.url);
+      const song = stored || (await SongService.save(newSong));
+      await GuildService.addToQueue(interaction.guildId, song._id);
+      await i.reply(`Added [${song.title}](${song.url}) to the queue.`);
+      collector.stop();
+    });
+  } catch (error) {
+    consola.error(error);
+    await reply(
+      interaction,
+      { content: "An error occurred while searching for a song.", ephemeral: true },
+      true
+    );
+  }
 };
 
 export const autocomplete: Autocomplete = async (interaction) => {

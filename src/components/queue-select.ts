@@ -4,12 +4,13 @@ import {
   StringSelectMenuOptionBuilder,
 } from "discord.js";
 import { ActionsEnum } from "../types/models.js";
-import type { IPlaylist } from "../types/playlist.js";
+import type { ISong } from "../types/song.js";
+import formatDate from "../utils/format-date.js";
 
-function playlistStringInput(array: IPlaylist[], ended = false) {
-  const options = array.map(parsePlaylistOption);
+function queueStringInput(array: ISong[], ended = false) {
+  const options = array.map(parseQueueOption);
   const select = new StringSelectMenuBuilder()
-    .setCustomId(ActionsEnum.PlaylistSelect)
+    .setCustomId(ActionsEnum.QueueSelect)
     .setPlaceholder("Make a selection!")
     .addOptions(options)
     .setDisabled(ended)
@@ -19,9 +20,9 @@ function playlistStringInput(array: IPlaylist[], ended = false) {
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 }
 
-export function parsePlaylistOption(video: IPlaylist, index: number) {
-  let description = `${video.artist} • ${video.songs.length} songs • ${video.source}`;
-  let title = video.name || "No title found!";
+export function parseQueueOption(video: ISong, index: number) {
+  let description = `${video.artist} • ${formatDate(video.duration)} • ${video.source}`;
+  let title = video.title;
   if (description.length > 100) description = description.substring(0, 97) + "...";
   if (title.length > 100) title = title.substring(0, 97) + "...";
 
@@ -31,4 +32,4 @@ export function parsePlaylistOption(video: IPlaylist, index: number) {
     .setDescription(description);
 }
 
-export default playlistStringInput;
+export default queueStringInput;

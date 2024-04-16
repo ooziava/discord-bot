@@ -4,7 +4,7 @@ import reply from "../../../utils/reply.js";
 
 async function clearQueue(interaction: MyCommandInteraction) {
   await GuildService.clearQueue(interaction.guildId);
-  return await reply(interaction, "Playlists cleared.");
+  return await reply(interaction, "Queue cleared.");
 }
 
 export default clearQueue;

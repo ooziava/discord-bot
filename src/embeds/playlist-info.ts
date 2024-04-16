@@ -24,18 +24,22 @@ export function playlistInfoEmbed(playlist: IPlaylist, songs: ISong[], page = 1)
   );
 }
 
-export function playlistsEmbed(playlists: IPlaylist[], page = 1) {
-  return new EmbedBuilder()
-    .addFields([
-      {
-        name: "Playlists",
-        value: playlists
-          .map(
-            (playlist, i) => `${i + 1}. [${playlist.name}](${playlist.url}) by ${playlist.artist}`
-          )
-          .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-          .join("\n"),
-      },
-    ])
-    .setColor(0x00008b);
+export function playlistsEmbed(playlists: IPlaylist[]) {
+  return (
+    new EmbedBuilder()
+      .addFields([
+        {
+          name: "Playlists",
+          value: playlists
+            .map((playlist, i) =>
+              `${i + 1}. [${playlist.name}](${playlist.url}) • ${playlist.artist} • ${
+                playlist.source
+              }`.slice(0, 200)
+            )
+            .join("\n"),
+        },
+      ])
+      // dark blue
+      .setColor(0x00008b)
+  );
 }

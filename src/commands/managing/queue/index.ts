@@ -44,12 +44,11 @@ export const execute: Execute = async (interaction, args) => {
 
       return await addToQueue(interaction, url);
     case "remove":
+    case "rm":
       const search =
         interaction instanceof Message
           ? args?.slice(1).join(" ")
-          : interaction.options.getString("song");
-      if (!search)
-        return await reply(interaction, "Please provide a song name or url to remove.", true);
+          : interaction.options.getString("song") || undefined;
 
       return await removeFromQueue(interaction, search);
     case "info":

@@ -12,7 +12,7 @@ async function addPlaylist(interaction: MyCommandInteraction, input: string) {
   const storedPlaylist = await PlaylistService.getByUrl(input);
   if (storedPlaylist) {
     if (await GuildService.hasPlaylist(interaction.guildId, storedPlaylist._id))
-      return await reply(interaction, "Playlist already saved.", true);
+      return await reply(interaction, "Playlist already saved.");
     else {
       await GuildService.addPlaylist(interaction.guildId, storedPlaylist._id);
       return await reply(interaction, `Playlist saved: ${storedPlaylist.name}`);
@@ -20,11 +20,11 @@ async function addPlaylist(interaction: MyCommandInteraction, input: string) {
   }
 
   const playlist = await SearchService.getPlaylistByURL(input, { source: SourceEnum.Youtube });
-  if (!playlist) return await reply(interaction, "Playlist not found.", true);
+  if (!playlist) return await reply(interaction, "Playlist not found.");
 
   const newPlaylist = PlaylistService.parseYoutubePlaylist(playlist);
   const videos = await playlist.all_videos().catch(() => null);
-  if (!videos) return await reply(interaction, "Failed to fetch playlist videos.", true);
+  if (!videos) return await reply(interaction, "Failed to fetch playlist videos.");
   for (const video of videos) {
     const song = SongService.parseYoutubeVideo(video);
     const newSong = (await SongService.getByUrl(song.url)) || (await SongService.save(song));

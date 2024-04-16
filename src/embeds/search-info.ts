@@ -1,12 +1,12 @@
 import { EmbedBuilder } from "discord.js";
-import type { ISong } from "../types/song.js";
+import type { YouTubeVideo } from "play-dl";
 
-function queueInfoEmbed(songs: ISong[]) {
+function searchInfoEmbed(songs: YouTubeVideo[]) {
   return (
     new EmbedBuilder()
       .addFields([
         {
-          name: "Queue",
+          name: "Songs",
           value: songs.map((song, i) => `${i + 1}. ${song.title}`.slice(0, 200)).join("\n"),
         },
       ])
@@ -15,4 +15,4 @@ function queueInfoEmbed(songs: ISong[]) {
   );
 }
 
-export default queueInfoEmbed;
+export default searchInfoEmbed;

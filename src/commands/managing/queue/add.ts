@@ -7,10 +7,10 @@ import reply from "../../../utils/reply.js";
 async function addToQueue(interaction: MyCommandInteraction, url: string) {
   let song = await SongService.getByUrl(url);
   if (!song) {
-    const result = await SearchService.searchSong(url);
-    if (!result || !result.length) return await reply(interaction, "No results found.", true);
+    const result = await SearchService.getSongByURL(url);
+    if (!result) return await reply(interaction, "No results found.");
 
-    const newSong = SongService.parseYoutubeVideo(result[0]);
+    const newSong = SongService.parseYoutubeVideo(result);
     song = await SongService.save(newSong);
   }
 

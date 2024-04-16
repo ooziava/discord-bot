@@ -53,17 +53,17 @@ class MyClient extends Client<true> {
       }
     });
 
-    const actionPromises = readFolders("./actions", import.meta.url).map(async (filePath) => {
-      const action = await import(filePath);
-      if ("name" in action && "execute" in action) {
-        this.customActions.set(action.name, action);
-        return true;
-      } else {
-        consola.warn(
-          `The action at ${filePath} is missing a required "name" or "execute" property.`
-        );
-      }
-    });
+    // const actionPromises = readFolders("./actions", import.meta.url).map(async (filePath) => {
+    //   const action = await import(filePath);
+    //   if ("name" in action && "execute" in action) {
+    //     this.customActions.set(action.name, action);
+    //     return true;
+    //   } else {
+    //     consola.warn(
+    //       `The action at ${filePath} is missing a required "name" or "execute" property.`
+    //     );
+    //   }
+    // });
 
     Promise.all(commandPromises).then((res) => {
       consola.success(`${res.filter((el) => !!el).length} commands loaded`);
@@ -71,9 +71,9 @@ class MyClient extends Client<true> {
     Promise.all(eventPromises).then((res) => {
       consola.success(`${res.filter((el) => !!el).length} events loaded`);
     });
-    Promise.all(actionPromises).then((res) => {
-      consola.success(`${res.filter((el) => !!el).length} actions loaded`);
-    });
+    // Promise.all(actionPromises).then((res) => {
+    //   consola.success(`${res.filter((el) => !!el).length} actions loaded`);
+    // });
   }
 }
 

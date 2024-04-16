@@ -8,7 +8,7 @@ async function infoQueue(interaction: MyCommandInteraction) {
   if (!queue.length) return await reply(interaction, "The queue is empty.");
 
   return await reply(interaction, {
-    embeds: [queueInfoEmbed(queue)],
+    embeds: [queueInfoEmbed(queue.slice(0, 15))],
   });
 }
 

@@ -42,7 +42,6 @@ export const data: Data = new SlashCommandBuilder()
         option
           .setName("playlist")
           .setDescription("The playlist to get information about")
-          .setRequired(true)
           .setAutocomplete(true)
       )
   )
@@ -67,7 +66,6 @@ export const data: Data = new SlashCommandBuilder()
         option.setName("playlist").setDescription("The playlist to modify").setRequired(true)
       )
   )
-  .addSubcommand((subcommand) => subcommand.setName("list").setDescription("List the playlists"))
   .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
 export const execute: Execute = async (interaction, args) => {
@@ -93,12 +91,11 @@ export const execute: Execute = async (interaction, args) => {
       return await addPlaylist(interaction, input);
 
     case "remove":
+    case "rm":
       return await removePlaylist(interaction, query);
 
     case "info":
-      if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
-      else return await infoPlaylist(interaction, query);
+      return await infoPlaylist(interaction, query);
 
     case "play":
       if (!query)
@@ -110,19 +107,9 @@ export const execute: Execute = async (interaction, args) => {
 
     case "modify":
       if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+        return await reply(interaction, "Please provide a playlist name or url to modify.", true);
 
-      return await reply(interaction, "Available soon.");
-
-    case "list":
-      const playlists = await GuildService.getPlaylists(interaction.guildId);
-      if (!playlists.length) return await reply(interaction, "No playlists saved.");
-
-      const count = playlists.length;
-
-      return await reply(interaction, {
-        embeds: [playlistsEmbed(playlists)],
-      });
+      return await reply(interaction, "Available soon.", true);
 
     case "clear":
       return await clearPlaylists(interaction);
@@ -149,13 +136,15 @@ export const autocomplete: Autocomplete = async (interaction) => {
     case "info":
     case "remove":
     case "modify":
-      const playlists = await GuildService.getPlaylists(interaction.guildId);
-      const filtered = playlists.filter((playlist) =>
-        playlist.name.toLowerCase().startsWith(focusedValue.toLowerCase())
-      );
+      const playlists = focusedValue
+        ? await GuildService.searchPlaylists(interaction.guildId, focusedValue)
+        : await GuildService.getPlaylists(interaction.guildId);
 
       return await interaction.respond(
-        filtered.map((choice) => ({ name: choice.name, value: choice.url }))
+        playlists.slice(0, 15).map((s, i) => ({
+          name: `${i + 1}. ${s.name} - ${s.artist}`.slice(0, 100),
+          value: s.url,
+        }))
       );
     default:
       return await interaction.respond([]);
