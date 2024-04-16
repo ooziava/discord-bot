@@ -3,7 +3,7 @@ import type { NewPlaylist } from "../types/playlist.js";
 import type { ISong } from "../types/song.js";
 import { getPlaylistUrl, isURL } from "../utils/urls.js";
 import { SourceEnum } from "../types/source.js";
-import type { YouTubePlayList } from "play-dl";
+import { validate, type SpotifyAlbum, type SpotifyPlaylist, type YouTubePlayList } from "play-dl";
 
 class PlaylistService {
   // crud operations
@@ -16,7 +16,9 @@ class PlaylistService {
   }
 
   static async getByUrl(input: string) {
-    const url = getPlaylistUrl(input, SourceEnum.Youtube);
+    const result = await validate(input).catch(() => null);
+    const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+    const url = getPlaylistUrl(input, source);
     return await playlistModel.findOne({ url });
   }
 
@@ -89,6 +91,28 @@ class PlaylistService {
         "https://cdn.discordapp.com/embed/avatars/0.png",
       songs: [],
       source: SourceEnum.Youtube,
+    };
+  }
+
+  static parseSpotifyPlaylist(playlist: SpotifyPlaylist): NewPlaylist {
+    return {
+      name: playlist.name || "Unknown title",
+      artist: playlist.owner.name || "Unknown artist",
+      url: getPlaylistUrl(playlist.url || "", SourceEnum.Spotify) || "https://open.spotify.com",
+      thumbnail: playlist.thumbnail.url || "https://cdn.discordapp.com/embed/avatars/0.png",
+      songs: [],
+      source: SourceEnum.Spotify,
+    };
+  }
+
+  static parseSpotifyAlbum(album: SpotifyAlbum): NewPlaylist {
+    return {
+      name: album.name || "Unknown title",
+      artist: album.artists?.map((a) => a.name).join(", ") || "Unknown artist",
+      url: getPlaylistUrl(album.url || "", SourceEnum.Spotify) || "https://open.spotify.com",
+      thumbnail: album.thumbnail.url || "https://cdn.discordapp.com/embed/avatars/0.png",
+      songs: [],
+      source: SourceEnum.Spotify,
     };
   }
 }

@@ -1,9 +1,12 @@
-import type { Source } from "../types/source.js";
+import { SourceEnum, type Source } from "../types/source.js";
 
 export function getPlaylistUrl(input: string, source: Source) {
   let playlistRegex;
   switch (source) {
-    case "youtube":
+    case SourceEnum.Spotify:
+      playlistRegex = /open\.spotify\.com\/playlist\/([a-zA-Z0-9]{22})/;
+      break;
+    case SourceEnum.Youtube:
     default:
       playlistRegex =
         /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]list=)|youtu\.be\/)([a-zA-Z0-9_-]{34})/;

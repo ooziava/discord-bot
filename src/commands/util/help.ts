@@ -14,24 +14,21 @@ export const execute: Execute = async (client, interaction) => {
 /search : query
 
 /queue[q] add : url | (_autocomplete)
-/queue[q] remove[rm] : (_autocomplete)
+/queue[q] remove[rm] : name | (_autocomplete)
 /queue[q] info
 /queue[q] clear
 
-/playlist[pl] play : (_autocomplete)
-/playlist[pl] info : (_autocomplete)
 /playlist[pl] add : url
-/playlist[pl] remove : (_autocomplete)
-/playlist[pl] create #maybe
-/playlist[pl] modify #maybe
-
-/list queue[q]
-/list playlists[pl]
+/playlist[pl] play : name | (_autocomplete)
+/playlist[pl] info : (name) | (_autocomplete)
+/playlist[pl] remove : (name) | (_autocomplete)
+/playlist[pl] create #soon
+/playlist[pl] modify #soon
+/playlist[pl] list
 
 /next : (number)
-/prev #specific usage
 /pause
-/loop
+/loop #soon
 /volume : volume
 /prefix : prefix
 

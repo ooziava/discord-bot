@@ -1,3 +1,4 @@
+import { SpotifyAlbum, validate, YouTubePlayList } from "play-dl";
 import GuildService from "../../../services/guild.js";
 import PlaylistService from "../../../services/playlist.js";
 import SearchService from "../../../services/search.js";
@@ -18,13 +19,20 @@ async function addPlaylist(interaction: MyCommandInteraction, input: string) {
       return await reply(interaction, `Playlist saved: ${storedPlaylist.name}`);
     }
   }
-
-  const playlist = await SearchService.getPlaylistByURL(input, { source: SourceEnum.Youtube });
+  const result = await validate(input).catch(() => null);
+  const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+  const playlist = await SearchService.getPlaylistByURL(input, { source });
   if (!playlist) return await reply(interaction, "Playlist not found.");
-
-  const newPlaylist = PlaylistService.parseYoutubePlaylist(playlist);
-  const videos = await playlist.all_videos().catch(() => null);
+  const { info, videos } = playlist;
   if (!videos) return await reply(interaction, "Failed to fetch playlist videos.");
+
+  const newPlaylist =
+    info instanceof YouTubePlayList
+      ? PlaylistService.parseYoutubePlaylist(info)
+      : info instanceof SpotifyAlbum
+      ? PlaylistService.parseSpotifyAlbum(info)
+      : PlaylistService.parseSpotifyPlaylist(info);
+
   for (const video of videos) {
     const song = SongService.parseYoutubeVideo(video);
     const newSong = (await SongService.getByUrl(song.url)) || (await SongService.save(song));

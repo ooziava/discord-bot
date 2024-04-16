@@ -1,9 +1,10 @@
 import { GatewayIntentBits } from "discord.js";
 import MyClient from "./client.js";
 import "./utils/generate-dependency-report.js";
+import "./utils/login-socials.js";
 import "./mongo.js";
 
-const token = process.env.REFRESH_TOKEN;
+const token = process.env.RESET_TOKEN;
 if (!token) {
   console.error("Missing required environment variable");
   process.exit(1);

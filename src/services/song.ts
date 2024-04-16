@@ -1,6 +1,6 @@
 import type { NewSong } from "../types/song.js";
 import songModel from "../models/song.js";
-import type { YouTubeVideo } from "play-dl";
+import { validate, type YouTubeVideo } from "play-dl";
 import { SourceEnum } from "../types/source.js";
 import { getSongUrl } from "../utils/urls.js";
 
@@ -15,7 +15,9 @@ class SongService {
   }
 
   static async getByUrl(input: string) {
-    const url = getSongUrl(input, SourceEnum.Youtube);
+    const result = await validate(input).catch(() => null);
+    const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+    const url = getSongUrl(input, source);
     return await songModel.findOne({
       url,
     });

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, Message } from "discord.js";
 import type { Data, Execute } from "../../types/command.js";
+import GuildService from "../../services/guild.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("prefix")
@@ -15,5 +16,7 @@ export const execute: Execute = async (client, interaction, args) => {
   } else {
     prefix = interaction.options.getString("prefix", true);
   }
-  await interaction.reply(`Setting prefix to ${prefix}`);
+
+  await GuildService.setPrefix(interaction.guildId, prefix);
+  return await interaction.reply(`Prefix set to \`${prefix}\``);
 };

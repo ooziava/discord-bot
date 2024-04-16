@@ -10,13 +10,14 @@ import {
   entersState,
   joinVoiceChannel,
 } from "@discordjs/voice";
-import { stream } from "play-dl";
+import { stream, validate } from "play-dl";
 import type { ISong, NewSong } from "../../types/song.js";
 import GuildService from "../../services/guild.js";
 import reply from "../../utils/reply.js";
 import SearchService from "../../services/search.js";
 import SongService from "../../services/song.js";
 import type MyClient from "../../client.js";
+import { SourceEnum } from "../../types/source.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("play")
@@ -37,7 +38,10 @@ export const execute: Execute = async (client, interaction, args) => {
       else await reply(interaction, "Playing last song in queue");
     } else {
       await reply(interaction, "Searching for song...");
-      const video = await SearchService.getSongByURL(url);
+
+      const result = await validate(url).catch(() => null);
+      const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+      const video = await SearchService.getSongByURL(url, { source });
       if (!video) return await reply(interaction, "Song not found");
       song = SongService.parseYoutubeVideo(video);
     }
