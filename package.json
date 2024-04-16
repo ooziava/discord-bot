@@ -1,44 +1,47 @@
 {
   "name": "discord-bot",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A discord bot that plays music and does other stuff",
   "main": "./index.js",
   "type": "module",
   "exports": "./dist/index.js",
   "scripts": {
-    "dev:server": "nodemon --watch \"./**/*.ts\" --exec \"node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm\" index.ts",
-    "watch": "nodemon --watch \"./**/*.{ts,graphql}\" --exec \"node --env-file=.env --experimental-specifier-resolution=node  --loader ts-node/esm/transpile-only\" index.ts",
+    "dev:server": "nodemon --watch \"./**/*.ts\" --exec \"node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm\" src/index.ts",
+    "watch": "nodemon --watch \"./**/*.{ts,graphql}\" --exec \"node --env-file=.env --experimental-specifier-resolution=node  --loader ts-node/esm/transpile-only\" src/index.ts",
     "dev": "tsc-watch --onSuccess \"npm run watch\"",
     "build": "tsc",
-    "start": "node --env-file=.env ./dist/index.js"
+    "start": "node --env-file .env --no-warnings ./dist/index.js",
+    "commands": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts",
+    "commands:global": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/deploy-commands.ts --global",
+    "report": "node --env-file=.env --experimental-specifier-resolution=node --loader ts-node/esm src/utils/generate-dependency-report.ts"
   },
   "keywords": [],
   "author": "ooziava",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.4.5",
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
-    "eslint": "^8.46.0",
-    "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
-    "tsc-watch": "^6.0.4",
-    "typescript": "^5.1.6"
+    "@types/node": "^20.12.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.4.4"
   },
   "dependencies": {
-    "@discordjs/voice": "^0.16.0",
+    "@discordjs/voice": "^0.16.1",
     "consola": "^3.2.3",
-    "discord.js": "^14.11.0",
-    "express": "^4.18.2",
+    "discord.js": "^14.14.1",
     "ffmpeg-static": "^5.2.0",
-    "libsodium-wrappers": "^0.7.11",
+    "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
-    "mongodb": "^6.1.0",
+    "mongodb": "^6.5.0",
+    "mongoose": "^8.3.0",
     "opusscript": "^0.0.8",
     "play-dl": "^1.9.7",
-    "sodium-native": "^4.0.4"
+    "sodium-native": "^4.1.1"
   },
   "engines": {
-    "node": ">= 20.0.0"
+    "node": ">= 20.6.0"
   }
 }
