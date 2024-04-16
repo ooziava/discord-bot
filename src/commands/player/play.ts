@@ -34,7 +34,7 @@ export const execute: Execute = async (client, interaction, args) => {
       song = await GuildService.getCurrentSong(interaction.guildId);
 
       if (!song) return await reply(interaction, "No song in queue");
-      else await reply(interaction, "Play last song in queue");
+      else await reply(interaction, "Playing last song in queue");
     } else {
       await reply(interaction, "Searching for song...");
       const video = await SearchService.getSongByURL(url);
@@ -48,19 +48,28 @@ export const execute: Execute = async (client, interaction, args) => {
 
     try {
       const connection = await connectToChannel(channel);
+      const guild = await GuildService.getGuild(interaction.guildId);
       if (!player) {
-        const guild = await GuildService.getGuild(interaction.guildId);
         player = createPlayer(interaction.guildId);
         client.players.set(interaction.guildId, player);
 
         connection.subscribe(player);
         await playSong(player, song, guild.volume);
       } else {
-        const state = player.state.status;
-        if (state !== AudioPlayerStatus.Idle) {
-          return await reply(interaction, "Player is already playing");
+        if (url) {
+          const newPlayer = createPlayer(interaction.guildId);
+          connection.subscribe(newPlayer);
+          player.stop();
+          player = newPlayer;
+          client.players.set(interaction.guildId, player);
+          await playSong(player, song, guild.volume);
         } else {
-          player.emit("idle");
+          const state = player.state.status;
+          if (state !== AudioPlayerStatus.Idle) {
+            return await reply(interaction, "Player is already playing");
+          } else {
+            player.emit("idle");
+          }
         }
       }
 

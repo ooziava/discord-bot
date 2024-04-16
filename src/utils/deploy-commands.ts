@@ -4,8 +4,8 @@ import readFolders from "./read-folders.js";
 
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
-const token = process.env.DISCORD_TOKEN;
-const status = process.argv[2];
+const token = process.env.REFRESH_TOKEN;
+const status = process.env.NODE_ENV != "development" ? "global" : "guild";
 
 if (!clientId || !guildId || !token) {
   consola.error("Missing required environment variables.");
@@ -30,7 +30,12 @@ const rest = new REST().setToken(token);
         ? Routes.applicationCommands(clientId)
         : Routes.applicationGuildCommands(clientId, guildId);
 
-    await rest.put(method, {
+    if (status === "global")
+      await rest.put(Routes.applicationCommands(clientId), {
+        body: [],
+      });
+
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: [],
     });
     const data = (await rest.put(method, {

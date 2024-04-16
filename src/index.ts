@@ -3,7 +3,13 @@ import MyClient from "./client.js";
 import "./utils/generate-dependency-report.js";
 import "./mongo.js";
 
-const token = process.env.DISCORD_TOKEN;
+const token = process.env.REFRESH_TOKEN;
+if (!token) {
+  console.error("Missing required environment variable");
+  process.exit(1);
+}
+if (process.env.NODE_ENV != "development") import("./utils/deploy-commands.js");
+
 const client = new MyClient({
   intents: [
     GatewayIntentBits.Guilds,
