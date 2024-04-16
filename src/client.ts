@@ -3,17 +3,20 @@ import readFolders from "./utils/read-folders.js";
 import consola from "consola";
 import type { Command } from "./types/command.js";
 import type { Action } from "./types/action.js";
+import type { AudioPlayer } from "@discordjs/voice";
 
 class MyClient extends Client<true> {
   commands: Collection<string, Command>;
   cooldowns: Collection<string, Collection<string, number>>;
   customActions: Collection<string, Action>;
+  players: Collection<string, AudioPlayer>;
 
   constructor(options: ClientOptions) {
     super(options);
     this.commands = new Collection();
     this.cooldowns = new Collection();
     this.customActions = new Collection();
+    this.players = new Collection();
 
     const commandPromises = readFolders("./commands", import.meta.url).map(async (filePath) => {
       const command = await import(filePath);

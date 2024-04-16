@@ -1,7 +1,12 @@
 import type { AutocompleteInteraction, ChatInputCommandInteraction, Message } from "discord.js";
+import type MyClient from "../client.js";
 
 export type MyCommandInteraction = ChatInputCommandInteraction<"cached" | "raw"> | Message<true>;
-export type Execute = (interaction: MyCommandInteraction, args?: string[]) => Promise<any>;
+export type Execute = (
+  client: MyClient,
+  interaction: MyCommandInteraction,
+  args?: string[]
+) => Promise<any>;
 
 export type Data = {
   name: string;

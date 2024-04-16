@@ -26,7 +26,7 @@ export const data: Data = new SlashCommandBuilder()
       .setAutocomplete(true)
   );
 
-export const execute: Execute = async (interaction, args) => {
+export const execute: Execute = async (client, interaction, args) => {
   const query =
     interaction instanceof Message ? args?.join(" ") : interaction.options.getString("query", true);
   if (!query) return await reply(interaction, "Please provide a query to search for.", true);

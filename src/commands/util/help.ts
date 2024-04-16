@@ -8,7 +8,7 @@ export const data: Data = new SlashCommandBuilder()
     option.setName("command").setDescription("The command to get help with").setRequired(false)
   );
 
-export const execute: Execute = async (interaction) => {
+export const execute: Execute = async (client, interaction) => {
   await interaction.reply(`
 /play : (url)
 /search : query

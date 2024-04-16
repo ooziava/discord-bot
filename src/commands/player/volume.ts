@@ -10,7 +10,7 @@ export const data: Data = new SlashCommandBuilder()
     option.setName("volume").setDescription("The volume to set").setRequired(true)
   );
 
-export const execute: Execute = async (interaction, args) => {
+export const execute: Execute = async (client, interaction, args) => {
   let volume;
   if (interaction instanceof Message) {
     const volumeArg = args?.[0];

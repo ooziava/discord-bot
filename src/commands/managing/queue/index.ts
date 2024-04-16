@@ -32,7 +32,7 @@ export const data: Data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the queue"));
 
-export const execute: Execute = async (interaction, args) => {
+export const execute: Execute = async (client, interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 

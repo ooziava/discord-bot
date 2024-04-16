@@ -7,7 +7,7 @@ export const data: Data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option.setName("prefix").setDescription("The new prefix").setRequired(true)
   );
-export const execute: Execute = async (interaction, args) => {
+export const execute: Execute = async (client, interaction, args) => {
   let prefix;
   if (interaction instanceof Message) {
     prefix = args?.[0];

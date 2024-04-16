@@ -10,7 +10,13 @@ class GuildService {
   }
   static async getCurrentSong(guildId: string) {
     const guild = await this.getGuild(guildId);
-    return guild.queue[0] || null;
+    if (!guild.queue.length) return;
+
+    await guild.populate({
+      path: "queue",
+      options: { limit: 1 },
+    });
+    return guild.queue[0] as unknown as ISong;
   }
 
   static async playNext(guildId: string, amount = 1) {

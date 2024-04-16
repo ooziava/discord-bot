@@ -12,10 +12,13 @@ function reply(interaction: MyCommandInteraction, payload: MyInteractionPayload,
     const messagePayload = payload as MyMessageReplyPayload;
     return reply ? interaction.reply(messagePayload) : interaction.channel.send(messagePayload);
   } else {
-    if (interaction.replied || (reply && interaction.deferred))
-      return interaction.followUp(payload as MySlashCommandReplyPayload);
-    if (interaction.deferred)
+    if (interaction.deferred) {
       return interaction.editReply(payload as MySlashCommandEditReplyPayload);
+    }
+    if (interaction.replied) {
+      if (reply) return interaction.followUp(payload as MySlashCommandReplyPayload);
+      return interaction.editReply(payload as MySlashCommandEditReplyPayload);
+    }
     return interaction.reply(payload as MySlashCommandReplyPayload);
   }
 }

@@ -26,7 +26,7 @@ export const execute = async (client: MyClient, message: Message) => {
   }
 
   try {
-    await command.execute(message, args);
+    await command.execute(client, message, args);
   } catch (error) {
     consola.error(error);
     await message.reply(replies.commandError);

@@ -20,7 +20,7 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   }
 
   try {
-    await command.execute(interaction);
+    await command.execute(client, interaction);
   } catch (error) {
     consola.error(error);
     if (interaction.replied || interaction.deferred) {
