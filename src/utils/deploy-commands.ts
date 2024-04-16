@@ -4,7 +4,7 @@ import readFolders from "./read-folders.js";
 
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
-const token = process.env.REFRESH_TOKEN;
+const token = process.env.RESET_TOKEN;
 const status = process.env.NODE_ENV != "development" ? "global" : "guild";
 
 if (!clientId || !guildId || !token) {
