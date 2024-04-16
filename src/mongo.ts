@@ -1,7 +1,7 @@
 import fs from "fs";
 import mongoose from "mongoose";
 import consola from "consola";
-import "./models";
+import "./models/index.js";
 
 (async () => {
   const credentials = fs.readFileSync("./cert.pem");
