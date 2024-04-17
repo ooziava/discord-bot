@@ -3,6 +3,7 @@ import MyClient from "./client.js";
 import "./utils/generate-dependency-report.js";
 import "./utils/login-socials.js";
 import "./mongo.js";
+import "./models/index.js";
 
 const token = process.env.RESET_TOKEN;
 if (!token) {

@@ -11,12 +11,11 @@ import {
   joinVoiceChannel,
 } from "@discordjs/voice";
 import { stream, validate } from "play-dl";
-import type { ISong, NewSong } from "../../types/song.js";
+import type { NewSong } from "../../types/song.js";
 import GuildService from "../../services/guild.js";
 import reply from "../../utils/reply.js";
 import SearchService from "../../services/search.js";
 import SongService from "../../services/song.js";
-import type MyClient from "../../client.js";
 import { SourceEnum } from "../../types/source.js";
 
 export const data: Data = new SlashCommandBuilder()
@@ -97,11 +96,11 @@ function createPlayer(guildId: string) {
   newPlayer.on("error", console.error);
 
   newPlayer.on(AudioPlayerStatus.Idle, async () => {
-    await GuildService.playNext(guildId);
+    const guild = await GuildService.getGuild(guildId);
+    if (!guild.loop) await GuildService.playNext(guildId);
     const song = await GuildService.getCurrentSong(guildId);
 
     if (song) {
-      const guild = await GuildService.getGuild(guildId);
       await playSong(newPlayer, song, guild.volume);
     }
   });

@@ -31,17 +31,10 @@ export const data: Data = new SlashCommandBuilder()
       .setName("remove")
       .setDescription("Remove a playlist")
       .addStringOption((option) =>
-        option.setName("playlist").setDescription("The playlist to remove").setAutocomplete(true)
-      )
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName("info")
-      .setDescription("Get information about the playlist")
-      .addStringOption((option) =>
         option
           .setName("playlist")
-          .setDescription("The playlist to get information about")
+          .setDescription("The playlist to remove")
+          .setRequired(true)
           .setAutocomplete(true)
       )
   )
@@ -57,18 +50,33 @@ export const data: Data = new SlashCommandBuilder()
           .setAutocomplete(true)
       )
   )
-  .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
   .addSubcommand((subcommand) =>
     subcommand
       .setName("modify")
       .setDescription("Modify a playlist")
       .addStringOption((option) =>
-        option.setName("playlist").setDescription("The playlist to modify").setRequired(true)
+        option
+          .setName("playlist")
+          .setDescription("The playlist to modify")
+          .setRequired(true)
+          .setAutocomplete(true)
       )
   )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("info")
+      .setDescription("Get information about the playlist")
+      .addStringOption((option) =>
+        option
+          .setName("playlist")
+          .setDescription("The playlist to get information about")
+          .setAutocomplete(true)
+      )
+  )
+  .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
   .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
-export const execute: Execute = async (client, interaction, args) => {
+export const execute: Execute = async (_client, interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
@@ -92,7 +100,9 @@ export const execute: Execute = async (client, interaction, args) => {
 
     case "remove":
     case "rm":
-      return await removePlaylist(interaction, query);
+      if (!query)
+        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+      else return await removePlaylist(interaction, query);
 
     case "info":
       return await infoPlaylist(interaction, query);
@@ -142,7 +152,7 @@ export const autocomplete: Autocomplete = async (interaction) => {
 
       return await interaction.respond(
         playlists.slice(0, 15).map((s, i) => ({
-          name: `${i + 1}. ${s.name} - ${s.artist}`.slice(0, 100),
+          name: `${i + 1}. ${s.name} - ${s.artist} (${s.source})`.slice(0, 100),
           value: s.url,
         }))
       );

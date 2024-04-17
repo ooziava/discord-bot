@@ -24,7 +24,11 @@ export const data: Data = new SlashCommandBuilder()
       .setName("remove")
       .setDescription("Remove a song from the queue")
       .addStringOption((option) =>
-        option.setName("song").setDescription("The song to remove").setAutocomplete(true)
+        option
+          .setName("song")
+          .setDescription("The song to remove")
+          .setRequired(true)
+          .setAutocomplete(true)
       )
   )
   .addSubcommand((subcommand) =>
@@ -49,6 +53,7 @@ export const execute: Execute = async (client, interaction, args) => {
         interaction instanceof Message
           ? args?.slice(1).join(" ")
           : interaction.options.getString("song") || undefined;
+      if (!search) return await reply(interaction, "Please provide a song to remove.", true);
 
       return await removeFromQueue(interaction, search);
     case "info":
