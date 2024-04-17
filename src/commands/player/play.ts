@@ -17,6 +17,7 @@ import reply from "../../utils/reply.js";
 import SearchService from "../../services/search.js";
 import SongService from "../../services/song.js";
 import { SourceEnum } from "../../types/source.js";
+import songInfoEmbed from "../../embeds/song-info.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("play")
@@ -76,7 +77,10 @@ export const execute: Execute = async (client, interaction, args) => {
         }
       }
 
-      return await reply(interaction, `Now playing: ${song.title}`);
+      return await reply(interaction, {
+        content: "",
+        embeds: [songInfoEmbed(song)],
+      });
     } catch (error) {
       console.error(error);
       return await reply(interaction, "Failed to play song");
@@ -108,7 +112,9 @@ function createPlayer(guildId: string) {
 }
 
 async function playSong(player: AudioPlayer, song: NewSong, volume: number) {
-  const st = await stream(song.url);
+  const st = await stream(song.url).catch(() => null);
+  if (!st) return player.emit("idle");
+
   const resource = createAudioResource(st.stream, {
     inputType: st.type,
     inlineVolume: true,
