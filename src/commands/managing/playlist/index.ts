@@ -50,18 +50,18 @@ export const data: Data = new SlashCommandBuilder()
           .setAutocomplete(true)
       )
   )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName("modify")
-      .setDescription("Modify a playlist")
-      .addStringOption((option) =>
-        option
-          .setName("playlist")
-          .setDescription("The playlist to modify")
-          .setRequired(true)
-          .setAutocomplete(true)
-      )
-  )
+  // .addSubcommand((subcommand) =>
+  //   subcommand
+  //     .setName("modify")
+  //     .setDescription("Modify a playlist")
+  //     .addStringOption((option) =>
+  //       option
+  //         .setName("playlist")
+  //         .setDescription("The playlist to modify")
+  //         .setRequired(true)
+  //         .setAutocomplete(true)
+  //     )
+  // )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("info")
@@ -72,9 +72,9 @@ export const data: Data = new SlashCommandBuilder()
           .setDescription("The playlist to get information about")
           .setAutocomplete(true)
       )
-  )
-  .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
-  .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
+  );
+// .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
+// .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
 export const execute: Execute = async (_client, interaction, args) => {
   const subcommand =
@@ -112,17 +112,17 @@ export const execute: Execute = async (_client, interaction, args) => {
         return await reply(interaction, "Please provide a playlist name or url to remove.", true);
       else return await playPlaylist(interaction, query);
 
-    case "create":
-      return await reply(interaction, "Available soon.");
+    // case "create":
+    //   return await reply(interaction, "Available soon.");
 
-    case "modify":
-      if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to modify.", true);
+    // case "modify":
+    //   if (!query)
+    //     return await reply(interaction, "Please provide a playlist name or url to modify.", true);
 
-      return await reply(interaction, "Available soon.", true);
+    //   return await reply(interaction, "Available soon.", true);
 
-    case "clear":
-      return await clearPlaylists(interaction);
+    // case "clear":
+    //   return await clearPlaylists(interaction);
     default:
       await reply(interaction, "Please provide a valid subcommand.", true);
   }
