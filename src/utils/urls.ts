@@ -19,7 +19,10 @@ export function getPlaylistUrl(input: string, source: Source) {
 export function getSongUrl(input: string, source: Source) {
   let songRegex;
   switch (source) {
-    case "youtube":
+    case SourceEnum.Spotify:
+      songRegex = /open\.spotify\.com\/track\/([a-zA-Z0-9]{22})/;
+      break;
+    case SourceEnum.Youtube:
     default:
       songRegex =
         /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
