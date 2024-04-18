@@ -5,10 +5,10 @@ import addPlaylist from "./add.js";
 import removePlaylist from "./remove.js";
 import infoPlaylist from "./info.js";
 import playPlaylist from "./play.js";
-import clearPlaylists from "./clear.js";
 import PlaylistService from "../../../services/playlist.js";
 import GuildService from "../../../services/guild.js";
-import { playlistsEmbed } from "../../../embeds/playlist-info.js";
+import * as playCommand from "../../player/play.js";
+import { AudioPlayerStatus } from "@discordjs/voice";
 
 export const aliases: Aliases = "pl";
 export const data: Data = new SlashCommandBuilder()
@@ -76,7 +76,7 @@ export const data: Data = new SlashCommandBuilder()
 // .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
 // .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
-export const execute: Execute = async (_client, interaction, args) => {
+export const execute: Execute = async (client, interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
@@ -110,8 +110,12 @@ export const execute: Execute = async (_client, interaction, args) => {
     case "play":
       if (!query)
         return await reply(interaction, "Please provide a playlist name or url to remove.", true);
-      else return await playPlaylist(interaction, query);
 
+      await playPlaylist(interaction, query);
+      const player = client.players.get(interaction.guildId);
+      if (!player || player.state.status === AudioPlayerStatus.Idle)
+        await playCommand.execute(client, interaction);
+      return;
     // case "create":
     //   return await reply(interaction, "Available soon.");
 
@@ -124,7 +128,7 @@ export const execute: Execute = async (_client, interaction, args) => {
     // case "clear":
     //   return await clearPlaylists(interaction);
     default:
-      await reply(interaction, "Please provide a valid subcommand.", true);
+      return await reply(interaction, "Please provide a valid subcommand.", true);
   }
 };
 

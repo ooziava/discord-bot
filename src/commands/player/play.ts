@@ -18,6 +18,8 @@ import SearchService from "../../services/search.js";
 import SongService from "../../services/song.js";
 import { SourceEnum } from "../../types/source.js";
 import songInfoEmbed from "../../embeds/song-info.js";
+import { connectToChannel } from "../../utils/channel.js";
+import { createPlayer, playSong } from "../../utils/player.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("play")
@@ -89,67 +91,3 @@ export const execute: Execute = async (client, interaction, args) => {
     return await reply(interaction, "You need to be in a voice channel to play a song");
   }
 };
-
-function createPlayer(guildId: string) {
-  const newPlayer = createAudioPlayer({
-    behaviors: {
-      noSubscriber: NoSubscriberBehavior.Pause,
-    },
-  });
-
-  newPlayer.on("error", console.error);
-
-  newPlayer.on(AudioPlayerStatus.Idle, async () => {
-    const guild = await GuildService.getGuild(guildId);
-    if (!guild.loop) await GuildService.playNext(guildId);
-    const song = await GuildService.getCurrentSong(guildId);
-
-    if (song) {
-      await playSong(newPlayer, song, guild.volume);
-    }
-  });
-  return newPlayer;
-}
-
-async function playSong(player: AudioPlayer, song: NewSong, volume: number) {
-  const st = await stream(song.url).catch(() => null);
-  if (!st) return player.emit("idle");
-
-  const resource = createAudioResource(st.stream, {
-    inputType: st.type,
-    inlineVolume: true,
-  });
-
-  resource.volume?.setVolume(volume / 100);
-  player.play(resource);
-  return entersState(player, AudioPlayerStatus.Playing, 5000);
-}
-
-async function connectToChannel(channel: VoiceBasedChannel) {
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: channel.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-
-  connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
-    try {
-      await Promise.race([
-        entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-        entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-      ]);
-    } catch (error) {
-      try {
-        connection.destroy();
-      } catch (error) {}
-    }
-  });
-
-  try {
-    await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
-    return connection;
-  } catch (error) {
-    connection.destroy();
-    throw error;
-  }
-}

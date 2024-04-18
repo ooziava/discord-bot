@@ -6,6 +6,8 @@ import removeFromQueue from "./remove.js";
 import clearQueue from "./clear.js";
 import GuildService from "../../../services/guild.js";
 import infoQueue from "./info.js";
+import { AudioPlayerStatus } from "@discordjs/voice";
+import * as playCommand from "../../player/play.js";
 
 export const aliases: Aliases = "q";
 export const data: Data = new SlashCommandBuilder()
@@ -46,7 +48,11 @@ export const execute: Execute = async (client, interaction, args) => {
         interaction instanceof Message ? args?.[1] : interaction.options.getString("song", true);
       if (!url) return await reply(interaction, "Please provide a URL to add.", true);
 
-      return await addToQueue(interaction, url);
+      await addToQueue(interaction, url);
+      const player = client.players.get(interaction.guildId);
+      if (!player || player.state.status === AudioPlayerStatus.Idle)
+        await playCommand.execute(client, interaction);
+      return;
     case "remove":
     case "rm":
       const search =
