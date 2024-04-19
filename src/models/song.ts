@@ -1,9 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-import type { ISong } from "../types/song.js";
-import { SourceEnum } from "../types/source.js";
-import { MongooseModelsEnum } from "../types/models.js";
 
-const songSchema: Schema = new Schema({
+import { type ISong, MongooseModelsEnum, SourceEnum } from "../types/index.js";
+
+export const songSchema: Schema = new Schema({
   title: { type: String, required: true },
   artist: { type: String, required: true },
   duration: { type: Number, required: true },
@@ -13,6 +12,4 @@ const songSchema: Schema = new Schema({
 });
 songSchema.index({ title: "text", artist: "text" });
 
-const Song = mongoose.model<ISong>(MongooseModelsEnum.Song, songSchema);
-
-export default Song;
+export default mongoose.model<ISong>(MongooseModelsEnum.Song, songSchema);

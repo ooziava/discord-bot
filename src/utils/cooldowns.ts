@@ -1,7 +1,7 @@
 import { Collection } from "discord.js";
 import type MyClient from "../client.js";
 
-async function checkCooldown(client: MyClient, userId: string, command: any) {
+export async function checkCooldown(client: MyClient, userId: string, command: any) {
   const cooldowns = client.cooldowns;
   if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Collection());
 
@@ -19,5 +19,3 @@ async function checkCooldown(client: MyClient, userId: string, command: any) {
   timestamps.set(userId, now);
   setTimeout(() => timestamps.delete(userId), cooldownAmount);
 }
-
-export default checkCooldown;

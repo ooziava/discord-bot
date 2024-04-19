@@ -1,13 +1,18 @@
 import { Message } from "discord.js";
-import type { MyCommandInteraction } from "../types/command.js";
+
 import type {
+  MyCommandInteraction,
   MyInteractionPayload,
   MyMessageReplyPayload,
   MySlashCommandReplyPayload,
   MySlashCommandEditReplyPayload,
-} from "../types/reply.js";
+} from "../types/index.js";
 
-function reply(interaction: MyCommandInteraction, payload: MyInteractionPayload, reply?: boolean) {
+export function reply(
+  interaction: MyCommandInteraction,
+  payload: MyInteractionPayload,
+  reply?: boolean
+) {
   if (interaction instanceof Message) {
     const messagePayload = payload as MyMessageReplyPayload;
     return reply ? interaction.reply(messagePayload) : interaction.channel.send(messagePayload);
@@ -22,5 +27,3 @@ function reply(interaction: MyCommandInteraction, payload: MyInteractionPayload,
     return interaction.reply(payload as MySlashCommandReplyPayload);
   }
 }
-
-export default reply;

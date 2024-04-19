@@ -1,7 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import { ButtonsEnum } from "../types/models.js";
 
-function navigation(position: "first" | "last" | "middle" | "disabled" = "first") {
+import { ButtonsEnum } from "../../types/models.js";
+
+export default function navigation(position: "first" | "last" | "middle" | "disabled" = "first") {
   const back = new ButtonBuilder()
     .setStyle(ButtonStyle.Primary)
     .setCustomId(ButtonsEnum.Back)
@@ -28,5 +29,3 @@ function navigation(position: "first" | "last" | "middle" | "disabled" = "first"
 
   return new ActionRowBuilder<ButtonBuilder>().addComponents(veryBack, back, forward, veryForward);
 }
-
-export default navigation;

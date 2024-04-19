@@ -1,7 +1,8 @@
 import { EmbedBuilder } from "discord.js";
+
 import type { IGuild } from "../types/guild.js";
 
-function guildInfoEmbed(guild: IGuild, name: string) {
+export default function guildInfoEmbed(guild: IGuild, name: string) {
   return (
     new EmbedBuilder()
       .setTitle(`Your guild info - ${name}`)
@@ -34,5 +35,3 @@ function guildInfoEmbed(guild: IGuild, name: string) {
       .setColor(0x00008b)
   );
 }
-
-export default guildInfoEmbed;

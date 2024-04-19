@@ -1,19 +1,16 @@
 import {
-  SlashCommandBuilder,
   Message,
   ComponentType,
+  SlashCommandBuilder,
   type StringSelectMenuInteraction,
 } from "discord.js";
-import type { Autocomplete, Data, Execute } from "../../types/command.js";
-import reply from "../../utils/reply.js";
-import SongService from "../../services/song.js";
-import SearchService from "../../services/search.js";
-import searchInput from "../../components/search-select.js";
-import GuildService from "../../services/guild.js";
-import { isURL } from "../../utils/urls.js";
-import searchInfoEmbed from "../../embeds/search-info.js";
-import { ActionsEnum } from "../../types/models.js";
-import consola from "consola";
+
+import searchInput from "../../components/selects/search.js";
+
+import { SongService, GuildService, SearchService } from "../../services/index.js";
+import { isURL, reply } from "../../utils/index.js";
+
+import { type Autocomplete, type Data, type Execute, ActionsEnum } from "../../types/index.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("search")

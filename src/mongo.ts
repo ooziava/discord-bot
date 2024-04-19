@@ -1,8 +1,8 @@
-import fs from "fs";
-import mongoose from "mongoose";
+import { readFileSync } from "fs";
 import consola from "consola";
+import mongoose from "mongoose";
 
-const credentials = fs.readFileSync("./cert.pem");
+const credentials = readFileSync("./cert.pem");
 await mongoose.connect(
   "mongodb+srv://cluster0.n3wzzwl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=Cluster0",
   {

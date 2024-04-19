@@ -1,15 +1,15 @@
-import { ButtonInteraction, ComponentType, Message } from "discord.js";
-import navigation from "../../../components/navigation.js";
-import { playlistInfoEmbed, playlistsEmbed } from "../../../embeds/playlist-info.js";
+import { ButtonInteraction, Message } from "discord.js";
+
+import { playlistInfoEmbed, playlistsEmbed } from "../../../embeds/playlists.js";
+import navigation from "../../../components/buttons/navigation.js";
+
 import GuildService from "../../../services/guild.js";
-import type { MyCommandInteraction } from "../../../types/command.js";
-import type { ISong } from "../../../types/song.js";
-import reply from "../../../utils/reply.js";
-import { ButtonsEnum } from "../../../types/models.js";
-import createNavigation from "../../../utils/create-navigation.js";
+import { createNavigation, reply } from "../../../utils/index.js";
+
+import type { MyCommandInteraction, ISong } from "../../../types/index.js";
 
 const itemsPerPage = 15;
-async function infoPlaylist(interaction: MyCommandInteraction, query?: string) {
+export default async function infoPlaylist(interaction: MyCommandInteraction, query?: string) {
   if (!query) {
     const playlists = await GuildService.getPlaylists(interaction.guildId);
     if (!playlists.length) return await reply(interaction, "No playlists saved.");
@@ -57,5 +57,3 @@ async function infoPlaylist(interaction: MyCommandInteraction, query?: string) {
     });
   }
 }
-
-export default infoPlaylist;

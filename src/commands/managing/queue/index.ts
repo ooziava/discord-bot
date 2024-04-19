@@ -1,13 +1,16 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import type { Aliases, Autocomplete, Data, Execute } from "../../../types/command.js";
-import reply from "../../../utils/reply.js";
-import addToQueue from "./add.js";
-import removeFromQueue from "./remove.js";
-import clearQueue from "./clear.js";
-import GuildService from "../../../services/guild.js";
-import infoQueue from "./info.js";
 import { AudioPlayerStatus } from "@discordjs/voice";
+
+import GuildService from "../../../services/guild.js";
+import { reply } from "../../../utils/reply.js";
 import * as playCommand from "../../player/play.js";
+
+import infoQueue from "./info.js";
+import addToQueue from "./add.js";
+import clearQueue from "./clear.js";
+import removeFromQueue from "./remove.js";
+
+import type { Aliases, Autocomplete, Data, Execute } from "../../../types/command.js";
 
 export const aliases: Aliases = "q";
 export const data: Data = new SlashCommandBuilder()
@@ -70,6 +73,7 @@ export const execute: Execute = async (client, interaction, args) => {
       return await reply(interaction, "Please provide a subcommand.", true);
   }
 };
+
 export const autocomplete: Autocomplete = async (interaction) => {
   const subcommand = interaction.options.getSubcommand();
   const focusedValue = interaction.options.getFocused();

@@ -1,25 +1,13 @@
-import { SlashCommandBuilder, Message, type VoiceBasedChannel, GuildMember } from "discord.js";
-import type { Data, Execute } from "../../types/command.js";
-import {
-  AudioPlayer,
-  AudioPlayerStatus,
-  NoSubscriberBehavior,
-  VoiceConnectionStatus,
-  createAudioPlayer,
-  createAudioResource,
-  entersState,
-  joinVoiceChannel,
-} from "@discordjs/voice";
-import { stream, validate } from "play-dl";
-import type { NewSong } from "../../types/song.js";
-import GuildService from "../../services/guild.js";
-import reply from "../../utils/reply.js";
-import SearchService from "../../services/search.js";
-import SongService from "../../services/song.js";
-import { SourceEnum } from "../../types/source.js";
+import { SlashCommandBuilder, Message, GuildMember } from "discord.js";
+import { AudioPlayerStatus } from "@discordjs/voice";
+import { validate } from "play-dl";
+
 import songInfoEmbed from "../../embeds/song-info.js";
-import { connectToChannel } from "../../utils/channel.js";
-import { createPlayer, playSong } from "../../utils/player.js";
+
+import { GuildService, SearchService, SongService } from "../../services/index.js";
+import { reply, connectToChannel, createPlayer, playSong } from "../../utils/index.js";
+
+import { type Data, type Execute, SourceEnum } from "../../types/index.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("play")

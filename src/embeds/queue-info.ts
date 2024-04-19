@@ -1,7 +1,8 @@
 import { EmbedBuilder } from "discord.js";
-import type { ISong } from "../types/song.js";
-import formatDate from "../utils/format-date.js";
-import type { EmbedListBuilder } from "../types/embeds.js";
+
+import { formatDuration } from "../utils/format-date.js";
+
+import type { EmbedListBuilder, ISong } from "../types/index.js";
 
 const itemsPerPage = 15;
 const queueInfoEmbed: EmbedListBuilder<ISong> = (songs: ISong[], page: number) => {
@@ -12,7 +13,7 @@ const queueInfoEmbed: EmbedListBuilder<ISong> = (songs: ISong[], page: number) =
           name: "Queue",
           value: songs
             .map((song, i) =>
-              `${i + 1}. ${song.title} (${formatDate(song.duration)})`.slice(0, 200)
+              `${i + 1}. ${song.title} (${formatDuration(song.duration)})`.slice(0, 200)
             )
             .slice((page - 1) * itemsPerPage, page * itemsPerPage)
             .join("\n"),

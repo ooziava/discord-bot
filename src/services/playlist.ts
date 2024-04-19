@@ -1,11 +1,12 @@
-import playlistModel from "../models/playlist.js";
-import type { NewPlaylist } from "../types/playlist.js";
-import type { ISong } from "../types/song.js";
-import { getPlaylistUrl, isURL } from "../utils/urls.js";
-import { SourceEnum } from "../types/source.js";
 import { validate, type SpotifyAlbum, type SpotifyPlaylist, type YouTubePlayList } from "play-dl";
 
-class PlaylistService {
+import playlistModel from "../models/playlist.js";
+
+import { getPlaylistUrl, isURL } from "../utils/urls.js";
+
+import { type NewPlaylist, type ISong, SourceEnum } from "../types/index.js";
+
+export default class PlaylistService {
   // crud operations
   static async save(playlist: NewPlaylist) {
     return await playlistModel.create(playlist);
@@ -116,5 +117,3 @@ class PlaylistService {
     };
   }
 }
-
-export default PlaylistService;

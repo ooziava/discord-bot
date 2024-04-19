@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import type { Data, Execute } from "../../types/command.js";
+
 import GuildService from "../../services/guild.js";
+
+import type { Data, Execute } from "../../types/command.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("prefix")
@@ -8,6 +10,7 @@ export const data: Data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option.setName("prefix").setDescription("The new prefix").setRequired(true)
   );
+
 export const execute: Execute = async (client, interaction, args) => {
   let prefix;
   if (interaction instanceof Message) {

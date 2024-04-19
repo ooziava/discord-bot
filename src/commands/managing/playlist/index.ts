@@ -1,14 +1,16 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import type { Aliases, Autocomplete, Data, Execute } from "../../../types/command.js";
-import reply from "../../../utils/reply.js";
+import { AudioPlayerStatus } from "@discordjs/voice";
+
+import { PlaylistService, GuildService } from "../../../services/index.js";
+import { reply } from "../../../utils/reply.js";
+import * as playCommand from "../../player/play.js";
+
 import addPlaylist from "./add.js";
-import removePlaylist from "./remove.js";
 import infoPlaylist from "./info.js";
 import playPlaylist from "./play.js";
-import PlaylistService from "../../../services/playlist.js";
-import GuildService from "../../../services/guild.js";
-import * as playCommand from "../../player/play.js";
-import { AudioPlayerStatus } from "@discordjs/voice";
+import removePlaylist from "./remove.js";
+
+import type { Aliases, Autocomplete, Data, Execute } from "../../../types/command.js";
 
 export const aliases: Aliases = "pl";
 export const data: Data = new SlashCommandBuilder()

@@ -1,5 +1,5 @@
-import { entersState, joinVoiceChannel, VoiceConnectionStatus } from "@discordjs/voice";
 import type { VoiceBasedChannel } from "discord.js";
+import { entersState, joinVoiceChannel, VoiceConnectionStatus } from "@discordjs/voice";
 
 export async function connectToChannel(channel: VoiceBasedChannel) {
   const connection = joinVoiceChannel({

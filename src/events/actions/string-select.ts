@@ -1,7 +1,9 @@
-import { Events, type Interaction } from "discord.js";
 import consola from "consola";
-import type MyClient from "../../client.js";
+import { Events, type Interaction } from "discord.js";
+
 import replies from "../../data/replies.json" assert { type: "json" };
+
+import type MyClient from "../../client.js";
 
 export const name = Events.InteractionCreate;
 export const execute = async (client: MyClient, interaction: Interaction) => {

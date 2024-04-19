@@ -1,11 +1,12 @@
-import { Client, Collection, type ClientOptions } from "discord.js";
-import readFolders from "./utils/read-folders.js";
 import consola from "consola";
-import type { Command } from "./types/command.js";
-import type { Action } from "./types/action.js";
+import { Client, Collection, type ClientOptions } from "discord.js";
 import type { AudioPlayer } from "@discordjs/voice";
 
-class MyClient extends Client<true> {
+import { readFolders } from "./utils/read-folders.js";
+
+import type { Command, Action } from "./types/index.js";
+
+export default class MyClient extends Client<true> {
   commands: Collection<string, Command>;
   cooldowns: Collection<string, Collection<string, number>>;
   customActions: Collection<string, Action>;
@@ -79,5 +80,3 @@ class MyClient extends Client<true> {
     // });
   }
 }
-
-export default MyClient;

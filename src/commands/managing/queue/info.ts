@@ -1,13 +1,15 @@
-import { ButtonInteraction, ComponentType, Message } from "discord.js";
-import navigation from "../../../components/navigation.js";
+import { ButtonInteraction, Message } from "discord.js";
+
+import navigation from "../../../components/buttons/navigation.js";
 import queueInfoEmbed from "../../../embeds/queue-info.js";
+
 import GuildService from "../../../services/guild.js";
+import { reply, createNavigation } from "../../../utils/index.js";
+
 import type { MyCommandInteraction } from "../../../types/command.js";
-import reply from "../../../utils/reply.js";
-import createNavigation from "../../../utils/create-navigation.js";
 
 const itemsPerPage = 15;
-async function infoQueue(interaction: MyCommandInteraction) {
+export default async function infoQueue(interaction: MyCommandInteraction) {
   const queue = await GuildService.getQueue(interaction.guildId);
   if (!queue.length) return await reply(interaction, "The queue is empty.");
   if (queue.length > itemsPerPage) {
@@ -26,5 +28,3 @@ async function infoQueue(interaction: MyCommandInteraction) {
     embeds: [queueInfoEmbed(queue, 1)],
   });
 }
-
-export default infoQueue;

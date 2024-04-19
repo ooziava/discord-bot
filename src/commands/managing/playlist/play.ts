@@ -1,9 +1,9 @@
-import GuildService from "../../../services/guild.js";
-import PlaylistService from "../../../services/playlist.js";
-import type { MyCommandInteraction } from "../../../types/command.js";
-import reply from "../../../utils/reply.js";
+import { GuildService, PlaylistService } from "../../../services/index.js";
+import { reply } from "../../../utils/reply.js";
 
-async function playPlaylist(interaction: MyCommandInteraction, query: string) {
+import type { MyCommandInteraction } from "../../../types/command.js";
+
+export default async function playPlaylist(interaction: MyCommandInteraction, query: string) {
   const playlist = await PlaylistService.getByNameOrUrl(query);
   if (!playlist) return await reply(interaction, "Playlist not found.");
 
@@ -13,5 +13,3 @@ async function playPlaylist(interaction: MyCommandInteraction, query: string) {
   await GuildService.addToQueue(interaction.guildId, ...songs);
   return await reply(interaction, `${songs.length} songs added to the queue.`);
 }
-
-export default playPlaylist;

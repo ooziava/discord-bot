@@ -1,7 +1,10 @@
 import { SlashCommandBuilder } from "discord.js";
-import type { Data, Execute } from "../../types/command.js";
-import GuildService from "../../services/guild.js";
+
 import guildInfoEmbed from "../../embeds/guild-info.js";
+
+import GuildService from "../../services/guild.js";
+
+import type { Data, Execute } from "../../types/command.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("info")

@@ -1,9 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-import type { IPlaylist } from "../types/playlist.js";
-import { SourceEnum } from "../types/source.js";
-import { MongooseModelsEnum } from "../types/models.js";
 
-const playlistSchema: Schema = new Schema({
+import { type IPlaylist, MongooseModelsEnum, SourceEnum } from "../types/index.js";
+
+export const playlistSchema: Schema = new Schema({
   name: { type: String, required: true },
   artist: { type: String, required: true },
   url: { type: String, required: true },

@@ -1,14 +1,16 @@
 import {
+  entersState,
   AudioPlayerStatus,
   createAudioPlayer,
   createAudioResource,
-  entersState,
   NoSubscriberBehavior,
   type AudioPlayer,
 } from "@discordjs/voice";
-import type { NewSong } from "../types/song.js";
 import { stream } from "play-dl";
+
 import GuildService from "../services/guild.js";
+
+import type { NewSong } from "../types/song.js";
 
 export function createPlayer(guildId: string) {
   const newPlayer = createAudioPlayer({

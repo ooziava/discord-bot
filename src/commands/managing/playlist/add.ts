@@ -1,13 +1,16 @@
 import { SpotifyAlbum, validate, YouTubePlayList } from "play-dl";
-import GuildService from "../../../services/guild.js";
-import PlaylistService from "../../../services/playlist.js";
-import SearchService from "../../../services/search.js";
-import SongService from "../../../services/song.js";
-import type { MyCommandInteraction } from "../../../types/command.js";
-import { SourceEnum } from "../../../types/source.js";
-import reply from "../../../utils/reply.js";
 
-async function addPlaylist(interaction: MyCommandInteraction, input: string) {
+import {
+  SongService,
+  GuildService,
+  SearchService,
+  PlaylistService,
+} from "../../../services/index.js";
+import { reply } from "../../../utils/reply.js";
+
+import { type MyCommandInteraction, SourceEnum } from "../../../types/index.js";
+
+export default async function addPlaylist(interaction: MyCommandInteraction, input: string) {
   await reply(interaction, "Searching for the playlist...");
 
   const storedPlaylist = await PlaylistService.getByUrl(input);
@@ -42,5 +45,3 @@ async function addPlaylist(interaction: MyCommandInteraction, input: string) {
   await GuildService.addPlaylist(interaction.guildId, savedPlaylist._id);
   return await reply(interaction, `Playlist saved: ${savedPlaylist.name}`);
 }
-
-export default addPlaylist;

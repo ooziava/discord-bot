@@ -1,5 +1,6 @@
-import { Events, type Interaction } from "discord.js";
 import consola from "consola";
+import { Events, type Interaction } from "discord.js";
+
 import type MyClient from "../../client.js";
 
 export const name = Events.InteractionCreate;

@@ -1,9 +1,12 @@
-import { Events, Message } from "discord.js";
 import consola from "consola";
-import type MyClient from "../../client.js";
-import replies from "../../data/replies.json" assert { type: "json" };
+import { Events, Message } from "discord.js";
+
 import GuildService from "../../services/guild.js";
-import checkCooldown from "../../utils/cooldowns.js";
+import { checkCooldown } from "../../utils/cooldowns.js";
+
+import replies from "../../data/replies.json" assert { type: "json" };
+
+import type MyClient from "../../client.js";
 
 export const name = Events.MessageCreate;
 export const execute = async (client: MyClient, message: Message) => {

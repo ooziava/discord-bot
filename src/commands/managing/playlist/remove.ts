@@ -1,9 +1,9 @@
-import GuildService from "../../../services/guild.js";
-import PlaylistService from "../../../services/playlist.js";
-import type { MyCommandInteraction } from "../../../types/command.js";
-import reply from "../../../utils/reply.js";
+import { GuildService, PlaylistService } from "../../../services/index.js";
+import { reply } from "../../../utils/reply.js";
 
-async function removePlaylist(interaction: MyCommandInteraction, query: string) {
+import type { MyCommandInteraction } from "../../../types/command.js";
+
+export default async function removePlaylist(interaction: MyCommandInteraction, query: string) {
   const playlist = await PlaylistService.getByNameOrUrl(query);
   if (!playlist) return await reply(interaction, "Playlist not found.");
 
@@ -11,5 +11,3 @@ async function removePlaylist(interaction: MyCommandInteraction, query: string) 
   if (!response) return await reply(interaction, "Playlist not saved.");
   else return await reply(interaction, `Playlist removed: ${playlist.name}`);
 }
-
-export default removePlaylist;

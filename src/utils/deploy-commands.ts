@@ -1,6 +1,7 @@
 import consola from "consola";
 import { REST, Routes } from "discord.js";
-import readFolders from "./read-folders.js";
+
+import { readFolders } from "./read-folders.js";
 
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;

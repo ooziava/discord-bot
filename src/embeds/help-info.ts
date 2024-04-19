@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-function helpEmbed(command?: string) {
+export default function helpEmbed(command?: string) {
   const embed = new EmbedBuilder().setTitle("Music Bot Help").setColor(0x00008b).setFooter({
     text: "Type `/help [command]` to get help for a specific command.",
   });
@@ -61,5 +61,3 @@ function helpEmbed(command?: string) {
 
   return embed;
 }
-
-export default helpEmbed;

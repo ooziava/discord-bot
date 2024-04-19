@@ -1,8 +1,10 @@
-import type { NewSong } from "../types/song.js";
-import songModel from "../models/song.js";
 import { validate, type YouTubeVideo } from "play-dl";
-import { SourceEnum } from "../types/source.js";
+
+import songModel from "../models/song.js";
+
 import { getSongUrl } from "../utils/urls.js";
+
+import { SourceEnum, type NewSong } from "../types/index.js";
 
 class SongService {
   // crud operations

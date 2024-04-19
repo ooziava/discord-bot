@@ -1,9 +1,10 @@
 import type { ObjectId } from "mongodb";
-import guildModel from "../models/guild.js";
-import type { ISong } from "../types/song.js";
-import type { IPlaylist } from "../types/playlist.js";
 
-class GuildService {
+import guildModel from "../models/guild.js";
+
+import type { IPlaylist, ISong } from "../types/index.js";
+
+export default class GuildService {
   // specific guild operations
   static async getGuild(guildId: string) {
     return (await guildModel.findOne({ guildId })) || (await guildModel.create({ guildId }));
@@ -132,5 +133,3 @@ class GuildService {
     return await guild.save();
   }
 }
-
-export default GuildService;

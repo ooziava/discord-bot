@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+
 import type { Data, Execute } from "../../types/command.js";
 
 export const data: Data = new SlashCommandBuilder()

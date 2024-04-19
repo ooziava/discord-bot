@@ -1,20 +1,19 @@
 import {
-  ButtonInteraction,
+  Message,
   Collection,
   ComponentType,
+  ButtonInteraction,
   InteractionResponse,
-  Message,
-  type APIEmbed,
   type CacheType,
   type CollectorFilter,
-  type JSONEncodable,
 } from "discord.js";
-import navigation from "../components/navigation.js";
-import { ButtonsEnum } from "../types/models.js";
-import type { EmbedListBuilder } from "../types/embeds.js";
+
+import navigation from "../components/buttons/navigation.js";
+
+import { ButtonsEnum, type EmbedListBuilder } from "../types/index.js";
 
 const itemsPerPage = 15;
-function createNavigation<T>(
+export function createNavigation<T>(
   response: Message<boolean> | InteractionResponse<boolean>,
   list: T[],
   embed: {
@@ -62,5 +61,3 @@ function createNavigation<T>(
     });
   });
 }
-
-export default createNavigation;

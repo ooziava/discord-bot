@@ -1,14 +1,15 @@
 import {
-  playlist_info,
   search,
   spotify,
   SpotifyTrack,
-  video_basic_info,
   YouTubeVideo,
+  playlist_info,
+  video_basic_info,
 } from "play-dl";
+
 import { SourceEnum, type Source } from "../types/source.js";
 
-class SearchService {
+export default class SearchService {
   static async searchSong(query: string, limit = 1) {
     return await search(query, {
       limit,
@@ -73,5 +74,3 @@ class SearchService {
     }
   }
 }
-
-export default SearchService;

@@ -3,14 +3,13 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from "discord.js";
-import { ActionsEnum } from "../types/models.js";
-import type { ISong } from "../types/song.js";
-import formatDate from "../utils/format-date.js";
 
-function queueStringInput(array: ISong[], ended = false) {
-  const options = array.map(parseQueueOption);
+import { type IPlaylist, ActionsEnum } from "../../types/index.js";
+
+export default function playlistStringInput(array: IPlaylist[], ended = false) {
+  const options = array.map(parsePlaylistOption);
   const select = new StringSelectMenuBuilder()
-    .setCustomId(ActionsEnum.QueueSelect)
+    .setCustomId(ActionsEnum.PlaylistSelect)
     .setPlaceholder("Make a selection!")
     .addOptions(options)
     .setDisabled(ended)
@@ -20,9 +19,9 @@ function queueStringInput(array: ISong[], ended = false) {
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 }
 
-export function parseQueueOption(video: ISong, index: number) {
-  let description = `${video.artist} • ${formatDate(video.duration)} • ${video.source}`;
-  let title = video.title;
+export function parsePlaylistOption(video: IPlaylist, index: number) {
+  let description = `${video.artist} • ${video.songs.length} songs • ${video.source}`;
+  let title = video.name || "No title found!";
   if (description.length > 100) description = description.substring(0, 97) + "...";
   if (title.length > 100) title = title.substring(0, 97) + "...";
 
@@ -31,5 +30,3 @@ export function parseQueueOption(video: ISong, index: number) {
     .setValue(video.url)
     .setDescription(description);
 }
-
-export default queueStringInput;

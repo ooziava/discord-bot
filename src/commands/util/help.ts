@@ -1,6 +1,8 @@
 import { Message, SlashCommandBuilder } from "discord.js";
+
+import helpEmbed from "../../embeds/help-info.js";
+
 import type { Data, Execute } from "../../types/command.js";
-import helpEmbed from "../../embeds/help.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("help")

@@ -1,16 +1,16 @@
 import fs from "fs";
-import path from "path";
+import { join } from "path";
 
-function readFiles(commandsPath: string) {
+export function readFiles(commandsPath: string) {
   const commandFiles: string[] = [];
 
   fs.readdirSync(commandsPath).forEach((file) => {
-    const filePath = path.join(commandsPath, file);
+    const filePath = join(commandsPath, file);
     if (fs.statSync(filePath).isDirectory()) {
       // If it's a directory, read the index file
       const indexFile = fs.readdirSync(filePath).find((f) => f === "index.ts" || f === "index.js");
       if (indexFile) {
-        const fileUrl = new URL(`file://${path.join(filePath, indexFile)}`);
+        const fileUrl = new URL(`file://${join(filePath, indexFile)}`);
         commandFiles.push(fileUrl.toString());
       }
     } else if (file.endsWith(".js") || file.endsWith(".ts")) {
@@ -22,5 +22,3 @@ function readFiles(commandsPath: string) {
 
   return commandFiles;
 }
-
-export default readFiles;
