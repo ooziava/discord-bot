@@ -22,7 +22,7 @@ export const execute: Execute = async (_client, interaction, args) => {
     volume = interaction.options.getInteger("volume", true);
   }
   const result = await GuildService.setVolume(interaction.guildId, volume);
-  if (!result.upsertedCount) return await reply(interaction, "Failed to set volume");
+  if (!result.modifiedCount) return await reply(interaction, "Failed to set volume");
 
   return await reply(interaction, `Volume set to ${volume}`);
 };
