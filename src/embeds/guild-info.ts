@@ -1,5 +1,4 @@
 import { EmbedBuilder } from "discord.js";
-import type { ISong } from "../types/song.js";
 import type { IGuild } from "../types/guild.js";
 
 function guildInfoEmbed(guild: IGuild, name: string) {
