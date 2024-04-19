@@ -115,6 +115,14 @@ export default class GuildService {
     return await guild.save();
   }
 
+  static async getPrefixes() {
+    const guilds = await guildModel.find();
+    return guilds.reduce((acc, guild) => {
+      acc.set(guild.guildId, guild.prefix);
+      return acc;
+    }, new Map<string, string>());
+  }
+
   static async setVolume(guildId: string, volume: number) {
     const guild = await this.getGuild(guildId);
     guild.volume = Math.min(200, Math.max(0, volume));

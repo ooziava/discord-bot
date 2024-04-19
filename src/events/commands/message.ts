@@ -2,16 +2,19 @@ import consola from "consola";
 import { Events, Message } from "discord.js";
 
 import GuildService from "../../services/guild.js";
-import { checkCooldown } from "../../utils/cooldowns.js";
-
-import replies from "../../data/replies.json" assert { type: "json" };
+import { checkCooldown, messageErrorHandler } from "../../utils/index.js";
 
 import type MyClient from "../../client.js";
 
 export const name = Events.MessageCreate;
 export const execute = async (client: MyClient, message: Message) => {
   if (message.author.bot || !message.inGuild()) return;
-  const prefix = (await GuildService.getGuild(message.guildId)).prefix;
+  let prefix = client.prefixes.get(message.guildId);
+  if (!prefix) {
+    const guild = await GuildService.getGuild(message.guildId);
+    client.prefixes.set(message.guildId, guild.prefix);
+    prefix = guild.prefix;
+  }
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -28,10 +31,7 @@ export const execute = async (client: MyClient, message: Message) => {
     });
   }
 
-  try {
-    await command.execute(client, message, args);
-  } catch (error) {
-    consola.error(error);
-    await message.reply(replies.commandError);
-  }
+  return await messageErrorHandler(message, async () => {
+    return await command.execute(client, message, args);
+  });
 };

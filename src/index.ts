@@ -1,5 +1,8 @@
+import consola from "consola";
 import { GatewayIntentBits } from "discord.js";
+
 import MyClient from "./client.js";
+
 import "./utils/generate-dependency-report.js";
 import "./utils/login-socials.js";
 import "./mongo.js";
@@ -7,7 +10,7 @@ import "./models/index.js";
 
 const token = process.env.RESET_TOKEN;
 if (!token) {
-  console.error("Missing required environment variable");
+  consola.error("Missing RESET_TOKEN environment variable");
   process.exit(1);
 }
 if (process.env.NODE_ENV != "development") import("./utils/deploy-commands.js");

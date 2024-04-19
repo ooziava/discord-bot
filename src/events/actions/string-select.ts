@@ -1,7 +1,6 @@
-import consola from "consola";
 import { Events, type Interaction } from "discord.js";
 
-import replies from "../../data/replies.json" assert { type: "json" };
+import { interactionErrorHandler } from "../../utils/error-handlers.js";
 
 import type MyClient from "../../client.js";
 
@@ -10,16 +9,8 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isStringSelectMenu() || !interaction.inGuild()) return;
 
   const action = client.customActions.get(interaction.customId);
-  if (!action) return;
-
-  try {
-    await action.execute(interaction);
-  } catch (error) {
-    consola.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(replies.commandError);
-    } else {
-      await interaction.reply(replies.commandError);
-    }
-  }
+  if (action)
+    return await interactionErrorHandler(interaction, async () => {
+      await action.execute(interaction);
+    });
 };

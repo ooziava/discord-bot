@@ -1,5 +1,6 @@
-import consola from "consola";
 import { Events, type Interaction } from "discord.js";
+
+import { interactionErrorHandler } from "../../utils/error-handlers.js";
 
 import type MyClient from "../../client.js";
 
@@ -8,14 +9,7 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isAutocomplete() || !interaction.inGuild()) return;
 
   const command = client.commands.get(interaction.commandName);
-  if (!command || !command.autocomplete)
-    return consola.error(
-      `Command ${interaction.commandName} does not have an autocomplete function.`
-    );
-
-  try {
-    await command.autocomplete(interaction);
-  } catch (error) {
-    consola.error(error);
-  }
+  return await interactionErrorHandler(interaction, async () => {
+    if (command && command.autocomplete) return await command.autocomplete(interaction);
+  });
 };

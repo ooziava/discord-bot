@@ -11,6 +11,7 @@ export default class MyClient extends Client<true> {
   cooldowns: Collection<string, Collection<string, number>>;
   customActions: Collection<string, Action>;
   players: Collection<string, AudioPlayer>;
+  prefixes: Collection<string, string>;
 
   constructor(options: ClientOptions) {
     super(options);
@@ -18,6 +19,7 @@ export default class MyClient extends Client<true> {
     this.cooldowns = new Collection();
     this.customActions = new Collection();
     this.players = new Collection();
+    this.prefixes = new Collection();
 
     const commandPromises = readFolders("./commands", import.meta.url).map(async (filePath) => {
       const command = await import(filePath);

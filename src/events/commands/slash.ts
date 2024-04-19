@@ -1,9 +1,7 @@
-import { Events, type Interaction } from "discord.js";
 import consola from "consola";
+import { Events, type Interaction } from "discord.js";
 
-import { checkCooldown } from "../../utils/cooldowns.js";
-
-import replies from "../../data/replies.json" assert { type: "json" };
+import { checkCooldown, interactionErrorHandler } from "../../utils/index.js";
 
 import type MyClient from "../../client.js";
 
@@ -22,14 +20,7 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
     });
   }
 
-  try {
-    await command.execute(client, interaction);
-  } catch (error) {
-    consola.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(replies.commandError);
-    } else {
-      await interaction.reply(replies.commandError);
-    }
-  }
+  return await interactionErrorHandler(interaction, async () => {
+    return await command.execute(client, interaction);
+  });
 };
