@@ -9,7 +9,14 @@ export const data: Data = new SlashCommandBuilder()
   .setName("loop")
   .setDescription("Loop the current song");
 
-export const execute: Execute = async (client, interaction) => {
-  const guilg = await GuildService.toggleLoop(interaction.guildId);
-  return await reply(interaction, guilg.loop ? "Looping enabled" : "Looping disabled");
+export const execute: Execute = async (_client, interaction) => {
+  const result = await GuildService.toggleLoop(interaction.guildId);
+  return await reply(
+    interaction,
+    result === undefined
+      ? result
+        ? "Looping enabled"
+        : "Looping disabled"
+      : "Something went wrong"
+  );
 };

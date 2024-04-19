@@ -9,10 +9,9 @@ import {
 import { reply } from "../../../utils/reply.js";
 
 import { type MyCommandInteraction, SourceEnum } from "../../../types/index.js";
+import { getPlaylistSource } from "../../../utils/urls.js";
 
 export default async function addPlaylist(interaction: MyCommandInteraction, input: string) {
-  await reply(interaction, "Searching for the playlist...");
-
   const storedPlaylist = await PlaylistService.getByUrl(input);
   if (storedPlaylist) {
     if (await GuildService.hasPlaylist(interaction.guildId, storedPlaylist._id))
@@ -22,10 +21,11 @@ export default async function addPlaylist(interaction: MyCommandInteraction, inp
       return await reply(interaction, `Playlist saved: ${storedPlaylist.name}`);
     }
   }
-  const result = await validate(input).catch(() => null);
-  const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+
+  let source = await getPlaylistSource(input);
   const playlist = await SearchService.getPlaylistByURL(input, { source });
   if (!playlist) return await reply(interaction, "Playlist not found.");
+
   const { info, videos } = playlist;
   if (!videos) return await reply(interaction, "Failed to fetch playlist videos.");
 
@@ -41,6 +41,7 @@ export default async function addPlaylist(interaction: MyCommandInteraction, inp
     const newSong = (await SongService.getByUrl(song.url)) || (await SongService.save(song));
     newPlaylist.songs.push(newSong._id);
   }
+
   const savedPlaylist = await PlaylistService.save(newPlaylist);
   await GuildService.addPlaylist(interaction.guildId, savedPlaylist._id);
   return await reply(interaction, `Playlist saved: ${savedPlaylist.name}`);

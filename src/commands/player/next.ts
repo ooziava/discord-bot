@@ -19,11 +19,10 @@ export const execute: Execute = async (client, interaction, args) => {
       : interaction.options.getInteger("amount") ?? 1;
   if (amount < 1) return await reply(interaction, "The amount must be at least 1", true);
 
-  const guild = await GuildService.playNext(interaction.guildId, amount);
-  if (!guild) return await reply(interaction, "The queue is empty", true);
-
+  await GuildService.playNext(interaction.guildId, amount);
   const player = client.players.get(interaction.guildId);
-  if (player) player.stop();
-  else return await reply(interaction, "Cannot find the player", true);
+  if (!player) return await reply(interaction, "Cannot find the player", true);
+
+  player.stop();
   return await reply(interaction, `Skipped ${amount > 1 ? `${amount} songs` : ""}`);
 };

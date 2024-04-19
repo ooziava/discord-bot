@@ -8,15 +8,15 @@ import { formatDuration } from "../../utils/format-date.js";
 
 import { type ISong, ActionsEnum } from "../../types/index.js";
 
+const select = new StringSelectMenuBuilder()
+  .setCustomId(ActionsEnum.QueueSelect)
+  .setPlaceholder("Make a selection!")
+  .setMinValues(1)
+  .setMaxValues(1);
+
 export default function queueStringInput(array: ISong[], ended = false) {
   const options = array.map(parseQueueOption);
-  const select = new StringSelectMenuBuilder()
-    .setCustomId(ActionsEnum.QueueSelect)
-    .setPlaceholder("Make a selection!")
-    .addOptions(options)
-    .setDisabled(ended)
-    .setMinValues(1)
-    .setMaxValues(1);
+  select.addOptions(options).setDisabled(ended);
 
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 }

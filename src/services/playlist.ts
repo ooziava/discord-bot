@@ -2,81 +2,82 @@ import { validate, type SpotifyAlbum, type SpotifyPlaylist, type YouTubePlayList
 
 import playlistModel from "../models/playlist.js";
 
-import { getPlaylistUrl, isURL } from "../utils/urls.js";
+import { getPlaylistSource, getPlaylistUrl, isURL } from "../utils/urls.js";
 
 import { type NewPlaylist, type ISong, SourceEnum } from "../types/index.js";
 
 export default class PlaylistService {
   // crud operations
-  static async save(playlist: NewPlaylist) {
-    return await playlistModel.create(playlist);
+  static save(playlist: NewPlaylist) {
+    return playlistModel.create(playlist);
   }
 
-  static async getById(id: string) {
-    return await playlistModel.findById(id);
+  static getById(id: string) {
+    return playlistModel.findById(id);
   }
 
   static async getByUrl(input: string) {
-    const result = await validate(input).catch(() => null);
-    const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+    const source = await getPlaylistSource(input);
     const url = getPlaylistUrl(input, source);
-    return await playlistModel.findOne({ url });
+    return playlistModel.findOne({ url });
   }
 
-  static async getByName(name: string) {
-    return await playlistModel.findOne({ name });
+  static getByName(input: string) {
+    return playlistModel.findOne({ name: input });
   }
 
-  static async getByNameOrUrl(input: string) {
-    return isURL(input) ? await this.getByUrl(input) : await this.getByName(input);
+  static getByNameOrUrl(input: string) {
+    return isURL(input) ? this.getByUrl(input) : this.getByName(input);
   }
 
-  static async update(id: string, playlist: NewPlaylist) {
-    return await playlistModel.findByIdAndUpdate(id, playlist);
+  static update(id: string, playlist: NewPlaylist) {
+    return playlistModel.findByIdAndUpdate(id, playlist);
   }
 
-  static async remove(id: string) {
-    return await playlistModel.findByIdAndDelete(id);
+  static remove(id: string) {
+    return playlistModel.findByIdAndDelete(id);
   }
 
   // bulk operations
-  static async search(query: string) {
-    return await playlistModel.find({ $text: { $search: query } });
+  static search(query: string, limit?: number) {
+    return playlistModel.find({ $text: { $search: query } }, {}, { limit });
   }
 
-  static async getAll() {
-    return await playlistModel.find();
+  static getAll(limit?: number) {
+    return playlistModel.find({}, {}, { limit });
   }
 
-  static async removeAll() {
-    return await playlistModel.deleteMany();
+  static removeAll() {
+    return playlistModel.deleteMany();
   }
 
   // song operations
-  static async addSong(id: string, song: ISong) {
-    const playlist = await this.getById(id);
-    playlist?.songs.push(song._id);
-    return await playlist?.save();
+  static addSongs(id: string, ...songs: ISong[]) {
+    return playlistModel.findByIdAndUpdate(id, { $push: { songs: { $each: songs } } });
   }
 
   static async getPlaylistSongs(query: string) {
-    const playlist = await this.getByNameOrUrl(query);
-    await playlist?.populate("songs");
-    return playlist?.songs as ISong[] | undefined;
+    const playlist = await playlistModel
+      .findOne({
+        $or: [{ name: { $regex: new RegExp("^" + query + "$", "i") } }, { url: query }],
+      })
+      .populate("songs");
+
+    return playlist ? (playlist.songs as unknown as ISong[]) : [];
   }
 
   static async removeSong(id: string, song: ISong) {
-    const playlist = await this.getById(id);
-    if (!playlist) return;
-
-    playlist.songs = playlist.songs.filter((s) => !s.equals(song._id));
-    return await playlist?.save();
+    return playlistModel.findByIdAndUpdate(id, { $pull: { songs: song } });
   }
 
   // other operations
   static async getSongCount(id: string) {
-    const playlist = await this.getById(id);
-    return playlist?.songs.length;
+    const result = await playlistModel.aggregate([
+      { $match: { _id: id } },
+      { $project: { songCount: { $size: "$songs" } } },
+    ]);
+
+    return result.length > 0 ? result[0].songCount : 0;
   }
 
   static parseYoutubePlaylist(playlist: YouTubePlayList): NewPlaylist {

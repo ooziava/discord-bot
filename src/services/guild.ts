@@ -2,142 +2,165 @@ import type { ObjectId } from "mongodb";
 
 import guildModel from "../models/guild.js";
 
-import type { IPlaylist, ISong } from "../types/index.js";
+import type { IGuild, IPlaylist, ISong } from "../types/index.js";
 
 export default class GuildService {
   // specific guild operations
-  static async getGuild(guildId: string) {
-    return (await guildModel.findOne({ guildId })) || (await guildModel.create({ guildId }));
+  static getGuild(guildId: string) {
+    return guildModel.findOneAndUpdate(
+      { guildId: guildId },
+      { guildId: guildId },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
   }
-  static async getCurrentSong(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    if (!guild.queue.length) return;
 
-    await guild.populate({
+  static async getCurrentSong(guildId: string) {
+    let guild = await guildModel.findOne({ guildId }).populate({
       path: "queue",
-      options: { limit: 1 },
+      justOne: true,
     });
-    return guild.queue[0] as unknown as ISong;
+
+    if (!guild) guild = await this.getGuild(guildId);
+    return guild.queue as unknown as ISong | null;
   }
 
   static async playNext(guildId: string, amount = 1) {
     const guild = await this.getGuild(guildId);
-    const queue = guild.queue;
-    if (queue.length === 0) return;
-
-    guild.queue = queue.slice(amount);
+    if (!guild.loop) {
+      if (guild.queue.length <= amount) {
+        guild.queue = [];
+      } else {
+        guild.queue = guild.queue.slice(amount);
+      }
+    }
     return await guild.save();
   }
 
   //playlist operations
-  static async addPlaylist(guildId: string, ...playlists: ObjectId[]) {
-    const guild = await this.getGuild(guildId);
-    guild.playlists.push(...playlists);
-    return await guild.save();
+  static addPlaylist(guildId: string, ...playlists: ObjectId[]) {
+    return guildModel.updateOne({ guildId, $push: { playlists: { $each: playlists } } });
   }
 
-  static async getPlaylists(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    await guild.populate("playlists");
+  static async getPlaylists(guildId: string, limit?: number) {
+    const query = guildModel.findOne({ guildId });
+    if (limit) query.limit(limit);
+
+    let guild = await query.populate("playlists").exec();
+    if (!guild) guild = await this.getGuild(guildId);
+
     return guild.playlists as unknown as IPlaylist[];
   }
 
   static async getPlaylistByNameOrUrl(guildId: string, query: string) {
-    const list = await this.getPlaylists(guildId);
-    return list.find((p) => p.name.toLowerCase() === query.toLowerCase() || p.url === query);
+    const lowerCaseQuery = query.toLowerCase();
+    let guild = await guildModel.findOne({ guildId }).populate({
+      path: "playlists",
+      match: {
+        $or: [{ name: { $regex: new RegExp("^" + lowerCaseQuery + "$", "i") } }, { url: query }],
+      },
+    });
+    if (!guild) guild = await this.getGuild(guildId);
+
+    return guild.playlists.length > 0 ? (guild.playlists[0] as unknown as IPlaylist) : null;
   }
 
-  static async searchPlaylists(guildId: string, query: string) {
-    const list = await this.getPlaylists(guildId);
-    return list.filter(
-      (p) => p.name.toLowerCase().includes(query.toLowerCase()) || p.url === query
-    );
+  static async searchPlaylists(guildId: string, query: string, limit?: number) {
+    const lowerCaseQuery = query.toLowerCase();
+
+    let guild = await guildModel
+      .findOne({ guildId })
+      .populate({
+        path: "playlists",
+        match: {
+          $or: [{ name: { $regex: new RegExp(lowerCaseQuery, "i") } }, { url: query }],
+        },
+        options: { limit },
+      })
+      .exec();
+
+    if (!guild) guild = await this.getGuild(guildId);
+    return guild.playlists as unknown as IPlaylist[];
   }
 
-  static async removePlaylist(guildId: string, playlistId: ObjectId) {
-    const guild = await this.getGuild(guildId);
-    const lenght = guild.playlists.length;
-    guild.playlists = guild.playlists.filter((p) => !p.equals(playlistId));
-
-    return lenght === guild.playlists.length ? null : await guild.save();
+  static removePlaylist(guildId: string, playlistId: ObjectId) {
+    return guildModel.updateOne({ guildId }, { $pull: { playlists: playlistId } });
   }
 
-  static async clearPlaylists(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    guild.playlists = [];
-    return await guild.save();
+  static clearPlaylists(guildId: string) {
+    return guildModel.updateOne({ guildId }, { playlists: [] });
   }
 
-  static async hasPlaylist(guildId: string, playlistId: ObjectId) {
-    const guild = await this.getGuild(guildId);
-    return guild.playlists.some((p) => p.equals(playlistId));
+  static hasPlaylist(guildId: string, playlistId: ObjectId) {
+    return guildModel.exists({ guildId, playlists: playlistId });
   }
 
   //queue operations
-  static async addToQueue(guildId: string, ...songs: ObjectId[]) {
-    const guild = await this.getGuild(guildId);
-    guild.queue.push(...songs);
-    return await guild.save();
+  static addToQueue(guildId: string, ...songs: ObjectId[]) {
+    return guildModel.updateOne({ guildId }, { $push: { queue: { $each: songs } } });
   }
 
-  static async getQueue(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    await guild.populate("queue");
+  static async getQueue(guildId: string, limit?: number) {
+    let guild = await guildModel.findOne({ guildId }).populate({
+      path: "queue",
+      options: { limit },
+    });
+    if (!guild) guild = await this.getGuild(guildId);
+
     return guild.queue as unknown as ISong[];
   }
 
-  static async searchInQueue(guildId: string, query: string) {
-    const list = await this.getQueue(guildId);
-    return list.filter(
-      (s) => s.title.toLowerCase().includes(query.toLowerCase()) || s.url === query
-    );
+  static async searchInQueue(guildId: string, query: string, limit?: number) {
+    const lowerCaseQuery = query.toLowerCase();
+    let guild = await guildModel.findOne({ guildId }).populate({
+      path: "queue",
+      match: {
+        $or: [{ title: { $regex: new RegExp(lowerCaseQuery, "i") } }, { url: query }],
+      },
+      options: { limit },
+    });
+    if (!guild) guild = await this.getGuild(guildId);
+
+    return guild.queue as unknown as ISong[];
   }
 
-  static async removeFromQueue(guildId: string, songId: ObjectId) {
-    const guild = await this.getGuild(guildId);
-    const index = guild.queue.findIndex((s) => s.equals(songId));
-    if (index === -1) return null;
-
-    guild.queue.splice(index, 1);
-    return await guild.save();
+  static removeFromQueue(guildId: string, songId: ObjectId) {
+    return guildModel.updateOne({ guildId }, { $pull: { queue: songId } });
   }
 
-  static async clearQueue(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    guild.queue = [];
-    return await guild.save();
+  static clearQueue(guildId: string) {
+    return guildModel.updateOne({ guildId }, { queue: [] });
   }
 
   //general operations
-  static async setPrefix(guildId: string, prefix: string) {
-    const guild = await this.getGuild(guildId);
-    guild.prefix = prefix;
-    return await guild.save();
+  static setPrefix(guildId: string, prefix: string) {
+    return guildModel.updateOne({ guildId }, { prefix });
   }
 
   static async getPrefixes() {
-    const guilds = await guildModel.find();
-    return guilds.reduce((acc, guild) => {
-      acc.set(guild.guildId, guild.prefix);
-      return acc;
-    }, new Map<string, string>());
+    const guilds = await guildModel.find().select("guildId prefix -_id");
+    return guilds as { guildId: string; prefix: string }[];
   }
 
-  static async setVolume(guildId: string, volume: number) {
-    const guild = await this.getGuild(guildId);
-    guild.volume = Math.min(200, Math.max(0, volume));
-    return await guild.save();
+  static setVolume(guildId: string, volume: number) {
+    return guildModel.updateOne({ guildId }, { volume });
   }
 
-  static async setMaxQueueSize(guildId: string, size: number) {
-    const guild = await this.getGuild(guildId);
-    guild.maxQueueSize = size;
-    return await guild.save();
+  static setMaxQueueSize(guildId: string, size: number) {
+    return guildModel.updateOne({ guildId }, { maxQueueSize: size });
   }
 
   static async toggleLoop(guildId: string) {
-    const guild = await this.getGuild(guildId);
-    guild.loop = !guild.loop;
-    return await guild.save();
+    const updatedGuild = await guildModel.findOneAndUpdate(
+      { guildId },
+      [{ $set: { loop: { $not: "$loop" } } }],
+      { new: true, fields: { loop: 1, _id: 0 } }
+    );
+    return updatedGuild ? updatedGuild.loop : undefined;
+  }
+
+  static async getPlayerMeta(guildId: string) {
+    const guild = await guildModel.findOne({ guildId }).select("guildId loop volume -_id");
+    if (!guild) return this.getGuild(guildId);
+    return guild as { guildId: string; loop: boolean; volume: number };
   }
 }

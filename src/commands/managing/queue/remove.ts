@@ -8,6 +8,6 @@ export default async function removeFromQueue(interaction: MyCommandInteraction,
   if (!song) return await reply(interaction, "Song not found.");
 
   const response = await GuildService.removeFromQueue(interaction.guildId, song._id);
-  if (!response) return await reply(interaction, "Song not in queue.");
+  if (!response) return await reply(interaction, "Song not found.");
   else return await reply(interaction, `Removed from queue: ${song.title}`);
 }

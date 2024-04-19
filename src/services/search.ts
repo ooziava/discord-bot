@@ -35,7 +35,7 @@ export default class SearchService {
     }
   }
 
-  static async getPlaylistByURL(url: string, options?: { source: Source }) {
+  static async getPlaylistByURL(url: string, options?: { source?: Source }) {
     switch (options?.source) {
       case SourceEnum.Spotify: {
         const sp = await spotify(url).catch(() => null);

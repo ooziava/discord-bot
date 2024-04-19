@@ -8,6 +8,6 @@ export default async function removePlaylist(interaction: MyCommandInteraction, 
   if (!playlist) return await reply(interaction, "Playlist not found.");
 
   const response = await GuildService.removePlaylist(interaction.guildId, playlist._id);
-  if (!response) return await reply(interaction, "Playlist not saved.");
+  if (!response) return await reply(interaction, "Playlist not found.");
   else return await reply(interaction, `Playlist removed: ${playlist.name}`);
 }

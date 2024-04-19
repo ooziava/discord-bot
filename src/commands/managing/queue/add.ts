@@ -9,7 +9,19 @@ export default async function addToQueue(interaction: MyCommandInteraction, url:
   let song = await SongService.getByUrl(url);
   if (!song) {
     const result = await validate(url).catch(() => null);
-    const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+    let source: SourceEnum;
+    switch (result) {
+      case "yt_video":
+      case "yt_playlist":
+        source = SourceEnum.Youtube;
+        break;
+      case "sp_track":
+        source = SourceEnum.Spotify;
+        break;
+      default:
+        return await reply(interaction, "Invalid URL.");
+    }
+
     const video = await SearchService.getSongByURL(url, { source });
     if (!video) return await reply(interaction, "No results found.");
 

@@ -2,46 +2,47 @@ import { validate, type YouTubeVideo } from "play-dl";
 
 import songModel from "../models/song.js";
 
-import { getSongUrl } from "../utils/urls.js";
+import { getSongSource, getSongUrl } from "../utils/urls.js";
 
 import { SourceEnum, type NewSong } from "../types/index.js";
 
 class SongService {
   // crud operations
-  static async save(song: NewSong) {
-    return await songModel.create(song);
+  static save(song: NewSong) {
+    return songModel.create(song);
   }
 
-  static async getById(id: string) {
-    return await songModel.findById(id);
+  static getById(id: string) {
+    return songModel.findById(id);
   }
 
   static async getByUrl(input: string) {
-    const result = await validate(input).catch(() => null);
-    const source = result && result.includes("sp_") ? SourceEnum.Spotify : SourceEnum.Youtube;
+    const source = await getSongSource(input);
     const url = getSongUrl(input, source);
-    return await songModel.findOne({
+    return songModel.findOne({
       url,
     });
   }
 
-  static async update(id: string, song: NewSong) {
-    return await songModel.findByIdAndUpdate(id, song);
+  static update(id: string, song: NewSong) {
+    return songModel.findByIdAndUpdate(id, song);
   }
 
-  static async remove(id: string) {
-    return await songModel.findByIdAndDelete(id);
+  static remove(id: string) {
+    return songModel.findByIdAndDelete(id);
   }
 
   // bulk operations
-  static async search(query: string) {
-    return await songModel
-      .find({ $text: { $search: query, $caseSensitive: false, $diacriticSensitive: false } })
-      .limit(10);
+  static search(query: string, limit?: number) {
+    return songModel.find(
+      { $text: { $search: query, $caseSensitive: false, $diacriticSensitive: false } },
+      {},
+      { limit }
+    );
   }
 
-  static async getAll() {
-    return await songModel.find();
+  static getAll(limit?: number) {
+    return songModel.find({}, {}, { limit });
   }
 
   //other operations

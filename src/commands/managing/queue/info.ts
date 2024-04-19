@@ -12,7 +12,7 @@ const itemsPerPage = 15;
 export default async function infoQueue(interaction: MyCommandInteraction) {
   const queue = await GuildService.getQueue(interaction.guildId);
   if (!queue.length) return await reply(interaction, "The queue is empty.");
-  if (queue.length > itemsPerPage) {
+  else if (queue.length > itemsPerPage) {
     const response = await reply(interaction, {
       embeds: [queueInfoEmbed(queue, 1)],
       components: [navigation()],
@@ -22,9 +22,9 @@ export default async function infoQueue(interaction: MyCommandInteraction) {
       i.user.id === (interaction instanceof Message ? interaction.author.id : interaction.user.id);
 
     return createNavigation(response, queue, { builder: queueInfoEmbed }, filter);
+  } else {
+    return await reply(interaction, {
+      embeds: [queueInfoEmbed(queue, 1)],
+    });
   }
-
-  return await reply(interaction, {
-    embeds: [queueInfoEmbed(queue, 1)],
-  });
 }

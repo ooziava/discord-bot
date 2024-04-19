@@ -21,5 +21,7 @@ export const execute: Execute = async (client, interaction, args) => {
   }
 
   await GuildService.setPrefix(interaction.guildId, prefix);
+  client.prefixes.set(interaction.guildId, prefix);
+
   return await interaction.reply(`Prefix set to \`${prefix}\``);
 };

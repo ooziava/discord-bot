@@ -10,6 +10,9 @@ import type { MyCommandInteraction, ISong } from "../../../types/index.js";
 
 const itemsPerPage = 15;
 export default async function infoPlaylist(interaction: MyCommandInteraction, query?: string) {
+  const filter = (i: ButtonInteraction) =>
+    i.user.id === (interaction instanceof Message ? interaction.author.id : interaction.user.id);
+
   if (!query) {
     const playlists = await GuildService.getPlaylists(interaction.guildId);
     if (!playlists.length) return await reply(interaction, "No playlists saved.");
@@ -19,16 +22,12 @@ export default async function infoPlaylist(interaction: MyCommandInteraction, qu
         components: [navigation()],
       });
 
-      const filter = (i: ButtonInteraction) =>
-        i.user.id ===
-        (interaction instanceof Message ? interaction.author.id : interaction.user.id);
-
       return createNavigation(response, playlists, { builder: playlistsEmbed }, filter);
+    } else {
+      return await reply(interaction, {
+        embeds: [playlistsEmbed(playlists, 1)],
+      });
     }
-
-    return await reply(interaction, {
-      embeds: [playlistsEmbed(playlists, 1)],
-    });
   }
 
   const playlist = await GuildService.getPlaylistByNameOrUrl(interaction.guildId, query);
@@ -42,9 +41,6 @@ export default async function infoPlaylist(interaction: MyCommandInteraction, qu
       components: [navigation()],
     });
 
-    const filter = (i: ButtonInteraction) =>
-      i.user.id === (interaction instanceof Message ? interaction.author.id : interaction.user.id);
-
     return createNavigation(
       response,
       songs,
@@ -52,7 +48,7 @@ export default async function infoPlaylist(interaction: MyCommandInteraction, qu
       filter
     );
   } else {
-    await reply(interaction, {
+    return await reply(interaction, {
       embeds: [playlistInfoEmbed(songs, 1, playlist)],
     });
   }

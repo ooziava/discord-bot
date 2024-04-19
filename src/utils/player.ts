@@ -1,3 +1,4 @@
+import consola from "consola";
 import {
   entersState,
   AudioPlayerStatus,
@@ -10,7 +11,7 @@ import { stream } from "play-dl";
 
 import GuildService from "../services/guild.js";
 
-import type { NewSong } from "../types/song.js";
+import type { ISong, NewSong } from "../types/song.js";
 
 export function createPlayer(guildId: string) {
   const newPlayer = createAudioPlayer({
@@ -22,12 +23,10 @@ export function createPlayer(guildId: string) {
   newPlayer.on("error", console.error);
 
   newPlayer.on(AudioPlayerStatus.Idle, async () => {
-    const guild = await GuildService.getGuild(guildId);
-    if (!guild.loop) await GuildService.playNext(guildId);
-    const song = await GuildService.getCurrentSong(guildId);
-
-    if (song) {
-      await playSong(newPlayer, song, guild.volume);
+    const guild = await GuildService.playNext(guildId);
+    if (guild.queue.length > 0) {
+      await guild.populate({ path: "queue", options: { limit: 1 } });
+      await playSong(newPlayer, guild.queue[0] as unknown as ISong, guild.volume);
     }
   });
   return newPlayer;
@@ -35,7 +34,10 @@ export function createPlayer(guildId: string) {
 
 export async function playSong(player: AudioPlayer, song: NewSong, volume: number) {
   const st = await stream(song.url).catch(() => null);
-  if (!st) return player.emit("idle");
+  if (!st) {
+    consola.error("Failed to get stream for song", song);
+    return player.emit("idle");
+  }
 
   const resource = createAudioResource(st.stream, {
     inputType: st.type,

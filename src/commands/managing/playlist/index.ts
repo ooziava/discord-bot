@@ -93,6 +93,7 @@ export const execute: Execute = async (client, interaction, args) => {
       if (interaction instanceof Message) {
         input = args?.[1];
         if (!input) return await reply(interaction, "Please provide a playlist URL.", true);
+        await reply(interaction, "Searching for the playlist...");
       } else {
         input = interaction.options.getString("url", true);
         await interaction.deferReply();
@@ -104,7 +105,7 @@ export const execute: Execute = async (client, interaction, args) => {
     case "rm":
       if (!query)
         return await reply(interaction, "Please provide a playlist name or url to remove.", true);
-      else return await removePlaylist(interaction, query);
+      return await removePlaylist(interaction, query);
 
     case "info":
       return await infoPlaylist(interaction, query);
@@ -114,6 +115,7 @@ export const execute: Execute = async (client, interaction, args) => {
         return await reply(interaction, "Please provide a playlist name or url to remove.", true);
 
       await playPlaylist(interaction, query);
+
       const player = client.players.get(interaction.guildId);
       if (!player || player.state.status === AudioPlayerStatus.Idle)
         await playCommand.execute(client, interaction);
@@ -141,25 +143,24 @@ export const autocomplete: Autocomplete = async (interaction) => {
   switch (subcommand) {
     case "add": {
       const playlists =
-        focusedValue && focusedValue.length > 2
-          ? await PlaylistService.search(focusedValue)
-          : await PlaylistService.getAll();
-      return await interaction.respond(
-        playlists?.slice(0, 15).map((choice) => ({ name: choice.name, value: choice.url })) || []
-      );
+        focusedValue && focusedValue.length > 3
+          ? await PlaylistService.search(focusedValue, 15)
+          : await PlaylistService.getAll(15);
+      return await interaction.respond(playlists.map((pl) => ({ name: pl.name, value: pl.url })));
     }
     case "play":
     case "info":
     case "remove":
     case "modify":
-      const playlists = focusedValue
-        ? await GuildService.searchPlaylists(interaction.guildId, focusedValue)
-        : await GuildService.getPlaylists(interaction.guildId);
+      const playlists =
+        focusedValue && focusedValue.length > 3
+          ? await GuildService.searchPlaylists(interaction.guildId, focusedValue, 15)
+          : await GuildService.getPlaylists(interaction.guildId, 15);
 
       return await interaction.respond(
-        playlists.slice(0, 15).map((s, i) => ({
-          name: `${i + 1}. ${s.name} - ${s.artist} (${s.source})`.slice(0, 100),
-          value: s.url,
+        playlists.map((pl, i) => ({
+          name: `${i + 1}. ${pl.name} - ${pl.artist} (${pl.source})`.slice(0, 100),
+          value: pl.url,
         }))
       );
     default:

@@ -52,10 +52,12 @@ export const execute: Execute = async (client, interaction, args) => {
       if (!url) return await reply(interaction, "Please provide a URL to add.", true);
 
       await addToQueue(interaction, url);
+
       const player = client.players.get(interaction.guildId);
       if (!player || player.state.status === AudioPlayerStatus.Idle)
         await playCommand.execute(client, interaction);
       return;
+
     case "remove":
     case "rm":
       const search =
@@ -79,11 +81,11 @@ export const autocomplete: Autocomplete = async (interaction) => {
   const focusedValue = interaction.options.getFocused();
   if (subcommand === "remove") {
     const songs = focusedValue
-      ? await GuildService.searchInQueue(interaction.guildId, focusedValue)
-      : await GuildService.getQueue(interaction.guildId);
+      ? await GuildService.searchInQueue(interaction.guildId, focusedValue, 15)
+      : await GuildService.getQueue(interaction.guildId, 15);
 
     return await interaction.respond(
-      songs.slice(0, 15).map((s, i) => ({
+      songs.map((s, i) => ({
         name: `${i + 1}. ${s.title} - ${s.artist}`.slice(0, 100),
         value: s.url,
       }))

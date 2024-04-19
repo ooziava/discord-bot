@@ -6,15 +6,15 @@ import {
 
 import { type IPlaylist, ActionsEnum } from "../../types/index.js";
 
+const select = new StringSelectMenuBuilder()
+  .setCustomId(ActionsEnum.PlaylistSelect)
+  .setPlaceholder("Make a selection!")
+  .setMinValues(1)
+  .setMaxValues(1);
+
 export default function playlistStringInput(array: IPlaylist[], ended = false) {
   const options = array.map(parsePlaylistOption);
-  const select = new StringSelectMenuBuilder()
-    .setCustomId(ActionsEnum.PlaylistSelect)
-    .setPlaceholder("Make a selection!")
-    .addOptions(options)
-    .setDisabled(ended)
-    .setMinValues(1)
-    .setMaxValues(1);
+  select.setOptions(options).setDisabled(ended);
 
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 }
