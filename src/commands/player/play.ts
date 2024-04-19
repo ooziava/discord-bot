@@ -62,7 +62,6 @@ export const execute: Execute = async (client, interaction, args) => {
       player = createPlayer(interaction.guildId);
       client.players.set(interaction.guildId, player);
 
-      connection.subscribe(player);
       await playSong(player, song, guild.volume);
     } else {
       if (url) {
@@ -76,6 +75,7 @@ export const execute: Execute = async (client, interaction, args) => {
         }
       }
     }
+    connection.subscribe(player);
 
     return await reply(interaction, {
       content: "",
