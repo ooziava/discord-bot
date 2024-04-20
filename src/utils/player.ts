@@ -11,7 +11,7 @@ import { stream } from "play-dl";
 
 import GuildService from "../services/guild.js";
 
-import type { ISong, NewSong } from "../types/song.js";
+import type { NewSong } from "../types/song.js";
 import SongService from "../services/song.js";
 
 export function createPlayer(guildId: string) {

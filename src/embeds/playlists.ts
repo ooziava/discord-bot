@@ -12,6 +12,7 @@ export const playlistInfoEmbed: EmbedListBuilder<ISong> = (
   new EmbedBuilder()
     .setTitle(playlist.name.slice(0, 256))
     .setURL(playlist.url)
+    .setDescription(`Total songs: ${playlist.songs.length}`.slice(0, 2048))
     .setThumbnail(playlist.thumbnail ?? null)
     .setFooter({
       text: `Created by ${playlist.artist} | Source: ${playlist.source}`.slice(0, 2048),

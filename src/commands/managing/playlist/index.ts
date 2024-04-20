@@ -7,6 +7,7 @@ import { reply } from "../../../utils/reply.js";
 import addPlaylist from "./add.js";
 import infoPlaylist from "./info.js";
 import playPlaylist from "./play.js";
+import updatePlaylist from "./update.js";
 import removePlaylist from "./remove.js";
 
 import type { Aliases, Autocomplete, Data, Execute } from "../../../types/command.js";
@@ -51,18 +52,18 @@ export const data: Data = new SlashCommandBuilder()
           .setAutocomplete(true)
       )
   )
-  // .addSubcommand((subcommand) =>
-  //   subcommand
-  //     .setName("modify")
-  //     .setDescription("Modify a playlist")
-  //     .addStringOption((option) =>
-  //       option
-  //         .setName("playlist")
-  //         .setDescription("The playlist to modify")
-  //         .setRequired(true)
-  //         .setAutocomplete(true)
-  //     )
-  // )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("update")
+      .setDescription("Update playlist songs")
+      .addStringOption((option) =>
+        option
+          .setName("playlist")
+          .setDescription("The playlist to update")
+          .setRequired(true)
+          .setAutocomplete(true)
+      )
+  )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("info")
@@ -74,7 +75,6 @@ export const data: Data = new SlashCommandBuilder()
           .setAutocomplete(true)
       )
   );
-// .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Create a playlist"))
 // .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the playlists"));
 
 export const execute: Execute = async (client, interaction, args) => {
@@ -124,15 +124,14 @@ export const execute: Execute = async (client, interaction, args) => {
 
       await playPlaylist(interaction, query);
       return;
-    // case "create":
-    //   return await reply(interaction, "Available soon.");
+    case "update":
+      if (!query) {
+        await reply(interaction, "Please provide a playlist name or url to update.", true);
+        return;
+      }
 
-    // case "modify":
-    //   if (!query)
-    //     return await reply(interaction, "Please provide a playlist name or url to modify.", true);
-
-    //   return await reply(interaction, "Available soon.", true);
-
+      await updatePlaylist(interaction, query);
+      return;
     // case "clear":
     //   return await clearPlaylists(interaction);
     default:
@@ -160,7 +159,7 @@ export const autocomplete: Autocomplete = async (interaction) => {
     case "play":
     case "info":
     case "remove":
-    case "modify":
+    case "update":
       let playlists;
       if (focusedValue && focusedValue.length > 3) {
         playlists = await GuildService.searchPlaylists(
