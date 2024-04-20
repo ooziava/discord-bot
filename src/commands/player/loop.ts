@@ -11,7 +11,7 @@ export const data: Data = new SlashCommandBuilder()
 
 export const execute: Execute = async (_client, interaction) => {
   const result = await GuildService.toggleLoop(interaction.guildId);
-  return await reply(
+  await reply(
     interaction,
     result === undefined
       ? result

@@ -1,24 +1,27 @@
 import { EmbedBuilder } from "discord.js";
 
+import { ELEMENTS_PER_PAGE } from "../constants/index.js";
+
 import type { IPlaylist, EmbedListBuilder, ISong } from "../types/index.js";
 
-const itemsPerPage = 15;
 export const playlistInfoEmbed: EmbedListBuilder<ISong> = (
   songs: ISong[],
   page: number,
   playlist: IPlaylist
 ) =>
   new EmbedBuilder()
-    .setTitle(playlist.name)
+    .setTitle(playlist.name.slice(0, 256))
     .setURL(playlist.url)
     .setThumbnail(playlist.thumbnail ?? null)
-    .setFooter({ text: `Created by ${playlist.artist} | Source: ${playlist.source}` })
+    .setFooter({
+      text: `Created by ${playlist.artist} | Source: ${playlist.source}`.slice(0, 2048),
+    })
     .addFields([
       {
         name: "Songs",
         value: songs
           .map((song, i) => `${i + 1}. ${song.title}`.slice(0, 200))
-          .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+          .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
           .join("\n"),
       },
     ])
@@ -36,7 +39,7 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (playlists: IPlaylist
               playlist.source
             }`.slice(0, 200)
           )
-          .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+          .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
           .join("\n"),
       },
     ])

@@ -5,5 +5,5 @@ import type { MyCommandInteraction } from "../../../types/command.js";
 
 export default async function clearQueue(interaction: MyCommandInteraction) {
   await GuildService.clearQueue(interaction.guildId);
-  return await reply(interaction, "Queue cleared.");
+  await reply(interaction, "Queue cleared.");
 }

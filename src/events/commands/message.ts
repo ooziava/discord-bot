@@ -1,4 +1,3 @@
-import consola from "consola";
 import { Events, Message } from "discord.js";
 
 import GuildService from "../../services/guild.js";
@@ -9,12 +8,14 @@ import type MyClient from "../../client.js";
 export const name = Events.MessageCreate;
 export const execute = async (client: MyClient, message: Message) => {
   if (message.author.bot || !message.inGuild()) return;
+
   let prefix = client.prefixes.get(message.guildId);
   if (!prefix) {
     const guild = await GuildService.getGuild(message.guildId);
     client.prefixes.set(message.guildId, guild.prefix);
     prefix = guild.prefix;
   }
+
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -22,7 +23,7 @@ export const execute = async (client: MyClient, message: Message) => {
   if (!commandName) return;
 
   const command = client.commands.get(commandName);
-  if (!command) return consola.error(`No command matching ${commandName} was found.`);
+  if (!command) return;
 
   const cooldown = await checkCooldown(client, message.author.id, command);
   if (cooldown) {
@@ -31,7 +32,7 @@ export const execute = async (client: MyClient, message: Message) => {
     });
   }
 
-  return await messageErrorHandler(message, async () => {
-    return await command.execute(client, message, args);
+  await messageErrorHandler(message, async () => {
+    await command.execute(client, message, args);
   });
 };

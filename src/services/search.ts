@@ -8,22 +8,24 @@ import {
 } from "play-dl";
 
 import { SourceEnum, type Source } from "../types/source.js";
+import { getPlaylistSource, getSongSource } from "../utils/urls.js";
 
 export default class SearchService {
-  static async searchSong(query: string, limit = 1) {
+  static async searchSongs(query: string, limit = 1) {
     return await search(query, {
       limit,
       unblurNSFWThumbnails: true,
     }).catch(() => null);
   }
 
-  static async getSongByURL(url: string, options?: { source: Source }) {
-    switch (options?.source) {
+  static async getSongByURL(url: string) {
+    const source = await getSongSource(url);
+    switch (source) {
       case SourceEnum.Spotify:
         const sp = await spotify(url).catch(() => null);
         if (!(sp instanceof SpotifyTrack)) return;
 
-        const videos = await this.searchSong(
+        const videos = await this.searchSongs(
           `${sp.name} ${sp.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
         );
         return videos?.[0];
@@ -35,8 +37,9 @@ export default class SearchService {
     }
   }
 
-  static async getPlaylistByURL(url: string, options?: { source?: Source }) {
-    switch (options?.source) {
+  static async getPlaylistByURL(url: string) {
+    const source = await getPlaylistSource(url);
+    switch (source) {
       case SourceEnum.Spotify: {
         const sp = await spotify(url).catch(() => null);
         if (!sp || sp instanceof SpotifyTrack) return;
@@ -46,8 +49,9 @@ export default class SearchService {
 
         const videos = await Promise.all(
           tracks.map(async (track) => {
-            const videos = await this.searchSong(
-              `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
+            const videos = await this.searchSongs(
+              `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`,
+              1
             );
             return videos?.[0];
           })

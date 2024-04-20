@@ -1,55 +1,58 @@
-import { validate, type YouTubeVideo } from "play-dl";
+import { type YouTubeVideo } from "play-dl";
 
 import songModel from "../models/song.js";
 
-import { getSongSource, getSongUrl } from "../utils/urls.js";
+import { getSongUrl } from "../utils/urls.js";
 
 import { SourceEnum, type NewSong } from "../types/index.js";
 
 class SongService {
   // crud operations
-  static save(song: NewSong) {
-    return songModel.create(song);
+  static async save(song: NewSong) {
+    return await songModel.create(song);
   }
 
-  static getById(id: string) {
-    return songModel.findById(id);
+  static async getById(id: string) {
+    return await songModel.findById(id);
   }
 
   static async getByUrl(input: string) {
-    const source = await getSongSource(input);
-    const url = getSongUrl(input, source);
+    const url = getSongUrl(input);
     return songModel.findOne({
       url,
     });
   }
 
-  static update(id: string, song: NewSong) {
-    return songModel.findByIdAndUpdate(id, song);
+  static async isExist(url: string) {
+    return await songModel.exists({ url });
   }
 
-  static remove(id: string) {
-    return songModel.findByIdAndDelete(id);
+  static async update(id: string, song: NewSong) {
+    return await songModel.findByIdAndUpdate(id, song);
+  }
+
+  static async remove(id: string) {
+    return await songModel.findByIdAndDelete(id);
   }
 
   // bulk operations
-  static search(query: string, limit?: number) {
-    return songModel.find(
-      { $text: { $search: query, $caseSensitive: false, $diacriticSensitive: false } },
+  static async search(query: string, limit?: number) {
+    return await songModel.find(
+      { $or: [{ name: { $regex: new RegExp(query.toLowerCase(), "i") } }, { url: query }] },
       {},
       { limit }
     );
   }
 
-  static getAll(limit?: number) {
-    return songModel.find({}, {}, { limit });
+  static async getAll(limit?: number) {
+    return await songModel.find({}, {}, { limit });
   }
 
   //other operations
   static parseYoutubeVideo(video: YouTubeVideo): NewSong {
     return {
       title: video.title || "Unknown title",
-      url: getSongUrl(video.url, SourceEnum.Youtube) || video.url,
+      url: getSongUrl(video.url) || video.url,
       thumbnail: video.thumbnails[0].url,
       duration: video.durationInSec,
       artist: video.channel?.name || "Unknown artist",

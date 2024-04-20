@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import { AudioPlayerStatus } from "@discordjs/voice";
 
+import { ELEMENTS_PER_PAGE, MIN_QUERY_LENGTH } from "../../../constants/index.js";
 import { PlaylistService, GuildService } from "../../../services/index.js";
 import { reply } from "../../../utils/reply.js";
-import * as playCommand from "../../player/play.js";
 
 import addPlaylist from "./add.js";
 import infoPlaylist from "./info.js";
@@ -92,33 +91,38 @@ export const execute: Execute = async (client, interaction, args) => {
       let input;
       if (interaction instanceof Message) {
         input = args?.[1];
-        if (!input) return await reply(interaction, "Please provide a playlist URL.", true);
-        await reply(interaction, "Searching for the playlist...");
+        if (!input) {
+          await reply(interaction, "Please provide a playlist URL.", true);
+          return;
+        }
       } else {
         input = interaction.options.getString("url", true);
-        await interaction.deferReply();
       }
 
-      return await addPlaylist(interaction, input);
+      await addPlaylist(interaction, input);
+      return;
 
     case "remove":
     case "rm":
-      if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
-      return await removePlaylist(interaction, query);
+      if (!query) {
+        await reply(interaction, "Please provide a playlist name or url to remove.", true);
+        return;
+      }
+
+      await removePlaylist(interaction, query);
+      return;
 
     case "info":
-      return await infoPlaylist(interaction, query);
+      await infoPlaylist(interaction, query);
+      return;
 
     case "play":
-      if (!query)
-        return await reply(interaction, "Please provide a playlist name or url to remove.", true);
+      if (!query) {
+        await reply(interaction, "Please provide a playlist name or url to remove.", true);
+        return;
+      }
 
       await playPlaylist(interaction, query);
-
-      const player = client.players.get(interaction.guildId);
-      if (!player || player.state.status === AudioPlayerStatus.Idle)
-        await playCommand.execute(client, interaction);
       return;
     // case "create":
     //   return await reply(interaction, "Available soon.");
@@ -132,7 +136,8 @@ export const execute: Execute = async (client, interaction, args) => {
     // case "clear":
     //   return await clearPlaylists(interaction);
     default:
-      return await reply(interaction, "Please provide a valid subcommand.", true);
+      await reply(interaction, "Please provide a valid subcommand.", true);
+      return;
   }
 };
 
@@ -142,28 +147,40 @@ export const autocomplete: Autocomplete = async (interaction) => {
 
   switch (subcommand) {
     case "add": {
-      const playlists =
-        focusedValue && focusedValue.length > 3
-          ? await PlaylistService.search(focusedValue, 15)
-          : await PlaylistService.getAll(15);
-      return await interaction.respond(playlists.map((pl) => ({ name: pl.name, value: pl.url })));
+      if (!focusedValue || focusedValue.length < MIN_QUERY_LENGTH) {
+        await interaction.respond([]);
+        return;
+      }
+      const playlists = await PlaylistService.search(focusedValue, ELEMENTS_PER_PAGE);
+      const filteredList = playlists.map((pl) => ({ name: pl.name, value: pl.url }));
+
+      await interaction.respond(filteredList);
+      return;
     }
     case "play":
     case "info":
     case "remove":
     case "modify":
-      const playlists =
-        focusedValue && focusedValue.length > 3
-          ? await GuildService.searchPlaylists(interaction.guildId, focusedValue, 15)
-          : await GuildService.getPlaylists(interaction.guildId, 15);
+      let playlists;
+      if (focusedValue && focusedValue.length > 3) {
+        playlists = await GuildService.searchPlaylists(
+          interaction.guildId,
+          focusedValue,
+          ELEMENTS_PER_PAGE
+        );
+      } else {
+        playlists = await GuildService.getPlaylists(interaction.guildId, ELEMENTS_PER_PAGE);
+      }
 
-      return await interaction.respond(
-        playlists.map((pl, i) => ({
-          name: `${i + 1}. ${pl.name} - ${pl.artist} (${pl.source})`.slice(0, 100),
-          value: pl.url,
-        }))
-      );
+      const filteredList = playlists.map((pl, i) => ({
+        name: `${i + 1}. ${pl.name} - ${pl.artist} (${pl.source})`.slice(0, 100),
+        value: pl.url,
+      }));
+
+      await interaction.respond(filteredList);
+      return;
     default:
-      return await interaction.respond([]);
+      await interaction.respond([]);
+      return;
   }
 };

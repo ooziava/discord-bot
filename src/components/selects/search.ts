@@ -9,15 +9,16 @@ import { formatDuration } from "../../utils/format-date.js";
 
 import { ActionsEnum } from "../../types/models.js";
 
-const select = new StringSelectMenuBuilder()
-  .setCustomId(ActionsEnum.SearchSelect)
-  .setPlaceholder("Make a selection!")
-  .setMinValues(1)
-  .setMaxValues(1);
-
 export default function searchInput(array: YouTubeVideo[], ended = false) {
   const options = array.map(parseSearchOption);
-  select.addOptions(options).setDisabled(ended);
+
+  const select = new StringSelectMenuBuilder()
+    .setCustomId(ActionsEnum.SearchSelect)
+    .setPlaceholder("Make a selection!")
+    .setMinValues(1)
+    .setMaxValues(1)
+    .addOptions(options)
+    .setDisabled(ended);
 
   return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
 }

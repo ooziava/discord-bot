@@ -2,12 +2,12 @@ import type { ObjectId } from "mongodb";
 
 import guildModel from "../models/guild.js";
 
-import type { IGuild, IPlaylist, ISong } from "../types/index.js";
+import type { IPlaylist, ISong } from "../types/index.js";
 
 export default class GuildService {
   // specific guild operations
-  static getGuild(guildId: string) {
-    return guildModel.findOneAndUpdate(
+  static async getGuild(guildId: string) {
+    return await guildModel.findOneAndUpdate(
       { guildId: guildId },
       { guildId: guildId },
       { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -37,7 +37,7 @@ export default class GuildService {
   }
 
   //playlist operations
-  static addPlaylist(guildId: string, ...playlists: ObjectId[]) {
+  static async addPlaylist(guildId: string, ...playlists: ObjectId[]) {
     return guildModel.updateOne({ guildId, $push: { playlists: { $each: playlists } } });
   }
 
@@ -82,21 +82,21 @@ export default class GuildService {
     return guild.playlists as unknown as IPlaylist[];
   }
 
-  static removePlaylist(guildId: string, playlistId: ObjectId) {
-    return guildModel.updateOne({ guildId }, { $pull: { playlists: playlistId } });
+  static async removePlaylist(guildId: string, playlistId: ObjectId) {
+    return await guildModel.updateOne({ guildId }, { $pull: { playlists: playlistId } });
   }
 
-  static clearPlaylists(guildId: string) {
-    return guildModel.updateOne({ guildId }, { playlists: [] });
+  static async clearPlaylists(guildId: string) {
+    return await guildModel.updateOne({ guildId }, { playlists: [] });
   }
 
-  static hasPlaylist(guildId: string, playlistId: ObjectId) {
-    return guildModel.exists({ guildId, playlists: playlistId });
+  static async hasPlaylist(guildId: string, playlistId: ObjectId) {
+    return await guildModel.exists({ guildId, playlists: playlistId });
   }
 
   //queue operations
-  static addToQueue(guildId: string, ...songs: ObjectId[]) {
-    return guildModel.updateOne({ guildId }, { $push: { queue: { $each: songs } } });
+  static async addToQueue(guildId: string, ...songs: ObjectId[]) {
+    return await guildModel.updateOne({ guildId }, { $push: { queue: { $each: songs } } });
   }
 
   static async getQueue(guildId: string, limit?: number) {
@@ -123,17 +123,17 @@ export default class GuildService {
     return guild.queue as unknown as ISong[];
   }
 
-  static removeFromQueue(guildId: string, songId: ObjectId) {
-    return guildModel.updateOne({ guildId }, { $pull: { queue: songId } });
+  static async removeFromQueue(guildId: string, songId: ObjectId) {
+    return await guildModel.updateOne({ guildId }, { $pull: { queue: songId } });
   }
 
-  static clearQueue(guildId: string) {
-    return guildModel.updateOne({ guildId }, { queue: [] });
+  static async clearQueue(guildId: string) {
+    return await guildModel.updateOne({ guildId }, { queue: [] });
   }
 
   //general operations
-  static setPrefix(guildId: string, prefix: string) {
-    return guildModel.updateOne({ guildId }, { prefix });
+  static async setPrefix(guildId: string, prefix: string) {
+    return await guildModel.updateOne({ guildId }, { prefix });
   }
 
   static async getPrefixes() {
@@ -141,12 +141,12 @@ export default class GuildService {
     return guilds as { guildId: string; prefix: string }[];
   }
 
-  static setVolume(guildId: string, volume: number) {
-    return guildModel.updateOne({ guildId }, { volume });
+  static async setVolume(guildId: string, volume: number) {
+    return await guildModel.updateOne({ guildId }, { volume });
   }
 
-  static setMaxQueueSize(guildId: string, size: number) {
-    return guildModel.updateOne({ guildId }, { maxQueueSize: size });
+  static async setMaxQueueSize(guildId: string, size: number) {
+    return await guildModel.updateOne({ guildId }, { maxQueueSize: size });
   }
 
   static async toggleLoop(guildId: string) {
@@ -160,7 +160,7 @@ export default class GuildService {
 
   static async getPlayerMeta(guildId: string) {
     const guild = await guildModel.findOne({ guildId }).select("guildId loop volume -_id");
-    if (!guild) return this.getGuild(guildId);
+    if (!guild) return await this.getGuild(guildId);
     return guild as { guildId: string; loop: boolean; volume: number };
   }
 }

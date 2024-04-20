@@ -15,7 +15,10 @@ export const execute: Execute = async (client, interaction, args) => {
   let prefix;
   if (interaction instanceof Message) {
     prefix = args?.[0];
-    if (!prefix) return await interaction.reply("Please provide a prefix.");
+    if (!prefix) {
+      await interaction.reply("Please provide a prefix.");
+      return;
+    }
   } else {
     prefix = interaction.options.getString("prefix", true);
   }
@@ -23,5 +26,5 @@ export const execute: Execute = async (client, interaction, args) => {
   await GuildService.setPrefix(interaction.guildId, prefix);
   client.prefixes.set(interaction.guildId, prefix);
 
-  return await interaction.reply(`Prefix set to \`${prefix}\``);
+  await interaction.reply(`Prefix set to \`${prefix}\``);
 };

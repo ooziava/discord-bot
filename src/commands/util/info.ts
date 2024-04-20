@@ -10,10 +10,10 @@ export const data: Data = new SlashCommandBuilder()
   .setName("info")
   .setDescription("Get information about the bot");
 
-export const execute: Execute = async (client, interaction) => {
+export const execute: Execute = async (_client, interaction) => {
   const guild = await GuildService.getGuild(interaction.guildId);
 
-  return interaction.reply({
+  await interaction.reply({
     embeds: [guildInfoEmbed(guild, interaction.guild?.name || "Unknown")],
   });
 };

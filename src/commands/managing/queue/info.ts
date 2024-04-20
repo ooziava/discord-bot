@@ -3,27 +3,31 @@ import { ButtonInteraction, Message } from "discord.js";
 import navigation from "../../../components/buttons/navigation.js";
 import queueInfoEmbed from "../../../embeds/queue-info.js";
 
+import { ELEMENTS_PER_PAGE } from "../../../constants/index.js";
 import GuildService from "../../../services/guild.js";
 import { reply, createNavigation } from "../../../utils/index.js";
 
 import type { MyCommandInteraction } from "../../../types/command.js";
 
-const itemsPerPage = 15;
+const INIT_PAGE = 1;
 export default async function infoQueue(interaction: MyCommandInteraction) {
+  if (!(interaction instanceof Message)) await interaction.deferReply();
+
   const queue = await GuildService.getQueue(interaction.guildId);
-  if (!queue.length) return await reply(interaction, "The queue is empty.");
-  else if (queue.length > itemsPerPage) {
+  if (!queue.length) {
+    await reply(interaction, "The queue is empty.");
+  } else if (queue.length > ELEMENTS_PER_PAGE) {
     const response = await reply(interaction, {
-      embeds: [queueInfoEmbed(queue, 1)],
+      embeds: [queueInfoEmbed(queue, INIT_PAGE)],
       components: [navigation()],
     });
 
     const filter = (i: ButtonInteraction) =>
       i.user.id === (interaction instanceof Message ? interaction.author.id : interaction.user.id);
 
-    return createNavigation(response, queue, { builder: queueInfoEmbed }, filter);
+    createNavigation(response, queue, { builder: queueInfoEmbed }, filter);
   } else {
-    return await reply(interaction, {
+    await reply(interaction, {
       embeds: [queueInfoEmbed(queue, 1)],
     });
   }

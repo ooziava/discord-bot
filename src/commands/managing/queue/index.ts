@@ -1,9 +1,8 @@
 import { SlashCommandBuilder, Message } from "discord.js";
-import { AudioPlayerStatus } from "@discordjs/voice";
 
+import { ELEMENTS_PER_PAGE } from "../../../constants/index.js";
 import GuildService from "../../../services/guild.js";
 import { reply } from "../../../utils/reply.js";
-import * as playCommand from "../../player/play.js";
 
 import infoQueue from "./info.js";
 import addToQueue from "./add.js";
@@ -41,7 +40,7 @@ export const data: Data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) => subcommand.setName("clear").setDescription("Clear the queue"));
 
-export const execute: Execute = async (client, interaction, args) => {
+export const execute: Execute = async (_client, interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
@@ -49,30 +48,38 @@ export const execute: Execute = async (client, interaction, args) => {
     case "add":
       const url =
         interaction instanceof Message ? args?.[1] : interaction.options.getString("song", true);
-      if (!url) return await reply(interaction, "Please provide a URL to add.", true);
+
+      if (!url) {
+        await reply(interaction, "Please provide a URL to add.", true);
+        return;
+      }
 
       await addToQueue(interaction, url);
-
-      const player = client.players.get(interaction.guildId);
-      if (!player || player.state.status === AudioPlayerStatus.Idle)
-        await playCommand.execute(client, interaction);
       return;
 
     case "remove":
     case "rm":
-      const search =
+      const query =
         interaction instanceof Message
           ? args?.slice(1).join(" ")
-          : interaction.options.getString("song") || undefined;
-      if (!search) return await reply(interaction, "Please provide a song to remove.", true);
+          : interaction.options.getString("song", true);
 
-      return await removeFromQueue(interaction, search);
+      if (!query) {
+        await reply(interaction, "Please provide a song to remove.", true);
+        return;
+      }
+
+      await removeFromQueue(interaction, query);
+      return;
     case "info":
-      return await infoQueue(interaction);
+      await infoQueue(interaction);
+      return;
     case "clear":
-      return await clearQueue(interaction);
+      await clearQueue(interaction);
+      return;
     default:
-      return await reply(interaction, "Please provide a subcommand.", true);
+      await reply(interaction, "Please provide a subcommand.", true);
+      return;
   }
 };
 
@@ -81,14 +88,14 @@ export const autocomplete: Autocomplete = async (interaction) => {
   const focusedValue = interaction.options.getFocused();
   if (subcommand === "remove") {
     const songs = focusedValue
-      ? await GuildService.searchInQueue(interaction.guildId, focusedValue, 15)
-      : await GuildService.getQueue(interaction.guildId, 15);
+      ? await GuildService.searchInQueue(interaction.guildId, focusedValue, ELEMENTS_PER_PAGE)
+      : await GuildService.getQueue(interaction.guildId, ELEMENTS_PER_PAGE);
 
-    return await interaction.respond(
-      songs.map((s, i) => ({
-        name: `${i + 1}. ${s.title} - ${s.artist}`.slice(0, 100),
-        value: s.url,
-      }))
-    );
+    const filteredList = songs.map((s, i) => ({
+      name: `${i + 1}. ${s.title} - ${s.artist}`.slice(0, 100),
+      value: s.url,
+    }));
+
+    await interaction.respond(filteredList);
   }
 };

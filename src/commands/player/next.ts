@@ -17,12 +17,19 @@ export const execute: Execute = async (client, interaction, args) => {
     interaction instanceof Message
       ? parseInt(args?.[0] ?? "1")
       : interaction.options.getInteger("amount") ?? 1;
-  if (amount < 1) return await reply(interaction, "The amount must be at least 1", true);
+
+  if (amount < 1) {
+    await reply(interaction, "The amount must be at least 1", true);
+    return;
+  }
 
   await GuildService.playNext(interaction.guildId, amount);
   const player = client.players.get(interaction.guildId);
-  if (!player) return await reply(interaction, "Cannot find the player", true);
+  if (!player) {
+    await reply(interaction, "Cannot find the player", true);
+    return;
+  }
 
   player.stop();
-  return await reply(interaction, `Skipped ${amount > 1 ? `${amount} songs` : ""}`);
+  await reply(interaction, `Skipped ${amount > 1 ? `${amount} songs` : ""}`);
 };

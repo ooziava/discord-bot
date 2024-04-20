@@ -15,5 +15,5 @@ export const execute: Execute = async (client, interaction) => {
     player.stop();
   }
 
-  return await interaction.reply("Goodbye!");
+  await interaction.reply("Goodbye!");
 };

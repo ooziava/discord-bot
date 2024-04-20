@@ -5,9 +5,16 @@ import type { MyCommandInteraction } from "../../../types/command.js";
 
 export default async function removePlaylist(interaction: MyCommandInteraction, query: string) {
   const playlist = await PlaylistService.getByNameOrUrl(query);
-  if (!playlist) return await reply(interaction, "Playlist not found.");
+  if (!playlist) {
+    await reply(interaction, "Playlist not found.");
+    return;
+  }
 
   const response = await GuildService.removePlaylist(interaction.guildId, playlist._id);
-  if (!response) return await reply(interaction, "Playlist not found.");
-  else return await reply(interaction, `Playlist removed: ${playlist.name}`);
+  if (!response) {
+    await reply(interaction, "Playlist not found.");
+    return;
+  }
+
+  await reply(interaction, `Playlist removed: ${playlist.name}`);
 }

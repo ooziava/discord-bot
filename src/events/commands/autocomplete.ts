@@ -9,7 +9,7 @@ export const execute = async (client: MyClient, interaction: Interaction) => {
   if (!interaction.isAutocomplete() || !interaction.inGuild()) return;
 
   const command = client.commands.get(interaction.commandName);
-  return await interactionErrorHandler(interaction, async () => {
-    if (command && command.autocomplete) return await command.autocomplete(interaction);
+  await interactionErrorHandler(interaction, async () => {
+    if (command && command.autocomplete) await command.autocomplete(interaction);
   });
 };

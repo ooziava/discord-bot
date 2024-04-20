@@ -6,7 +6,7 @@ export type Execute = (
   client: MyClient,
   interaction: MyCommandInteraction,
   args?: string[]
-) => Promise<any>;
+) => Promise<void>;
 
 export type Data = {
   name: string;

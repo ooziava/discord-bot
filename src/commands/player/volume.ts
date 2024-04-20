@@ -16,13 +16,20 @@ export const execute: Execute = async (_client, interaction, args) => {
   let volume;
   if (interaction instanceof Message) {
     const volumeArg = args?.[0];
-    if (!volumeArg) return await interaction.reply("Please provide a volume.");
+    if (!volumeArg) {
+      await interaction.reply("Please provide a volume.");
+      return;
+    }
+
     volume = parseInt(volumeArg);
   } else {
     volume = interaction.options.getInteger("volume", true);
   }
   const result = await GuildService.setVolume(interaction.guildId, volume);
-  if (!result.modifiedCount) return await reply(interaction, "Failed to set volume");
+  if (!result.modifiedCount) {
+    await reply(interaction, "Failed to set volume");
+    return;
+  }
 
-  return await reply(interaction, `Volume set to ${volume}`);
+  await reply(interaction, `Volume set to ${volume}`);
 };

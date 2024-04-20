@@ -1,4 +1,4 @@
-import { validate, type SpotifyAlbum, type SpotifyPlaylist, type YouTubePlayList } from "play-dl";
+import { type SpotifyAlbum, type SpotifyPlaylist, type YouTubePlayList } from "play-dl";
 
 import playlistModel from "../models/playlist.js";
 
@@ -8,52 +8,63 @@ import { type NewPlaylist, type ISong, SourceEnum } from "../types/index.js";
 
 export default class PlaylistService {
   // crud operations
-  static save(playlist: NewPlaylist) {
-    return playlistModel.create(playlist);
+  static async save(playlist: NewPlaylist) {
+    return await playlistModel.create(playlist);
   }
 
-  static getById(id: string) {
-    return playlistModel.findById(id);
+  static async getById(id: string) {
+    return await playlistModel.findById(id);
   }
 
   static async getByUrl(input: string) {
-    const source = await getPlaylistSource(input);
-    const url = getPlaylistUrl(input, source);
-    return playlistModel.findOne({ url });
+    const url = getPlaylistUrl(input);
+    return await playlistModel.findOne({ url });
   }
 
-  static getByName(input: string) {
-    return playlistModel.findOne({ name: input });
+  static async isExists(url: string) {
+    return await playlistModel.exists({ url });
   }
 
-  static getByNameOrUrl(input: string) {
-    return isURL(input) ? this.getByUrl(input) : this.getByName(input);
+  static async getByName(input: string) {
+    return await playlistModel.findOne({ name: input });
   }
 
-  static update(id: string, playlist: NewPlaylist) {
-    return playlistModel.findByIdAndUpdate(id, playlist);
+  static async getByNameOrUrl(input: string) {
+    return isURL(input) ? await this.getByUrl(input) : await this.getByName(input);
   }
 
-  static remove(id: string) {
-    return playlistModel.findByIdAndDelete(id);
+  static async update(id: string, playlist: NewPlaylist) {
+    return await playlistModel.findByIdAndUpdate(id, playlist);
+  }
+
+  static async remove(id: string) {
+    return await playlistModel.findByIdAndDelete(id);
   }
 
   // bulk operations
-  static search(query: string, limit?: number) {
-    return playlistModel.find({ $text: { $search: query } }, {}, { limit });
+  static async search(query: string, limit?: number) {
+    return await playlistModel.find(
+      { $or: [{ name: { $regex: new RegExp(query.toLowerCase(), "i") } }, { url: query }] },
+      {},
+      { limit }
+    );
   }
 
-  static getAll(limit?: number) {
-    return playlistModel.find({}, {}, { limit });
+  static async getAll() {
+    return await playlistModel.find();
   }
 
-  static removeAll() {
-    return playlistModel.deleteMany();
+  static async getList(limit?: number) {
+    return await playlistModel.find({}, {}, { limit });
+  }
+
+  static async removeAll() {
+    return await playlistModel.deleteMany();
   }
 
   // song operations
-  static addSongs(id: string, ...songs: ISong[]) {
-    return playlistModel.findByIdAndUpdate(id, { $push: { songs: { $each: songs } } });
+  static async addSongs(id: string, ...songs: ISong[]) {
+    return await playlistModel.findByIdAndUpdate(id, { $push: { songs: { $each: songs } } });
   }
 
   static async getPlaylistSongs(query: string) {
@@ -67,7 +78,7 @@ export default class PlaylistService {
   }
 
   static async removeSong(id: string, song: ISong) {
-    return playlistModel.findByIdAndUpdate(id, { $pull: { songs: song } });
+    return await playlistModel.findByIdAndUpdate(id, { $pull: { songs: song } });
   }
 
   // other operations
@@ -84,9 +95,7 @@ export default class PlaylistService {
     return {
       name: playlist.title || "Unknown title",
       artist: playlist.channel?.name || "Unknown artist",
-      url:
-        getPlaylistUrl(playlist.url || playlist.link || "", SourceEnum.Youtube) ||
-        "https://www.youtube.com",
+      url: getPlaylistUrl(playlist.url || playlist.link) || "https://www.youtube.com",
       thumbnail:
         playlist.thumbnail?.url ||
         playlist.channel?.iconURL() ||
@@ -100,7 +109,7 @@ export default class PlaylistService {
     return {
       name: playlist.name || "Unknown title",
       artist: playlist.owner.name || "Unknown artist",
-      url: getPlaylistUrl(playlist.url || "", SourceEnum.Spotify) || "https://open.spotify.com",
+      url: getPlaylistUrl(playlist.url) || "https://open.spotify.com",
       thumbnail: playlist.thumbnail.url || "https://cdn.discordapp.com/embed/avatars/0.png",
       songs: [],
       source: SourceEnum.Spotify,
@@ -111,7 +120,7 @@ export default class PlaylistService {
     return {
       name: album.name || "Unknown title",
       artist: album.artists?.map((a) => a.name).join(", ") || "Unknown artist",
-      url: getPlaylistUrl(album.url || "", SourceEnum.Spotify) || "https://open.spotify.com",
+      url: getPlaylistUrl(album.url) || "https://open.spotify.com",
       thumbnail: album.thumbnail.url || "https://cdn.discordapp.com/embed/avatars/0.png",
       songs: [],
       source: SourceEnum.Spotify,

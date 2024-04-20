@@ -5,11 +5,17 @@ import type { MyCommandInteraction } from "../../../types/command.js";
 
 export default async function playPlaylist(interaction: MyCommandInteraction, query: string) {
   const playlist = await PlaylistService.getByNameOrUrl(query);
-  if (!playlist) return await reply(interaction, "Playlist not found.");
+  if (!playlist) {
+    await reply(interaction, "Playlist not found.");
+    return;
+  }
 
   const songs = playlist.songs;
-  if (!songs.length) return await reply(interaction, "Playlist is empty.");
+  if (!songs.length) {
+    await reply(interaction, "Playlist is empty.");
+    return;
+  }
 
   await GuildService.addToQueue(interaction.guildId, ...songs);
-  return await reply(interaction, `${songs.length} songs added to the queue.`);
+  await reply(interaction, `${songs.length} songs added to the queue.`);
 }

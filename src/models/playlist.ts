@@ -5,7 +5,7 @@ import { type IPlaylist, MongooseModelsEnum, SourceEnum } from "../types/index.j
 export const playlistSchema: Schema = new Schema({
   name: { type: String, required: true },
   artist: { type: String, required: true },
-  url: { type: String, required: true },
+  url: { type: String, required: true, unique: true },
   thumbnail: { type: String },
   source: { type: String, enum: [SourceEnum.Youtube, SourceEnum.Spotify], required: true },
   songs: [
@@ -15,6 +15,5 @@ export const playlistSchema: Schema = new Schema({
     },
   ],
 });
-playlistSchema.index({ name: "text", artist: "text" });
 
 export default mongoose.model<IPlaylist>(MongooseModelsEnum.Playlist, playlistSchema);

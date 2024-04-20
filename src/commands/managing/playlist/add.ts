@@ -1,4 +1,4 @@
-import { SpotifyAlbum, validate, YouTubePlayList } from "play-dl";
+import { SpotifyAlbum, YouTubePlayList } from "play-dl";
 
 import {
   SongService,
@@ -8,26 +8,36 @@ import {
 } from "../../../services/index.js";
 import { reply } from "../../../utils/reply.js";
 
-import { type MyCommandInteraction, SourceEnum } from "../../../types/index.js";
-import { getPlaylistSource } from "../../../utils/urls.js";
+import { type MyCommandInteraction } from "../../../types/index.js";
+import { Message } from "discord.js";
 
-export default async function addPlaylist(interaction: MyCommandInteraction, input: string) {
-  const storedPlaylist = await PlaylistService.getByUrl(input);
+export default async function addPlaylist(interaction: MyCommandInteraction, url: string) {
+  const storedPlaylist = await PlaylistService.isExists(url);
   if (storedPlaylist) {
-    if (await GuildService.hasPlaylist(interaction.guildId, storedPlaylist._id))
-      return await reply(interaction, "Playlist already saved.");
-    else {
+    if (await GuildService.hasPlaylist(interaction.guildId, storedPlaylist._id)) {
+      await reply(interaction, "Playlist already saved.");
+      return;
+    } else {
       await GuildService.addPlaylist(interaction.guildId, storedPlaylist._id);
-      return await reply(interaction, `Playlist saved: ${storedPlaylist.name}`);
+      await reply(interaction, "Playlist saved");
+      return;
     }
   }
 
-  let source = await getPlaylistSource(input);
-  const playlist = await SearchService.getPlaylistByURL(input, { source });
-  if (!playlist) return await reply(interaction, "Playlist not found.");
+  if (!(interaction instanceof Message)) await interaction.deferReply();
+  else await reply(interaction, "Fetching playlist...");
+
+  const playlist = await SearchService.getPlaylistByURL(url);
+  if (!playlist) {
+    await reply(interaction, "Playlist not found.");
+    return;
+  }
 
   const { info, videos } = playlist;
-  if (!videos) return await reply(interaction, "Failed to fetch playlist videos.");
+  if (!videos) {
+    await reply(interaction, "Failed to fetch playlist videos.");
+    return;
+  }
 
   const newPlaylist =
     info instanceof YouTubePlayList
@@ -38,11 +48,11 @@ export default async function addPlaylist(interaction: MyCommandInteraction, inp
 
   for (const video of videos) {
     const song = SongService.parseYoutubeVideo(video);
-    const newSong = (await SongService.getByUrl(song.url)) || (await SongService.save(song));
+    const newSong = (await SongService.isExist(song.url)) || (await SongService.save(song));
     newPlaylist.songs.push(newSong._id);
   }
 
   const savedPlaylist = await PlaylistService.save(newPlaylist);
   await GuildService.addPlaylist(interaction.guildId, savedPlaylist._id);
-  return await reply(interaction, `Playlist saved: ${savedPlaylist.name}`);
+  await reply(interaction, `Playlist saved: ${savedPlaylist.name}`);
 }

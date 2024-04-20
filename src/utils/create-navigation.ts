@@ -1,3 +1,4 @@
+import consola from "consola";
 import {
   Message,
   Collection,
@@ -10,9 +11,10 @@ import {
 
 import navigation from "../components/buttons/navigation.js";
 
+import { ELEMENTS_PER_PAGE } from "../constants/index.js";
+
 import { ButtonsEnum, type EmbedListBuilder } from "../types/index.js";
 
-const itemsPerPage = 15;
 export function createNavigation<T>(
   response: Message<boolean> | InteractionResponse<boolean>,
   list: T[],
@@ -32,9 +34,13 @@ export function createNavigation<T>(
   });
 
   collector.on("end", async () => {
-    await response.edit({
-      components: [navigation("disabled")],
-    });
+    try {
+      await response.edit({
+        components: [navigation("disabled")],
+      });
+    } catch (error) {
+      consola.error(error);
+    }
   });
 
   collector.on("collect", async (i) => {
@@ -49,15 +55,21 @@ export function createNavigation<T>(
         page++;
         break;
       case ButtonsEnum.VeryForward:
-        page = Math.ceil(list.length / itemsPerPage);
+        page = Math.ceil(list.length / ELEMENTS_PER_PAGE);
         break;
     }
 
-    await i.update({
-      embeds: [embed.builder(list, page, ...(embed.extra || []))],
-      components: [
-        navigation(page === 1 ? "first" : page * itemsPerPage >= list.length ? "last" : "middle"),
-      ],
-    });
+    try {
+      await i.update({
+        embeds: [embed.builder(list, page, ...(embed.extra || []))],
+        components: [
+          navigation(
+            page === 1 ? "first" : page * ELEMENTS_PER_PAGE >= list.length ? "last" : "middle"
+          ),
+        ],
+      });
+    } catch (error) {
+      consola.error(error);
+    }
   });
 }

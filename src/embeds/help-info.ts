@@ -1,8 +1,5 @@
 import { EmbedBuilder } from "discord.js";
 
-const embed = new EmbedBuilder().setTitle("Music Bot Help").setColor(0x00008b).setFooter({
-  text: "Type `/help [command]` to get help for a specific command.",
-});
 const defaultHelpFileds = [
   { name: "/play", value: "Play a song.", inline: true },
   { name: "/search", value: "Search for a song.", inline: true },
@@ -29,7 +26,6 @@ const defaultHelpFileds = [
   { name: "/info", value: "Get information about the bot.", inline: true },
 ];
 
-// Specific command help message
 const commandsHelp: { [key: string]: string } = {
   play: "Use `/play` to play a song from the queue or pass a URL to play a song instantly.",
   search:
@@ -48,17 +44,26 @@ const commandsHelp: { [key: string]: string } = {
   info: "Get information about the bot.",
 };
 
+const defaultEmbed = new EmbedBuilder()
+  .setTitle("Music Bot Help")
+  .setColor(0x00008b)
+  .setFooter({
+    text: "Type `/help [command]` to get help for a specific command.",
+  })
+  .addFields(defaultHelpFileds);
+
 export default function helpEmbed(command?: string) {
   if (!command) {
-    // General help message
-    embed.setFields(defaultHelpFileds);
+    return defaultEmbed;
   } else {
+    const embed = new EmbedBuilder().setTitle("Music Bot Help").setColor(0x00008b).setFooter({
+      text: "Type `/help [command]` to get help for a specific command.",
+    });
     if (commandsHelp[command]) {
       embed.setFields({ name: command, value: commandsHelp[command], inline: false });
     } else {
       embed.setFields({ name: "Error", value: "Command not found.", inline: false });
     }
+    return embed;
   }
-
-  return embed;
 }

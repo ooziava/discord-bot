@@ -3,6 +3,11 @@ import consola from "consola";
 import mongoose from "mongoose";
 
 const credentials = readFileSync("./cert.pem");
+if (!credentials) {
+  consola.error("No certificate found");
+  process.exit(1);
+}
+
 await mongoose.connect(
   "mongodb+srv://cluster0.n3wzzwl.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&appName=Cluster0",
   {
@@ -11,7 +16,6 @@ await mongoose.connect(
     cert: credentials,
   }
 );
-mongoose.set("strictQuery", false);
 consola.success("Connected to MongoDB");
 
-process.on("SIGINT", () => mongoose.connection.close());
+// process.on("SIGINT", () => mongoose.connection.close());
