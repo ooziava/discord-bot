@@ -21,7 +21,8 @@ export default class PlaylistService {
     return await playlistModel.findOne({ url });
   }
 
-  static async isExists(url: string) {
+  static async isExists(input: string) {
+    const url = getPlaylistUrl(input);
     return await playlistModel.exists({ url });
   }
 

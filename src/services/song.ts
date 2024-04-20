@@ -23,7 +23,8 @@ class SongService {
     });
   }
 
-  static async isExist(url: string) {
+  static async isExist(input: string) {
+    const url = getSongUrl(input);
     return await songModel.exists({ url });
   }
 
