@@ -16,11 +16,11 @@ export const execute: Execute = async (client, interaction) => {
 
   if (player.state.status === AudioPlayerStatus.Paused) {
     player.unpause();
-    await interaction.reply("Player is already paused");
+    await interaction.reply("Unpaused");
     return;
   } else if (player.state.status === AudioPlayerStatus.Playing) {
     player.pause();
-    await interaction.reply("Player is now paused");
+    await interaction.reply("Paused");
     return;
   } else {
     await interaction.reply("Player is not playing");

@@ -1,7 +1,7 @@
 import { validate } from "play-dl";
 import { SourceEnum } from "../types/source.js";
 
-const spPlaylistRegex = /spotify\.com\/playlist\/([a-zA-Z0-9]{22})/;
+const spPlaylistRegex = /spotify\.com\/(?:playlist|album)\/([a-zA-Z0-9]{22})/;
 const ytPlaylistRegex =
   /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]list=)|youtu\.be\/)([a-zA-Z0-9_-]{34})/;
 
