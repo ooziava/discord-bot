@@ -30,7 +30,7 @@ export function createNavigation<T>(
   const collector = response.createMessageComponentCollector({
     filter,
     componentType: ComponentType.Button,
-    time: 60_000,
+    time: 300_000, // 5 minutes
   });
 
   collector.on("end", async () => {

@@ -1,5 +1,12 @@
 import consola from "consola";
-import { search, spotify, SpotifyTrack, playlist_info, video_basic_info } from "play-dl";
+import {
+  search,
+  spotify,
+  SpotifyTrack,
+  playlist_info,
+  video_basic_info,
+  YouTubeVideo,
+} from "play-dl";
 
 import { SourceEnum } from "../types/source.js";
 import { getPlaylistSource, getSongSource } from "../utils/urls.js";
@@ -56,26 +63,18 @@ export default class SearchService {
         });
         if (!tracks) return;
 
-        const videos = [];
+        const videos: YouTubeVideo[] = [];
 
-        for (let i = 0; i < tracks.length; i += 2) {
-          const [res1, res2] = await Promise.all([
-            this.searchSongs(
-              `${tracks[i].name} ${tracks[i].artists.reduce(
-                (acc, cur) => acc + " " + cur.name,
-                ""
-              )}`
-            ),
-            this.searchSongs(
-              `${tracks[i + 1].name} ${tracks[i + 1].artists.reduce(
-                (acc, cur) => acc + " " + cur.name,
-                ""
-              )}`
-            ),
-          ]);
-
-          if (res1 && res1.length) videos.push(res1[0]);
-          if (res2 && res2.length) videos.push(res2[0]);
+        for (let i = 0; i < tracks.length; i += 5) {
+          const chunk = tracks.slice(i, i + 5);
+          const queries = chunk.map(
+            (track) =>
+              `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`
+          );
+          const results = await Promise.all(queries.map((query) => this.searchSongs(query)));
+          results.forEach((result) => {
+            if (result && result.length) videos.push(result[0]);
+          });
         }
 
         return {
