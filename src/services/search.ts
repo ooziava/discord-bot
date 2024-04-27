@@ -1,13 +1,7 @@
-import {
-  search,
-  spotify,
-  SpotifyTrack,
-  YouTubeVideo,
-  playlist_info,
-  video_basic_info,
-} from "play-dl";
+import consola from "consola";
+import { search, spotify, SpotifyTrack, playlist_info, video_basic_info } from "play-dl";
 
-import { SourceEnum, type Source } from "../types/source.js";
+import { SourceEnum } from "../types/source.js";
 import { getPlaylistSource, getSongSource } from "../utils/urls.js";
 
 export default class SearchService {
@@ -15,14 +9,20 @@ export default class SearchService {
     return await search(query, {
       limit,
       unblurNSFWThumbnails: true,
-    }).catch(() => null);
+    }).catch((err) => {
+      consola.error("Failed to search song: ", err);
+      return null;
+    });
   }
 
   static async getSongByURL(url: string) {
     const source = await getSongSource(url);
     switch (source) {
       case SourceEnum.Spotify:
-        const sp = await spotify(url).catch(() => null);
+        const sp = await spotify(url).catch((err) => {
+          consola.error("Failed to fetch spotify song: ", err);
+          return null;
+        });
         if (!(sp instanceof SpotifyTrack)) return;
 
         const videos = await this.searchSongs(
@@ -32,7 +32,10 @@ export default class SearchService {
 
       case SourceEnum.Youtube:
       default:
-        const info = await video_basic_info(url).catch(() => null);
+        const info = await video_basic_info(url).catch((err) => {
+          consola.error("Failed to fetch youtube song: ", err);
+          return null;
+        });
         return info?.video_details;
     }
   }
@@ -41,34 +44,59 @@ export default class SearchService {
     const source = await getPlaylistSource(url);
     switch (source) {
       case SourceEnum.Spotify: {
-        const sp = await spotify(url).catch(() => null);
+        const sp = await spotify(url).catch((err) => {
+          consola.error("Failed to fetch spotify playlist: ", err);
+          return null;
+        });
         if (!sp || sp instanceof SpotifyTrack) return;
 
-        const tracks = await sp.all_tracks().catch(() => null);
+        const tracks = await sp.all_tracks().catch((err) => {
+          consola.error("Failed to fetch spotify tracks: ", err);
+          return null;
+        });
         if (!tracks) return;
 
-        const videos = await Promise.all(
-          tracks.map(async (track) => {
-            const videos = await this.searchSongs(
-              `${track.name} ${track.artists.reduce((acc, cur) => acc + " " + cur.name, "")}`,
-              1
-            );
-            return videos?.[0];
-          })
-        );
+        const videos = [];
+
+        for (let i = 0; i < tracks.length; i += 2) {
+          const [res1, res2] = await Promise.all([
+            this.searchSongs(
+              `${tracks[i].name} ${tracks[i].artists.reduce(
+                (acc, cur) => acc + " " + cur.name,
+                ""
+              )}`
+            ),
+            this.searchSongs(
+              `${tracks[i + 1].name} ${tracks[i + 1].artists.reduce(
+                (acc, cur) => acc + " " + cur.name,
+                ""
+              )}`
+            ),
+          ]);
+
+          if (res1 && res1.length) videos.push(res1[0]);
+          if (res2 && res2.length) videos.push(res2[0]);
+        }
+
         return {
           info: sp,
-          videos: videos.filter((video) => video) as YouTubeVideo[],
+          videos,
         };
       }
       case SourceEnum.Youtube:
       default:
         const playlist = await playlist_info(url, {
           incomplete: true,
-        }).catch(() => null);
+        }).catch((err) => {
+          consola.error("Failed to fetch youtube playlist: ", err);
+          return null;
+        });
         if (!playlist) return;
 
-        const videos = await playlist.all_videos().catch(() => null);
+        const videos = await playlist.all_videos().catch((err) => {
+          consola.error("Failed to fetch youtube videos: ", err);
+          return null;
+        });
         if (!videos) return;
 
         return {

@@ -1,3 +1,4 @@
+import consola from "consola";
 import { validate } from "play-dl";
 import { SourceEnum } from "../types/source.js";
 
@@ -43,7 +44,10 @@ export function isURL(str: string) {
 }
 
 export async function getPlaylistSource(input: string) {
-  const result = await validate(input).catch(() => null);
+  const result = await validate(input).catch((err) => {
+    consola.error("Failed to validate url: ", err);
+    return null;
+  });
   switch (result) {
     case "yt_playlist":
       return SourceEnum.Youtube;
@@ -54,7 +58,10 @@ export async function getPlaylistSource(input: string) {
 }
 
 export async function getSongSource(input: string) {
-  const result = await validate(input).catch(() => null);
+  const result = await validate(input).catch((err) => {
+    consola.error("Failed to validate url: ", err);
+    return null;
+  });
   switch (result) {
     case "yt_video":
     case "yt_playlist":
