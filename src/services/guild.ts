@@ -26,13 +26,12 @@ export default class GuildService {
 
   static async playNext(guildId: string, amount = 1) {
     const guild = await this.getGuild(guildId);
-    if (!guild.loop) {
-      if (guild.queue.length <= amount) {
-        guild.queue = [];
-      } else {
-        guild.queue = guild.queue.slice(amount);
-      }
+    if (guild.queue.length <= amount) {
+      guild.queue = [];
+    } else {
+      guild.queue = guild.queue.slice(amount);
     }
+
     return await guild.save();
   }
 

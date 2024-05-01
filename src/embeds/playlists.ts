@@ -1,8 +1,9 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, type APIEmbedField } from "discord.js";
 
 import { ELEMENTS_PER_PAGE } from "../constants/index.js";
 
 import type { IPlaylist, EmbedListBuilder, ISong } from "../types/index.js";
+import { formatDuration } from "../utils/format-date.js";
 
 export const playlistInfoEmbed: EmbedListBuilder<ISong> = (
   songs: ISong[],
@@ -17,15 +18,16 @@ export const playlistInfoEmbed: EmbedListBuilder<ISong> = (
     .setFooter({
       text: `Created by ${playlist.artist} | Source: ${playlist.source}`.slice(0, 2048),
     })
-    .addFields([
-      {
-        name: "Songs",
-        value: songs
-          .map((song, i) => `${i + 1}. ${song.title}`.slice(0, 200))
-          .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
-          .join("\n"),
-      },
-    ])
+    .addFields(
+      songs
+        .map(
+          (song, i): APIEmbedField => ({
+            name: `${i + 1}.  **${song.artist}** • ${formatDuration(song.duration)}`,
+            value: `[${song.title}](${song.url})`,
+          })
+        )
+        .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
+    )
     // dark blue
     .setColor(0x00008b);
 

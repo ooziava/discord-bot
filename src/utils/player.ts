@@ -25,19 +25,20 @@ export function createPlayer(guildId: string) {
 
   newPlayer.on(AudioPlayerStatus.Idle, async () => {
     try {
-      const guild = await GuildService.playNext(guildId);
-      if (guild.queue.length > 0) {
-        const song = await SongService.getById(guild.queue[0]._id.toString());
-        if (!song) {
-          newPlayer.emit("idle");
-          return;
-        }
-        try {
-          await playSong(newPlayer, song, guild.volume);
-        } catch (error) {
-          consola.error("Failed to play current song: ", error);
-          newPlayer.emit("idle");
-        }
+      const meta = await GuildService.getPlayerMeta(guildId);
+      if (!meta.loop) {
+        await GuildService.playNext(guildId);
+      }
+      const song = await GuildService.getCurrentSong(guildId);
+      if (!song) {
+        newPlayer.emit("idle");
+        return;
+      }
+      try {
+        await playSong(newPlayer, song, meta.volume);
+      } catch (error) {
+        consola.error("Failed to play current song: ", error);
+        newPlayer.emit("idle");
       }
     } catch (error) {
       consola.error("Failed to play next song: ", error);

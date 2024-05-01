@@ -6,8 +6,8 @@ import { reply } from "../../utils/reply.js";
 import type { Data, Execute } from "../../types/command.js";
 
 export const data: Data = new SlashCommandBuilder()
-  .setName("next")
-  .setDescription("Play the next song")
+  .setName("skip")
+  .setDescription("Skip songs in the queue")
   .addIntegerOption((option) =>
     option.setName("amount").setDescription("The amount of songs to skip")
   );
@@ -23,13 +23,13 @@ export const execute: Execute = async (client, interaction, args) => {
     return;
   }
 
-  await GuildService.playNext(interaction.guildId, amount);
   const player = client.players.get(interaction.guildId);
-  if (!player) {
-    await reply(interaction, "Cannot find the player", true);
-    return;
+  if (player) {
+    await GuildService.playNext(interaction.guildId, amount - 1);
+    player.stop();
+  } else {
+    await GuildService.playNext(interaction.guildId, amount);
   }
 
-  player.stop();
   await reply(interaction, `Skipped ${amount > 1 ? `${amount} songs` : ""}`);
 };
