@@ -11,12 +11,5 @@ export const data: Data = new SlashCommandBuilder()
 
 export const execute: Execute = async (_client, interaction) => {
   const result = await GuildService.toggleLoop(interaction.guildId);
-  await reply(
-    interaction,
-    result === undefined
-      ? result
-        ? "Looping enabled"
-        : "Looping disabled"
-      : "Something went wrong"
-  );
+  await reply(interaction, result ? "Looping enabled" : "Looping disabled");
 };
