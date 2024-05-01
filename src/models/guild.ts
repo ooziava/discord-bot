@@ -8,7 +8,7 @@ export const GuildSchema: Schema = new Schema({
   playlists: [{ type: Schema.Types.ObjectId, ref: MongooseModelsEnum.Playlist }],
   prefix: { type: String, default: "!" },
   volume: { type: Number, default: 100 },
-  loop: { type: Boolean, default: false },
+  loop: { type: Number, default: 0 },
   maxQueueSize: { type: Number, default: 100 },
 });
 
