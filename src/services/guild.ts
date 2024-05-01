@@ -152,7 +152,7 @@ export default class GuildService {
   static async toggleLoop(guildId: string) {
     const updatedGuild = await guildModel.findOneAndUpdate(
       { guildId },
-      [{ $set: { loop: { $not: "$loop" } } }],
+      { $bit: { loop: { xor: 1 } } },
       { new: true, fields: { loop: 1, _id: 0 } }
     );
     return updatedGuild ? updatedGuild.loop : undefined;
