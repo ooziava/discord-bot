@@ -51,11 +51,11 @@ export default class GuildService {
   }
 
   static async getPlaylistByNameOrUrl(guildId: string, query: string) {
-    const lowerCaseQuery = query.toLowerCase();
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     let guild = await guildModel.findOne({ guildId }).populate({
       path: "playlists",
       match: {
-        $or: [{ name: { $regex: new RegExp("^" + lowerCaseQuery + "$", "i") } }, { url: query }],
+        $or: [{ name: { $regex: `^${escapedQuery}`, $options: "i" } }, { url: query }],
       },
     });
     if (!guild) guild = await this.getGuild(guildId);
@@ -64,14 +64,13 @@ export default class GuildService {
   }
 
   static async searchPlaylists(guildId: string, query: string, limit?: number) {
-    const lowerCaseQuery = query.toLowerCase();
-
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     let guild = await guildModel
       .findOne({ guildId })
       .populate({
         path: "playlists",
         match: {
-          $or: [{ name: { $regex: new RegExp(lowerCaseQuery, "i") } }, { url: query }],
+          $or: [{ name: { $regex: `^${escapedQuery}`, $options: "i" } }, { url: query }],
         },
         options: { limit },
       })
@@ -109,11 +108,11 @@ export default class GuildService {
   }
 
   static async searchInQueue(guildId: string, query: string, limit?: number) {
-    const lowerCaseQuery = query.toLowerCase();
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     let guild = await guildModel.findOne({ guildId }).populate({
       path: "queue",
       match: {
-        $or: [{ title: { $regex: new RegExp(lowerCaseQuery, "i") } }, { url: query }],
+        $or: [{ title: { $regex: `^${escapedQuery}`, $options: "i" } }, { url: query }],
       },
       options: { limit },
     });

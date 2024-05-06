@@ -77,4 +77,8 @@ Promise.all(
   consola.success(`${res.filter((el) => !!el).length} events loaded`);
 });
 
+process.on("unhandledRejection", (reason, promise) => {
+  consola.error("Unhandled Rejection at:", promise, "\nreason:", reason);
+});
+
 client.login(token);

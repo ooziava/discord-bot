@@ -44,8 +44,9 @@ export default class PlaylistService {
 
   // bulk operations
   static async search(query: string, limit?: number) {
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     return await playlistModel.find(
-      { $or: [{ name: { $regex: new RegExp(query.toLowerCase(), "i") } }, { url: query }] },
+      { $or: [{ name: { $regex: `^${escapedQuery}`, $options: "i" } }, { url: query }] },
       {},
       { limit }
     );

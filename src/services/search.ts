@@ -6,6 +6,8 @@ import {
   playlist_info,
   video_basic_info,
   YouTubeVideo,
+  is_expired,
+  refreshToken,
 } from "play-dl";
 
 import { SourceEnum } from "../types/source.js";
@@ -13,16 +15,15 @@ import { getPlaylistSource, getSongSource } from "../utils/urls.js";
 
 export default class SearchService {
   static async searchSongs(query: string, limit = 1) {
-    return await search(query, {
-      limit,
-      unblurNSFWThumbnails: true,
-    }).catch((err) => {
+    if (is_expired()) refreshToken();
+    return await search(query, { limit, unblurNSFWThumbnails: true }).catch((err) => {
       consola.error("Failed to search song: ", err);
       return null;
     });
   }
 
   static async getSongByURL(url: string) {
+    if (is_expired()) refreshToken();
     const source = await getSongSource(url);
     switch (source) {
       case SourceEnum.Spotify:
@@ -48,6 +49,7 @@ export default class SearchService {
   }
 
   static async getPlaylistByURL(url: string) {
+    if (is_expired()) refreshToken();
     const source = await getPlaylistSource(url);
     switch (source) {
       case SourceEnum.Spotify: {

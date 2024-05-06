@@ -31,8 +31,8 @@ export function parseSearchOption(video: YouTubeVideo, index: number) {
     notation: "compact",
   })} views • ${formatDuration(video.durationInSec)}`;
   let title = video.title || "No title found!";
-  if (description.length > 100) description = description.substring(0, 97) + "...";
-  if (title.length > 100) title = title.substring(0, 97) + "...";
+  if (description.length > 90) description = description.substring(0, 90) + "...";
+  if (title.length > 90) title = title.substring(0, 90) + "...";
 
   return new StringSelectMenuOptionBuilder()
     .setLabel(`${index + 1}. ${title}`)

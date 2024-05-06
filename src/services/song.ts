@@ -38,8 +38,9 @@ class SongService {
 
   // bulk operations
   static async search(query: string, limit?: number) {
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     return await songModel.find(
-      { $or: [{ name: { $regex: new RegExp(query.toLowerCase(), "i") } }, { url: query }] },
+      { $or: [{ title: { $regex: `^${escapedQuery}`, $options: "i" } }, { url: query }] },
       {},
       { limit }
     );

@@ -12,7 +12,6 @@ import { stream } from "play-dl";
 import GuildService from "../services/guild.js";
 
 import type { NewSong } from "../types/song.js";
-import SongService from "../services/song.js";
 
 export function createPlayer(guildId: string) {
   const newPlayer = createAudioPlayer({
@@ -30,10 +29,8 @@ export function createPlayer(guildId: string) {
         await GuildService.playNext(guildId);
       }
       const song = await GuildService.getCurrentSong(guildId);
-      if (!song) {
-        newPlayer.emit("idle");
-        return;
-      }
+      if (!song) return;
+
       try {
         await playSong(newPlayer, song, meta.volume);
       } catch (error) {
@@ -51,12 +48,7 @@ export async function playSong(player: AudioPlayer, song: NewSong, volume: numbe
   const st = await stream(song.url, {
     quality: 2,
     discordPlayerCompatibility: song.duration < 600_000,
-  }).catch(consola.error);
-
-  if (!st) {
-    player.emit("idle");
-    return;
-  }
+  });
 
   const resource = createAudioResource(st.stream, {
     inputType: st.type,

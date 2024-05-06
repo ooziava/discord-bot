@@ -44,6 +44,11 @@ export const execute: Execute = async (_client, interaction, args) => {
   const subcommand =
     interaction instanceof Message ? args?.[0] : interaction.options.getSubcommand();
 
+  if (!subcommand) {
+    await infoQueue(interaction);
+    return;
+  }
+
   switch (subcommand) {
     case "add":
       const url =
