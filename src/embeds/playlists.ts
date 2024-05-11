@@ -33,18 +33,16 @@ export const playlistInfoEmbed: EmbedListBuilder<ISong> = (
 
 export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (playlists: IPlaylist[], page: number) =>
   new EmbedBuilder()
-    .addFields([
-      {
-        name: "Playlists",
-        value: playlists
-          .map((playlist, i) =>
-            `${i + 1}. [${playlist.name}](${playlist.url}) • ${playlist.artist} • ${
-              playlist.source
-            }`.slice(0, 200)
-          )
-          .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
-          .join("\n"),
-      },
-    ])
+    .addFields(
+      playlists
+        .map(
+          (playlist, i): APIEmbedField => ({
+            name: `${i + 1}.  **${playlist.name}**`.slice(0, 256),
+            value: `[${playlist.artist}](${playlist.url})`.slice(0, 1024),
+            inline: true,
+          })
+        )
+        .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
+    )
     // dark blue
     .setColor(0x00008b);
