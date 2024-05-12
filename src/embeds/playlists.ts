@@ -39,7 +39,6 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (playlists: IPlaylist
           (playlist, i): APIEmbedField => ({
             name: `${i + 1}.  **${playlist.name}**`.slice(0, 256),
             value: `[${playlist.artist}](${playlist.url})`.slice(0, 1024),
-            inline: true,
           })
         )
         .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
