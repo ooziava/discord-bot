@@ -44,8 +44,8 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (
     // })
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
-    .forEach((playlist, i) => {
-      const name = `${i + 1}.  **${playlist.artist}**`.slice(0, 256);
+    .forEach((playlist) => {
+      const name = playlist.artist;
       const value = `[${playlist.name}](${playlist.url})`.slice(0, 1024);
       if (playlistObj[name]) playlistObj[name] += `\n${value}`;
       else playlistObj[name] = value;
@@ -53,8 +53,8 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (
   return (
     new EmbedBuilder()
       .addFields(
-        Object.entries(playlistObj).map(([name, value]) => ({
-          name,
+        Object.entries(playlistObj).map(([name, value], i) => ({
+          name: `${i + 1}.  **${name}**`.slice(0, 256),
           value,
         }))
       )
