@@ -37,10 +37,18 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (
 ) => {
   const playlistObj: { [key: string]: string } = {};
   playlists
+    // .sort((a, b) => {
+    //   if (a.name < b.name) return -1; // a comes before b
+    //   if (a.name > b.name) return 1; // a comes after b
+    //   return 0;
+    // })
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
     .forEach((playlist, i) => {
-      playlistObj[`${i + 1}.  **${playlist.artist}**`.slice(0, 256)] =
-        `[${playlist.name}](${playlist.url})`.slice(0, 1024);
+      const name = `${i + 1}.  **${playlist.artist}**`.slice(0, 256);
+      const value = `[${playlist.name}](${playlist.url})`.slice(0, 1024);
+      if (playlistObj[name]) playlistObj[name] += `\n${value}`;
+      else playlistObj[name] = value;
     });
   return (
     new EmbedBuilder()

@@ -86,6 +86,11 @@ export const execute: Execute = async (client, interaction, args) => {
       ? args?.slice(1).join(" ")
       : interaction.options.getString("playlist") || undefined;
 
+  if (!subcommand) {
+    await infoPlaylist(interaction, query);
+    return;
+  }
+
   switch (subcommand) {
     case "add":
       let input;
