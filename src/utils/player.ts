@@ -34,6 +34,7 @@ export function createPlayer(guildId: string) {
       try {
         await playSong(newPlayer, song, meta.volume);
       } catch (error) {
+        consola.log("Song obj: ", song);
         consola.error("Failed to play current song: ", error);
         newPlayer.emit("idle");
       }

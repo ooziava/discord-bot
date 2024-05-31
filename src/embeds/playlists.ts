@@ -35,7 +35,7 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (
   playlists: IPlaylist[],
   page: number
 ) => {
-  const playlistObj: { [key: string]: string } = {};
+  const playlistObj: { [key: string]: string[] } = {};
   playlists
     // .sort((a, b) => {
     //   if (a.name < b.name) return -1; // a comes before b
@@ -46,16 +46,18 @@ export const playlistsEmbed: EmbedListBuilder<IPlaylist> = (
     .slice((page - 1) * ELEMENTS_PER_PAGE, page * ELEMENTS_PER_PAGE)
     .forEach((playlist) => {
       const name = playlist.artist;
-      const value = `[${playlist.name}](${playlist.url})`.slice(0, 1024);
-      if (playlistObj[name]) playlistObj[name] += `\n${value}`;
-      else playlistObj[name] = value;
+      const value = `[${playlist.name}](${playlist.url})`;
+      if (playlistObj[name]) playlistObj[name].push(value);
+      else playlistObj[name] = [value];
     });
+
+  let index = 0;
   return (
     new EmbedBuilder()
       .addFields(
         Object.entries(playlistObj).map(([name, value], i) => ({
-          name: `${i + 1}.  **${name}**`.slice(0, 256),
-          value,
+          name: `**${name}**`.slice(0, 256),
+          value: value.reduce((acc, cur) => `${acc}\n${++index}. ${cur}`, "").slice(0, 1024),
         }))
       )
       // dark blue

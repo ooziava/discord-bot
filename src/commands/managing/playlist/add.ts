@@ -24,8 +24,8 @@ export default async function addPlaylist(interaction: MyCommandInteraction, url
     }
   }
 
-  if (!(interaction instanceof Message)) await interaction.deferReply();
-  else await reply(interaction, "Fetching playlist...");
+  if (interaction instanceof Message) await reply(interaction, "Fetching playlist...");
+  else await interaction.deferReply();
 
   const playlist = await SearchService.getPlaylistByURL(url);
   if (!playlist) {

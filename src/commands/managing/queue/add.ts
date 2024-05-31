@@ -16,7 +16,7 @@ export default async function addToQueue(interaction: MyCommandInteraction, url:
     }
 
     const newSong = SongService.parseYoutubeVideo(video);
-    song = await SongService.save(newSong);
+    song = (await SongService.isExist(newSong.url)) || (await SongService.save(newSong));
   }
 
   await GuildService.addToQueue(interaction.guildId, song._id);
