@@ -19,29 +19,11 @@ export function createPlayer(guildId: string) {
       noSubscriber: NoSubscriberBehavior.Pause,
     },
   });
+  const listener = createPlayerListener(newPlayer, guildId);
 
   newPlayer.on("error", consola.error);
+  newPlayer.on(AudioPlayerStatus.Idle, listener);
 
-  newPlayer.on(AudioPlayerStatus.Idle, async () => {
-    try {
-      const meta = await GuildService.getPlayerMeta(guildId);
-      if (!meta.loop) {
-        await GuildService.playNext(guildId);
-      }
-      const song = await GuildService.getCurrentSong(guildId);
-      if (!song) return;
-
-      try {
-        await playSong(newPlayer, song, meta.volume);
-      } catch (error) {
-        consola.log("Song obj: ", song);
-        consola.error("Failed to play current song: ", error);
-        newPlayer.emit("idle");
-      }
-    } catch (error) {
-      consola.error("Failed to play next song: ", error);
-    }
-  });
   return newPlayer;
 }
 
@@ -59,4 +41,34 @@ export async function playSong(player: AudioPlayer, song: NewSong, volume: numbe
   resource.volume?.setVolume(volume / 100);
   player.play(resource);
   return await entersState(player, AudioPlayerStatus.Playing, 5000);
+}
+
+function createPlayerListener(player: AudioPlayer, guildId: string) {
+  let retries = 0;
+  return async () => {
+    try {
+      const meta = await GuildService.getPlayerMeta(guildId);
+      if (!meta.loop) {
+        await GuildService.playNext(guildId);
+      }
+      const song = await GuildService.getCurrentSong(guildId);
+      if (!song) return;
+
+      try {
+        await playSong(player, song, meta.volume);
+      } catch (error) {
+        consola.log("Song obj: ", song);
+        consola.error("Failed to play current song: ", error);
+        if (retries < 3) {
+          retries++;
+          player.emit("idle");
+        } else {
+          retries = 0;
+          throw error;
+        }
+      }
+    } catch (error) {
+      consola.error("Failed to play next song: ", error);
+    }
+  };
 }

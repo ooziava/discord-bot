@@ -21,6 +21,7 @@ export default class GuildService {
     });
 
     if (!guild) guild = await this.getGuild(guildId);
+    if (Array.isArray(guild.queue)) return null;
     return guild.queue as unknown as ISong | null;
   }
 
