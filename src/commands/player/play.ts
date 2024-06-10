@@ -35,9 +35,7 @@ export const execute: Execute = async (client, interaction, args) => {
     if (interaction instanceof Message) await reply(interaction, "Searching for song...");
     else await interaction.deferReply();
 
-    consola.info(`Searching for song: ${url}`);
     const video = await SearchService.getSongByURL(url);
-    consola.info(`Found song: ${video?.title}`);
     if (!video) {
       await reply(interaction, "Song not found");
       return;
