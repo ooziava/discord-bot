@@ -23,7 +23,7 @@ export default class SearchService {
   }
 
   static async getSongByURL(url: string) {
-    if (is_expired()) refreshToken();
+    if (is_expired()) await refreshToken();
     const source = await getSongSource(url);
     switch (source) {
       case SourceEnum.Spotify:
