@@ -27,7 +27,7 @@ export default class GuildService {
 
   static async playNext(guildId: string, amount = 1) {
     const guild = await this.getGuild(guildId);
-    if (guild.queue.length < amount) {
+    if (guild.queue.length <= amount) {
       guild.queue = [];
     } else {
       guild.queue = guild.queue.slice(amount);
@@ -157,9 +157,13 @@ export default class GuildService {
     return updatedGuild ? updatedGuild.loop : undefined;
   }
 
+  static async setOutsideQ(guildId: string, outsideQ: boolean) {
+    return await guildModel.updateOne({ guildId }, { outsideQ: outsideQ ? 1 : 0 });
+  }
+
   static async getPlayerMeta(guildId: string) {
-    const guild = await guildModel.findOne({ guildId }).select("guildId loop volume -_id");
+    const guild = await guildModel.findOne({ guildId }).select("guildId loop volume outsideQ -_id");
     if (!guild) return await this.getGuild(guildId);
-    return guild as { guildId: string; loop: boolean; volume: number };
+    return guild as { guildId: string; loop: boolean; outsideQ: boolean; volume: number };
   }
 }

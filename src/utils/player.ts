@@ -48,9 +48,12 @@ function createPlayerListener(player: AudioPlayer, guildId: string) {
   return async () => {
     try {
       const meta = await GuildService.getPlayerMeta(guildId);
-      if (!meta.loop) {
+      if (!meta.loop && !meta.outsideQ) {
         await GuildService.playNext(guildId);
+      } else if (meta.outsideQ) {
+        await GuildService.setOutsideQ(guildId, false);
       }
+
       const song = await GuildService.getCurrentSong(guildId);
       if (!song) return;
 

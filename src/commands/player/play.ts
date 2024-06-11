@@ -62,6 +62,7 @@ export const execute: Execute = async (client, interaction, args) => {
     }
 
     await playSong(player, song, meta.volume);
+    await GuildService.setOutsideQ(interaction.guildId, !!url);
     await reply(interaction, {
       content: "",
       embeds: [songInfoEmbed(song)],

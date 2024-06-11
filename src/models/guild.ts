@@ -9,6 +9,7 @@ export const GuildSchema: Schema = new Schema({
   prefix: { type: String, default: "!" },
   volume: { type: Number, default: 100 },
   loop: { type: Number, default: 0 },
+  outsideQ: { type: Number, default: 0 },
   maxQueueSize: { type: Number, default: 100 },
 });
 

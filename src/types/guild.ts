@@ -7,6 +7,7 @@ export type NewGuild = {
   prefix: string;
   volume: number;
   loop: boolean;
+  outsideQ: boolean;
   maxQueueSize: number;
 };
 
