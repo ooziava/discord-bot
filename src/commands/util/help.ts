@@ -8,6 +8,8 @@ import { createPlayer } from "../../utils/player.js";
 import { createReadStream } from "fs";
 import { createAudioResource, StreamType } from "@discordjs/voice";
 import consola from "consola";
+import { Readable } from "stream";
+import { get } from "https";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("help")
@@ -29,7 +31,8 @@ export const data: Data = new SlashCommandBuilder()
         { name: "volume", value: "volume" },
         { name: "prefix", value: "prefix" },
         { name: "info", value: "info" },
-        { name: "test", value: "test" }
+        { name: "test url", value: "testurl" },
+        { name: "test file", value: "testfile" }
       )
   );
 
@@ -39,7 +42,7 @@ export const execute: Execute = async (client, interaction, arg) => {
       ? arg?.[0]
       : interaction.options.getString("command") ?? undefined;
 
-  if (value === "test") {
+  if (value?.includes("test")) {
     try {
       await interaction.channel?.send("Testing player");
       const member = interaction.member;
@@ -52,7 +55,12 @@ export const execute: Execute = async (client, interaction, arg) => {
       const player = createPlayer(interaction.guildId);
       connection.subscribe(player);
       await interaction.channel?.send("Player created");
-      const stream = createReadStream("src/assets/test.mp3");
+      const stream = value.includes("url")
+        ? createUrlReadStream(
+            "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
+          )
+        : createReadStream("src/assets/test.mp3");
+
       const resource = createAudioResource(stream, {
         inputType: StreamType.Arbitrary,
       });
@@ -66,4 +74,23 @@ export const execute: Execute = async (client, interaction, arg) => {
     await interaction.reply({
       embeds: [helpEmbed(value)],
     });
+};
+export const createUrlReadStream = (url: string): Readable => {
+  const readable = new Readable({
+    read() {}, // No-op
+  });
+
+  get(url, (response) => {
+    response.on("data", (chunk: any) => {
+      readable.push(chunk);
+    });
+
+    response.on("end", () => {
+      readable.push(null); // End of stream
+    });
+  }).on("error", (error) => {
+    readable.emit("error", error); // Forward the error to the readable stream
+  });
+
+  return readable;
 };
