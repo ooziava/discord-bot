@@ -46,9 +46,9 @@ export const execute: Execute = async (client, interaction, args) => {
 
   const channel = member.voice.channel;
 
+  let player = client.players.get(interaction.guildId);
   try {
     const connection = await connectToChannel(client, channel);
-    let player = client.players.get(interaction.guildId);
     if (!player) {
       player = createPlayer(interaction.guildId);
       client.players.set(interaction.guildId, player);
@@ -70,5 +70,6 @@ export const execute: Execute = async (client, interaction, args) => {
   } catch (error) {
     console.error(error);
     await reply(interaction, "Failed to play song");
+    player?.stop();
   }
 };
