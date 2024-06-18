@@ -31,7 +31,7 @@ if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarke
         cookie: ytCookie,
       },
     });
-
+  consola.info(Object.keys(options).join(", "));
   await setToken(options);
   consola.success("Successfully set social tokens.");
 })();
