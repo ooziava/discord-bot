@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, Message, GuildMember } from "discord.js";
 import { AudioPlayerStatus } from "@discordjs/voice";
+import { is_expired, refreshToken } from "play-dl";
 
 import songInfoEmbed from "../../embeds/song-info.js";
 
@@ -59,7 +60,7 @@ export const execute: Execute = async (client, interaction, args) => {
       await reply(interaction, "Player is already playing");
       return;
     }
-
+    if (is_expired()) refreshToken();
     await playSong(player, song, meta.volume);
     await GuildService.setOutsideQ(interaction.guildId, !!url);
     await reply(interaction, {
