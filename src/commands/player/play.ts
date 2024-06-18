@@ -1,13 +1,12 @@
 import { SlashCommandBuilder, Message, GuildMember } from "discord.js";
-import { AudioPlayerStatus, VoiceConnectionStatus } from "@discordjs/voice";
+import { AudioPlayerStatus } from "@discordjs/voice";
 
 import songInfoEmbed from "../../embeds/song-info.js";
 
 import { GuildService, SearchService, SongService } from "../../services/index.js";
 import { reply, connectToChannel, createPlayer, playSong } from "../../utils/index.js";
 
-import { type Data, type Execute, SourceEnum } from "../../types/index.js";
-import consola from "consola";
+import { type Data, type Execute } from "../../types/index.js";
 
 export const data: Data = new SlashCommandBuilder()
   .setName("play")
