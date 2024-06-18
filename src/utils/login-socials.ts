@@ -8,13 +8,13 @@ const spRefreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
 const spMarket = process.env.SPOTIFY_MARKET;
 const ytCookie = process.env.YOUTUBE_COOKIE;
 
-if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarket || !ytCookie) {
+if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarket) {
   consola.error("Missing required environment variables.");
   process.exit(1);
 }
 
 (async () => {
-  await setToken({
+  let options = {
     soundcloud: {
       client_id: scClientId,
     },
@@ -24,10 +24,15 @@ if (!scClientId || !spClientId || !spClientSecret || !spRefreshToken || !spMarke
       refresh_token: spRefreshToken,
       market: spMarket,
     },
-    youtube: {
-      cookie: ytCookie,
-    },
-  });
+  };
+  if (ytCookie)
+    Object.assign(options, {
+      youtube: {
+        cookie: ytCookie,
+      },
+    });
+
+  await setToken(options);
   consola.success("Successfully set social tokens.");
 })();
 
