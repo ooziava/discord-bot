@@ -118,6 +118,7 @@ export const execute: Execute = async (client, interaction, args) => {
       return;
 
     case "info":
+    case "i":
       await infoPlaylist(interaction, query);
       return;
 

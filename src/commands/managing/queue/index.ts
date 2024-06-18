@@ -77,6 +77,7 @@ export const execute: Execute = async (_client, interaction, args) => {
       await removeFromQueue(interaction, query);
       return;
     case "info":
+    case "i":
       await infoQueue(interaction);
       return;
     case "clear":

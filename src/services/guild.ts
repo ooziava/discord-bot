@@ -130,6 +130,20 @@ export default class GuildService {
     return await guildModel.updateOne({ guildId }, { queue: [] });
   }
 
+  static async shuffle(guildId: string) {
+    let guild = await guildModel.findOne({ guildId });
+    if (!guild) guild = await this.getGuild(guildId);
+
+    const shuffledQueue = await guildModel.aggregate([
+      { $match: { guildId } },
+      { $unwind: "$queue" },
+      { $sample: { size: guild.queue.length } },
+      { $group: { _id: "$_id", queue: { $push: "$queue" } } },
+    ]);
+
+    return await guildModel.updateOne({ guildId }, { $set: { queue: shuffledQueue[0].queue } });
+  }
+
   //general operations
   static async setPrefix(guildId: string, prefix: string) {
     return await guildModel.updateOne({ guildId }, { prefix });

@@ -3,8 +3,9 @@ import { SlashCommandBuilder, Message } from "discord.js";
 import GuildService from "../../services/guild.js";
 import { reply } from "../../utils/reply.js";
 
-import type { Data, Execute } from "../../types/command.js";
+import type { Aliases, Data, Execute } from "../../types/command.js";
 
+export const aliases: Aliases = "vol";
 export const data: Data = new SlashCommandBuilder()
   .setName("volume")
   .setDescription("Set the volume of the player")
